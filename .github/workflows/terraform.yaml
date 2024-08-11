@@ -1,14 +1,13 @@
 name: Terraform
 on:
   push:
-    branches-ignore:
-      - main
+  workflow_dispatch:
+env:
+  TF_VAR_cloudflare_api_token: ${{ secrets.TF_VAR_CLOUDFLARE_API_TOKEN }}
 jobs:
   tf_plan:
     name: Plan Terraform
     runs-on: ubuntu-22.04
-    env:
-      TF_VAR_cloudflare_api_token: ${{ secrets.TF_VAR_CLOUDFLARE_API_TOKEN }}
     steps:
       - uses: actions/checkout@v4
       - uses: hashicorp/setup-terraform@v3
@@ -28,6 +27,7 @@ jobs:
         working-directory: "./terraform"
       - name: Comment result to Pull Request
         uses: robburger/terraform-pr-commenter@v1
+        if: github.event_name == 'pull_request'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -35,3 +35,20 @@ jobs:
           # Terraform rarely writes to stdout and stderr in the same action, so we concatenate
           commenter_input: ${{ format('{0}{1}', steps.tfplan.outputs.stdout, steps.tfplan.outputs.stderr) }}
           commenter_exitcode: ${{ steps.tfplan.outputs.exitcode }}
+  tf_apply:
+    name: Apply Terraform
+    runs-on: ubuntu-22.04
+    concurrency: tf_apply_on_main
+    needs:
+      - tf_plan
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          cli_config_credentials_token: ${{ secrets.TERRAFORM_CLOUD_API_TOKEN }}
+      - run: terraform init
+        working-directory: "./terraform"
+      - name: Terraform apply
+        run: terraform apply -input=false -no-color -auto-approve -lock-timeout=10m
+        working-directory: "./terraform"
