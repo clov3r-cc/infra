@@ -1,6 +1,8 @@
 name: Terraform (PR)
 on:
-  pull_request:
+  push:
+    branches-ignore:
+      - main
 jobs:
   tf_plan:
     name: Plan Terraform
