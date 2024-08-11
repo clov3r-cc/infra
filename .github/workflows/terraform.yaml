@@ -1,4 +1,4 @@
-name: Terraform (PR)
+name: Terraform
 on:
   push:
     branches-ignore:
