@@ -7,6 +7,8 @@ jobs:
   tf_plan:
     name: Plan Terraform
     runs-on: ubuntu-22.04
+    env:
+      TF_VAR_cloudflare_api_token: ${{ secrets.TF_VAR_CLOUDFLARE_API_TOKEN }}
     steps:
       - uses: actions/checkout@v4
       - uses: hashicorp/setup-terraform@v3
