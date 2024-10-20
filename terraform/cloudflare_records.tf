@@ -18,6 +18,16 @@ resource "cloudflare_record" "homepage__www" {
   comment = "for my homepage in Cloudflare Pages"
 }
 
+resource "cloudflare_record" "auth0_domain" {
+  zone_id = cloudflare_zone.clov3r-cc.id
+  type    = "CNAME"
+  name    = "auth"
+  content = "dev-ylboliln6z4iuhd7-cd-jhudqctvydtf51ka.edge.tenants.jp.auth0.com"
+  proxied = false
+  ttl     = 1 # Auto
+  comment = "for Auth0"
+}
+
 resource "cloudflare_record" "mail-server__primary" {
   zone_id  = cloudflare_zone.clov3r-cc.id
   type     = "MX"
