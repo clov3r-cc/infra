@@ -7,7 +7,7 @@ env:
 jobs:
   tf_plan:
     name: Plan Terraform
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: hashicorp/setup-terraform@v3
@@ -37,7 +37,7 @@ jobs:
           commenter_exitcode: ${{ steps.tfplan.outputs.exitcode }}
   tf_apply:
     name: Apply Terraform
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     concurrency: tf_apply_on_main
     needs:
       - tf_plan
