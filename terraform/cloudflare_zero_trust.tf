@@ -24,14 +24,6 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "cloudflared-01" {
     ingress_rule {
       hostname = cloudflare_record.pxmx01-mng.hostname
       service  = "http://192.168.20.2:8006"
-      origin_request {
-        connect_timeout = "2m0s"
-        access {
-          required  = true
-          team_name = "myteam"
-          aud_tag   = [cloudflare_zero_trust_access_application.pxmx01-mng.aud]
-        }
-      }
     }
     ingress_rule {
       service = "http_status:404"
