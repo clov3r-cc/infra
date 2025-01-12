@@ -23,6 +23,9 @@ provider "cloudflare" {
   api_token = var.cloudflare_api_token
 }
 
+provider "random" {
+}
+
 locals {
   # NOTE: account_id は非シークレット
   # https://github.com/cloudflare/wrangler-legacy/issues/209#issuecomment-541654484
