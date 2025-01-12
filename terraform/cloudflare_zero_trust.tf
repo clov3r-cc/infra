@@ -46,6 +46,14 @@ resource "cloudflare_zero_trust_access_application" "pxmx01-mng" {
   session_duration = "1h"
 }
 
+resource "cloudflare_zero_trust_access_group" "allow_github" {
+  include {
+    # GitHub
+    login_method = ["3b628f5e-ce37-44d3-9182-ab59c1331f53"]
+  }
+  name = "Allow GitHub"
+}
+
 resource "cloudflare_zero_trust_access_policy" "pxmx01-mng" {
   application_id = cloudflare_zero_trust_access_application.pxmx01-mng.id
   zone_id        = cloudflare_zone.clov3r-cc.id
@@ -53,6 +61,6 @@ resource "cloudflare_zero_trust_access_policy" "pxmx01-mng" {
   precedence     = "1"
   decision       = "allow"
   include {
-    email = [var.cloudflare_email]
+    group = [cloudflare_zero_trust_access_group.allow_github.id]
   }
 }
