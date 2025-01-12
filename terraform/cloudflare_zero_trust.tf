@@ -49,7 +49,7 @@ resource "cloudflare_zero_trust_access_application" "pxmx01-mng" {
 resource "cloudflare_zero_trust_access_policy" "pxmx01-mng" {
   application_id = cloudflare_zero_trust_access_application.pxmx01-mng.id
   zone_id        = cloudflare_zone.clov3r-cc.id
-  name           = "Example policy for pxmx01-mng.${cloudflare_zone.clov3r-cc.zone}"
+  name           = "Policy for pxmx01-mng.${cloudflare_zone.clov3r-cc.zone}"
   precedence     = "1"
   decision       = "allow"
   include {
