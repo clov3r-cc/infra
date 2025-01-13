@@ -1,0 +1,31 @@
+name: Terraform CI
+on:
+  pull_request:
+env:
+  TF_VAR_cloudflare_api_token: ${{ secrets.TF_VAR_CLOUDFLARE_API_TOKEN }}
+  # Path from tfcmt working-directory
+  TFCMT_CONFIG: ../.github/tfcmt-config.yaml
+permissions:
+  pull-requests: write
+defaults:
+  run:
+    working-directory: ./terraform
+jobs:
+  tf_plan:
+    name: Plan Terraform
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          cli_config_credentials_token: ${{ secrets.TERRAFORM_CLOUD_API_TOKEN }}
+      - uses: shmokmt/actions-setup-tfcmt@v2
+      - name: Terraform Format
+        run: terraform fmt -check
+      - run: Terraform Init
+      - name: Terraform Validate
+        run: terraform validate -no-color
+      - name: Terraform Plan
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: tfcmt plan -patch -- terraform plan -input=false -no-color -lock-timeout=10m
