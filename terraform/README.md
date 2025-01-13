@@ -4,17 +4,18 @@ Terraform で管理しているインフラの設定をまとめているディ�
 
 ## 管理リソース
 
-- Cloudflare [^1]
-  - DNS レコード
-  - Cloudflare Pages
-    - プロジェクト
-    - プロジェクトに割り当てるカスタムドメイン
-  - Cloudflare Zero Trust
-    - Cloudflare Tunnel
-    - Cloudflare Access
-      - Application
-      - Access Group
-      - Access Policy
+### Cloudflare[^1]
+
+- DNS レコード
+- Cloudflare Pages
+  - プロジェクト
+  - プロジェクトに割り当てるカスタムドメイン
+- Cloudflare Zero Trust
+  - Cloudflare Tunnel
+  - Cloudflare Access
+    - Application
+    - Access Group
+    - Access Policy
 
 ## リリース方法
 
