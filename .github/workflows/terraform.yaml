@@ -7,7 +7,6 @@ on:
   workflow_dispatch:
 env:
   TF_VAR_cloudflare_api_token: ${{ secrets.TF_VAR_CLOUDFLARE_API_TOKEN }}
-  TF_VAR_cloudflare_email: ${{ secrets.TF_VAR_CLOUDFLARE_EMAIL }}
   # Path from tfcmt working-directory
   TFCMT_CONFIG: ../.github/tfcmt-config.yaml
 permissions:
