@@ -12,19 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-    # - name: Are any files changed?
-    #   uses: tj-actions/changed-files@v45
-    #   id: changed-files
-    #   with:
-    #     files: '**/*.md'
-    #     separator: ","
     - name: Lint markdown files
       uses: DavidAnson/markdownlint-cli2-action@v19
-      # if: steps.changed-files.outputs.any_changed == 'true'
-      # with:
-      #   globs: ${{ steps.changed-files.outputs.all_changed_files }}
-      #   separator: ","
       with:
         globs: '**/*.md'
+        config: .github/.markdownlint.yaml
