@@ -30,7 +30,7 @@ jobs:
         working-directory: "./terraform"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: tfcmt plan -patch -- terraform plan -no-color -input=false -lock-timeout=10m
+        run: tfcmt plan -patch -- terraform plan -input=false -no-color -lock-timeout=10m
   tf_apply:
     name: Apply Terraform
     runs-on: ubuntu-24.04
@@ -43,8 +43,11 @@ jobs:
       - uses: hashicorp/setup-terraform@v3
         with:
           cli_config_credentials_token: ${{ secrets.TERRAFORM_CLOUD_API_TOKEN }}
+      - uses: shmokmt/actions-setup-tfcmt@v2
       - run: terraform init
         working-directory: "./terraform"
-      - name: Terraform apply
-        run: terraform apply -input=false -no-color -auto-approve -lock-timeout=10m
+      - name: Apply Terraform infrastructure changes
         working-directory: "./terraform"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: tfcmt apply -- terraform plan -input=false -no-color -auto-approve -lock-timeout=10m
