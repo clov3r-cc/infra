@@ -1,0 +1,5 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/suzuki-shunsuke/tfcmt/main/json-schema/tfcmt.json
+plan_patch: true
+terraform:
+  plan:
+    disable_label: true
