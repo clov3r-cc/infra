@@ -97,7 +97,7 @@
       --ssh-public-keys "$SSH_PUBLIC_KEY_TXT" \
       --rootfs "local-lvm:10" \
       --cores 1 \
-      --memory 512 \
+      --memory 256 \
       --swap 0 \
       --net0 name=eth0,bridge=vmbr0,ip=192.168.20.3/24,gw=192.168.20.1,firewall=1 \
       --onboot 1 \
