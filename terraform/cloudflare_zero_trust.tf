@@ -54,7 +54,9 @@ resource "cloudflare_zero_trust_access_policy" "pxmx01-mng" {
   precedence     = "1"
   decision       = "allow"
   include {
-    group         = [cloudflare_zero_trust_access_group.allow_github.id]
+    group = [cloudflare_zero_trust_access_group.allow_github.id]
+  }
+  include {
     service_token = [cloudflare_zero_trust_access_service_token.managed.id]
   }
 }
