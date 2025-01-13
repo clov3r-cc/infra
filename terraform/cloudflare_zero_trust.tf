@@ -56,6 +56,15 @@ resource "cloudflare_zero_trust_access_policy" "pxmx01-mng" {
   include {
     group = [cloudflare_zero_trust_access_group.allow_github.id]
   }
+}
+
+# Service Token での認証はアクション（`decision`）を`Service Auth`（`non_identity`）にする必要がある
+resource "cloudflare_zero_trust_access_policy" "pxmx01-mng__srv-token" {
+  application_id = cloudflare_zero_trust_access_application.pxmx01-mng.id
+  zone_id        = cloudflare_zone.clov3r-cc.id
+  name           = "Policy for pxmx01-mng.${cloudflare_zone.clov3r-cc.zone}"
+  precedence     = "2"
+  decision       = "non_identity"
   include {
     service_token = [cloudflare_zero_trust_access_service_token.managed.id]
   }
