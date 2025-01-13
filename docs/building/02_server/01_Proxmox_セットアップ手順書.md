@@ -89,7 +89,7 @@
 
     ```shell
     $ USERNAME=lucky #適宜ユーザ名は変更する
-    $ adduser "$USERNAME"
+    $ adduser "$USERNAME" --comment ''
     Adding user `lucky' ...
     Adding new group `lucky' (1000) ...
     Adding new user `lucky' (1000) with group `lucky (1000)' ...
@@ -98,14 +98,6 @@
     New password:
     Retype new password:
     passwd: password updated successfully
-    Changing the user information for lucky
-    Enter the new value, or press ENTER for the default
-            Full Name []:
-            Room Number []:
-            Work Phone []:
-            Home Phone []:
-            Other []:
-    Is the information correct? [Y/n]
     Adding new user `lucky' to supplemental / extra groups `users' ...
     Adding user `lucky' to group `users' ...
     ```
@@ -121,13 +113,13 @@
 
 ### 4.4. SSHサーバの設定をする
 
-**注意: 下記手順をそのまま実行しても、SSHのポートは変更されません。コマンドで参照している変数の値を適宜変更してください。**
+**注意: SSHポートの値はコマンドで参照している変数を参照します。適宜変更してください。**
 
 1. sshdの設定を変更する
 
     ```shell
     ### ポートを変更する
-    NEW_SSH_PORT=22 # 適宜ポートは変更する
+    NEW_SSH_PORT=60000 # 適宜ポートは変更する
     sed -i -E "s/^#?Port .*$/Port ${NEW_SSH_PORT}/" /etc/ssh/sshd_config
 
     ### root ユーザでのログインを禁止する
@@ -164,12 +156,6 @@
     ssh -i ~/.ssh/id_ed25519 lucky@192.168.20.2 # will OK
     ssh lucky@192.168.20.2 # will fail
     ssh root@192.168.20.2 # will fail
-    ```
-
-5. ターミナルを終了する
-
-    ```shell
-    exit
     ```
 
 ## 5. 完了条件

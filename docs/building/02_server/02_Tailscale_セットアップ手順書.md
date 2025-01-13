@@ -17,7 +17,7 @@
   - [4.5. コンテナ）作業用ユーザを追加する](#45-コンテナ作業用ユーザを追加する)
   - [4.6. コンテナ）SSHサーバの設定をする](#46-コンテナsshサーバの設定をする)
   - [4.7. ホスト）コンテナを特権モードで動作させる](#47-ホストコンテナを特権モードで動作させる)
-  - [4.8. コンテナ）Tailscaleをセットアップする](#48-コンテナtailscaleをセットアップする)
+  - [4.8. コンテナ）`Tailscale`をセットアップする](#48-コンテナtailscaleをセットアップする)
   - [4.9. `Tailscale`でExit Nodeの設定をする](#49-tailscaleでexit-nodeの設定をする)
   - [4.10. `Tailscale`の鍵の有効期限を無効化をする](#410-tailscaleの鍵の有効期限を無効化をする)
 - [5. 完了条件](#5-完了条件)
@@ -53,12 +53,13 @@
 
     ```shell
     # Debianのバージョン
-    DEBIAN_MAJOR_VER=12
-    IMAGE_TEMPLATE=$(sudo pveam available | grep system | grep "debian-${DEBIAN_MAJOR_VER}-standard" | awk '{print $2}')
+    $ DEBIAN_MAJOR_VER=12
+    $ IMAGE_TEMPLATE=$(sudo pveam available | grep system | grep "debian-${DEBIAN_MAJOR_VER}-standard" | awk '{print $2}')
     # ダウンロードする先のProxmox上ストレージ
-    STORAGE=local
-    sudo pveam download "$STORAGE" "$IMAGE_TEMPLATE"
-    # download of (URL) to (path) finished と表示されればOK
+    $ STORAGE=local
+    $ sudo pveam download "$STORAGE" "$IMAGE_TEMPLATE"
+    ...
+    download of (URL) to (path) finished
     ```
 
 ### 4.3. ホスト）LXCコンテナを作成する
@@ -68,8 +69,17 @@
     ```shell
     ### rootユーザのパスワードを格納する
     ROOT_PASSWORD_TXT=root-password.txt
-    vim "$ROOT_PASSWORD_TXT"
+    # pwgen options:
+    # -c アルファベット大文字を1つ以上
+    # -n 数字を1つ以上
+    # -s 完全にランダムで覚えにくいパスワードを生成する
+    # -y 記号を1つ以上
+    # -B 曖昧で間違えにくい文字を含まない
+    # NOTE: pwgen コマンドはファイルへのリダイレクトなどの場合は、1個しかパスワードを生成しない
+    pwgen -cnsyB 16 > "$ROOT_PASSWORD_TXT"
     ROOT_PASSWORD=$(cat "$ROOT_PASSWORD_TXT")
+    # メモ用にコンソールにパスワードを出力
+    echo "$ROOT_PASSWORD"
 
     ### SSH公開鍵をGitHubからとってくる
     SSH_PUBLIC_KEY_TXT=ssh-public-key.txt
@@ -94,6 +104,11 @@
       --timezone Asia/Tokyo \
       --start 1
     # エラーが表示されなければOK
+
+    # 不要なファイルを削除
+    rm "$ROOT_PASSWORD_TXT"
+
+    exit
     ```
 
 ### 4.4. コンテナ）コンテナのパッケージを最新化する
@@ -113,7 +128,7 @@
 
     ```shell
     $ USERNAME=lucky #適宜ユーザ名は変更する
-    $ adduser "$USERNAME"
+    $ adduser "$USERNAME" --comment ''
     Adding user `lucky' ...
     Adding new group `lucky' (1000) ...
     Adding new user `lucky' (1000) with group `lucky (1000)' ...
@@ -122,14 +137,6 @@
     New password:
     Retype new password:
     passwd: password updated successfully
-    Changing the user information for lucky
-    Enter the new value, or press ENTER for the default
-            Full Name []:
-            Room Number []:
-            Work Phone []:
-            Home Phone []:
-            Other []:
-    Is the information correct? [Y/n]
     Adding new user `lucky' to supplemental / extra groups `users' ...
     Adding user `lucky' to group `users' ...
     ```
@@ -145,13 +152,11 @@
 
 ### 4.6. コンテナ）SSHサーバの設定をする
 
-**注意: 下記手順をそのまま実行しても、SSHのポートは変更されません。コマンドで参照している変数の値を適宜変更してください。**
-
 1. `sshd`の設定を変更する
 
     ```shell
     ### ポートを変更する
-    NEW_SSH_PORT=22 # 適宜ポートは変更する
+    NEW_SSH_PORT=60000 # 適宜ポートは変更する
     sed -i -E "s/^#?Port .*$/Port ${NEW_SSH_PORT}/" /etc/ssh/sshd_config
 
     ### root ユーザでのログインを禁止する
@@ -198,7 +203,7 @@
 5. コンテナを停止する
 
     ```shell
-    ssh -p (ポート) lucky@192.168.20.3
+    ssh -p 60000 lucky@192.168.20.3
 
     sudo systemctl poweroff
     ```
@@ -222,7 +227,7 @@
     exit
     ```
 
-### 4.8. コンテナ）Tailscaleをセットアップする
+### 4.8. コンテナ）`Tailscale`をセットアップする
 
 1. コンテナにIPフォワーディングを許可する
 
