@@ -1,10 +1,17 @@
 name: Terraform
 on:
   push:
+    branches:
+      - main
+  pull_request:
   workflow_dispatch:
 env:
   TF_VAR_cloudflare_api_token: ${{ secrets.TF_VAR_CLOUDFLARE_API_TOKEN }}
   TF_VAR_cloudflare_email: ${{ secrets.TF_VAR_CLOUDFLARE_EMAIL }}
+  # Path from tfcmt working-directory
+  TFCMT_CONFIG: ../.github/tfcmt-config.yaml
+permissions:
+  pull-requests: write
 jobs:
   tf_plan:
     name: Plan Terraform
@@ -14,6 +21,7 @@ jobs:
       - uses: hashicorp/setup-terraform@v3
         with:
           cli_config_credentials_token: ${{ secrets.TERRAFORM_CLOUD_API_TOKEN }}
+      - uses: shmokmt/actions-setup-tfcmt@v2
       - name: Terraform fmt
         run: terraform fmt -check
         working-directory: "./terraform"
@@ -23,19 +31,10 @@ jobs:
         run: terraform validate -no-color
         working-directory: "./terraform"
       - name: Plan Terraform infrastructure changes
-        run: terraform plan -input=false -no-color -lock-timeout=10m
-        id: tfplan
         working-directory: "./terraform"
-      - name: Comment result to Pull Request
-        uses: robburger/terraform-pr-commenter@v1
-        if: github.event_name == 'pull_request'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          commenter_type: plan
-          # Terraform rarely writes to stdout and stderr in the same action, so we concatenate
-          commenter_input: ${{ format('{0}{1}', steps.tfplan.outputs.stdout, steps.tfplan.outputs.stderr) }}
-          commenter_exitcode: ${{ steps.tfplan.outputs.exitcode }}
+        run: tfcmt plan -patch -- terraform plan -input=false -no-color -lock-timeout=10m
   tf_apply:
     name: Apply Terraform
     runs-on: ubuntu-24.04
@@ -48,8 +47,11 @@ jobs:
       - uses: hashicorp/setup-terraform@v3
         with:
           cli_config_credentials_token: ${{ secrets.TERRAFORM_CLOUD_API_TOKEN }}
+      - uses: shmokmt/actions-setup-tfcmt@v2
       - run: terraform init
         working-directory: "./terraform"
-      - name: Terraform apply
-        run: terraform apply -input=false -no-color -auto-approve -lock-timeout=10m
+      - name: Apply Terraform infrastructure changes
         working-directory: "./terraform"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: tfcmt apply -- terraform plan -input=false -no-color -auto-approve -lock-timeout=10m
