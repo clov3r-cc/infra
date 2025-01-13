@@ -1,4 +1,4 @@
-# Tailscale セットアップ手順書
+# Cloudflared セットアップ手順書
 
 ## 1. 目次
 
@@ -16,21 +16,19 @@
   - [4.4. コンテナ）コンテナのパッケージを最新化する](#44-コンテナコンテナのパッケージを最新化する)
   - [4.5. コンテナ）作業用ユーザを追加する](#45-コンテナ作業用ユーザを追加する)
   - [4.6. コンテナ）SSHサーバの設定をする](#46-コンテナsshサーバの設定をする)
-  - [4.7. ホスト）コンテナを特権モードで動作させる](#47-ホストコンテナを特権モードで動作させる)
-  - [4.8. コンテナ）`Tailscale`をセットアップする](#48-コンテナtailscaleをセットアップする)
-  - [4.9. `Tailscale`でExit Nodeの設定をする](#49-tailscaleでexit-nodeの設定をする)
-  - [4.10. `Tailscale`の鍵の有効期限を無効化をする](#410-tailscaleの鍵の有効期限を無効化をする)
+  - [4.7. コンテナ）Cloudflare Tunnel をセットアップする](#47-コンテナcloudflare-tunnel-をセットアップする)
 - [5. 完了条件](#5-完了条件)
 
 <!-- /code_chunk_output -->
 
 ## 2. 目的・概要
 
-`Tailscale`を稼働させるLXCコンテナを作成する手順書です。
+`Cloudflared`を稼働させるLXCコンテナを作成する手順書です。
 
 ## 3. 前提条件
 
 - `Proxmox`のセットアップまで完了していること
+- `Terraform`を用いて、`Cloudflare Tunnel`の作成まで完了していること
 
 ## 4. 作業手順
 
@@ -86,11 +84,18 @@
     curl -o "$SSH_PUBLIC_KEY_TXT" https://github.com/Lucky3028.keys
 
     ### LXCコンテナを作成する
-    VM_ID=101
+    VM_ID=102
+    # pct create options:
+    # unprivileged 1 非特権コンテナにする
+    # features nesting=1 ネストを有効にする
+    # rootfs "local-lvm:10" local-lvm ボリュームに 10GB のディスクを作成して、コンテナのルートボリュームにする
+    # swap 0 スワップを無効化
+    # onboot 1 ホスト起動時に自動起動
+    # start 1 コンテナ作成後に自動起動
     sudo pct create "$VM_ID" "local:vztmpl/${IMAGE_TEMPLATE}" \
       --arch amd64 \
       --ostype debian \
-      --hostname tailscale-01 \
+      --hostname cloudflared-01 \
       --unprivileged 1 \
       --features nesting=1 \
       --password "$ROOT_PASSWORD" \
@@ -99,7 +104,7 @@
       --cores 1 \
       --memory 512 \
       --swap 0 \
-      --net0 name=eth0,bridge=vmbr0,ip=192.168.20.3/24,gw=192.168.20.1,firewall=1 \
+      --net0 name=eth0,bridge=vmbr0,ip=192.168.20.4/24,gw=192.168.20.1,firewall=1 \
       --onboot 1 \
       --timezone Asia/Tokyo \
       --start 1
@@ -116,7 +121,7 @@
 1. パッケージの更新と必要なパッケージのインストールを行う
 
     ```shell
-    ssh root@192.168.20.3
+    ssh root@192.168.20.4
 
     apt update && apt upgrade -y && apt dist-upgrade -y && \
       apt install curl sudo vim -y
@@ -127,7 +132,8 @@
 1. 作業用ユーザを追加
 
     ```shell
-    $ USERNAME=lucky #適宜ユーザ名は変更する
+    $ USERNAME=lucky # 適宜ユーザ名は変更する
+    # --comment ''を指定することで、Full Name などの入力をスキップする
     $ adduser "$USERNAME" --comment ''
     Adding user `lucky' ...
     Adding new group `lucky' (1000) ...
@@ -195,78 +201,39 @@
     - `root`ユーザでSSH接続できないこと
 
     ```shell
-    ssh -i ~/.ssh/id_ed25519 lucky@192.168.20.3 # will OK
-    ssh lucky@192.168.20.3 # will fail
-    ssh root@192.168.20.3 # will fail
+    ssh -i ~/.ssh/id_ed25519 lucky@192.168.20.4 # will OK
+    ss -p 60000 lucky@192.168.20.4 # will fail
+    ssh -p 60000 root@192.168.20.4 # will fail
     ```
 
-5. コンテナを停止する
+### 4.7. コンテナ）Cloudflare Tunnel をセットアップする
+
+1. コンテナにSSH接続する
 
     ```shell
-    ssh -p 60000 lucky@192.168.20.3
-
-    sudo systemctl poweroff
+    ssh -p (ポート) lucky@192.168.20.4
     ```
 
-### 4.7. ホスト）コンテナを特権モードで動作させる
-
-1. 特権モードで動作させるために、以下の書き込みをする
+2. Cloudflared をインストールする
 
     ```shell
-    cat << EOF | sudo tee -a /etc/pve/lxc/101.conf > /dev/null
+    curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+    sudo dpkg -i cloudflared.deb
 
-    lxc.cgroup2.devices.allow: c 10:200 rwm
-    lxc.mount.entry: /dev/net/tun dev/net/tun none bind,create=file
-    EOF
+    rm cloudflared.deb
     ```
 
-2. コンテナを起動する
+3. `Terraform Cloud`の`State`画面から、`tunnel_token`で検索した値を用いて、`Cloudflare Tunnel`を作成する
 
     ```shell
-    sudo pct start 101
-    exit
+    $ sudo cloudflared service install (Terraform Cloud から確認した tunnel_token)
+    Linux service for cloudflared installed successfully
     ```
 
-### 4.8. コンテナ）`Tailscale`をセットアップする
-
-1. コンテナにIPフォワーディングを許可する
-
-    ```shell
-    ssh tailscale-01
-
-    sudo sed -i 's/^#net.ipv4.ip_forward=1$/net.ipv4.ip_forward=1/' /etc/sysctl.conf
-    sudo sed -i 's/^#net.ipv6.conf.all.forwarding=1$/net.ipv6.conf.all.forwarding=1/' /etc/sysctl.conf
-
-    ### 再起動させる
-    sudo systemctl reboot
-    ```
-
-2. `Tailscale`をインストールする
-
-    ```shell
-    ssh tailscale-01
-
-    curl -fsSL https://tailscale.com/install.sh | sh
-    sudo tailscale up --advertise-routes=192.168.20.0/24 --advertise-exit-node --accept-routes
-
-    exit
-    ```
-
-### 4.9. `Tailscale`でExit Nodeの設定をする
-
-1. [Tailscale](https://login.tailscale.com/admin/machines)を開く。
-2. `tailscale-0` > `Edit route settings...`を押下する
-3. `Subnet routes` > `192.168.20.0/24` と `Exit node` > `Use as exit node` にチェックを入れる
-4. `Save`を押下する
-
-### 4.10. `Tailscale`の鍵の有効期限を無効化をする
-
-ref. <https://tailscale.com/kb/1028/key-expiry>
-
-1. `tailscale-0` > `Disable key expiry`を押下する
+4. `pxmx01-mng.clov3r.cc`を開き、`Proxmox`のコンソール画面が表示されればよい。
 
 ## 5. 完了条件
 
 - LXCコンテナに対するSSH接続において、`root`ユーザとしてログインできないこと
 - LXCコンテナに対するSSH接続において、作業用ユーザが作成されていて、そのユーザとしてログインできること
-- `Tailscale`により、インターネットからセキュアにネットワーク内にアクセスできること
+- `Cloudflare Tunnel`により、インターネットからセキュアに`Proxmox`にアクセスできること
