@@ -42,6 +42,7 @@ Terraform CLI を用いて行います。
     | アカウント | Zero Trust                                      | 編集 |
     | アカウント | アクセス: 組織、ID プロバイダー、およびグループ | 編集 |
     | アカウント | アクセス: アプリおよびポリシー                  | 編集 |
+    | アカウント | アクセス: サービストークン                      | 編集 |
     | ゾーン     | DNS                                             | 編集 |
 
 2. [GitHub Actions > Repository Secrets](https://github.com/clov3r-cc/infra/settings/secrets/actions) で、`TF_VAR_CLOUDFLARE_API_TOKEN`として設定してください。
