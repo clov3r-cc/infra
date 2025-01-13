@@ -8,7 +8,7 @@ on:
 env:
   TF_VAR_cloudflare_api_token: ${{ secrets.TF_VAR_CLOUDFLARE_API_TOKEN }}
   TF_VAR_cloudflare_email: ${{ secrets.TF_VAR_CLOUDFLARE_EMAIL }}
-  TFCMT_CONFIG: ./.github/tfcmt-config.yaml
+  TFCMT_CONFIG: ../tfcmt-config.yaml
 permissions:
   pull-requests: write
 jobs:
