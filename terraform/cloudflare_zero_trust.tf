@@ -8,14 +8,6 @@ resource "cloudflare_zero_trust_tunnel_cloudflared" "cloudflared-01" {
   secret     = base64sha256(random_password.tunnel_secret.result)
 }
 
-resource "cloudflare_record" "pxmx01-mng" {
-  zone_id = cloudflare_zone.clov3r-cc.id
-  name    = "pxmx01-mng"
-  content = cloudflare_zero_trust_tunnel_cloudflared.cloudflared-01.cname
-  type    = "CNAME"
-  proxied = true
-}
-
 # Creates the configuration for the tunnel.
 resource "cloudflare_zero_trust_tunnel_cloudflared_config" "cloudflared-01" {
   tunnel_id  = cloudflare_zero_trust_tunnel_cloudflared.cloudflared-01.id
