@@ -53,9 +53,7 @@ resource "cloudflare_zero_trust_access_policy" "pxmx01-mng" {
   name           = "Policy for pxmx01-mng.${cloudflare_zone.clov3r-cc.zone}"
   decision       = "allow"
   include {
-    group = [cloudflare_zero_trust_access_group.allow_github.id]
-    service_token = {
-      token_id = cloudflare_zero_trust_access_service_token.managed.id
-    }
+    group         = [cloudflare_zero_trust_access_group.allow_github.id]
+    service_token = [cloudflare_zero_trust_access_service_token.managed.id]
   }
 }
