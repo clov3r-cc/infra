@@ -4,7 +4,7 @@ on:
     branches:
       - main
     paths:
-      - '**/.md'
+      - '**/*.md'
   pull_request:
 jobs:
   lint:
