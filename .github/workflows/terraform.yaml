@@ -54,4 +54,4 @@ jobs:
         working-directory: "./terraform"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: tfcmt apply -- terraform plan -input=false -no-color -auto-approve -lock-timeout=10m
+        run: tfcmt apply -- terraform apply -input=false -no-color -auto-approve -lock-timeout=10m
