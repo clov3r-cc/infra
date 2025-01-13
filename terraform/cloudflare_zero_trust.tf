@@ -41,7 +41,7 @@ resource "cloudflare_zero_trust_access_group" "allow_github" {
   }
 }
 
-resource "cloudflare_zero_trust_access_service_token" "zero_trust_access_service_token" {
+resource "cloudflare_zero_trust_access_service_token" "managed" {
   name     = "managed token"
   zone_id  = cloudflare_zone.clov3r-cc.id
   duration = "8760h" # 1year
@@ -55,7 +55,7 @@ resource "cloudflare_zero_trust_access_policy" "pxmx01-mng" {
   include {
     group = [cloudflare_zero_trust_access_group.allow_github.id]
     service_token = {
-      token_id = cloudflare_zero_trust_access_service_token.id
+      token_id = cloudflare_zero_trust_access_service_token.managed.id
     }
   }
 }
