@@ -58,6 +58,7 @@ resource "cloudflare_zero_trust_access_policy" "pxmx01-mng" {
   }
 }
 
+# Service Token での認証はアクション（`decision`）を`Service Auth`（`non_identity`）にする必要がある
 resource "cloudflare_zero_trust_access_policy" "pxmx01-mng__srv-token" {
   application_id = cloudflare_zero_trust_access_application.pxmx01-mng.id
   zone_id        = cloudflare_zone.clov3r-cc.id
