@@ -28,7 +28,7 @@ Terraform CLI を用いて行います。
 
 #### Terraform Cloud
 
-1. [Account Settings > Tokens](https://app.terraform.io/app/settings/tokens)で、API トークンを発行してください。
+1. [Account Settings > Tokens](https://app.terraform.io/app/settings/tokens) で、API トークンを発行してください。
 2. [GitHub Actions > Repository Secrets](https://github.com/clov3r-cc/infra/settings/secrets/actions) で、`TERRAFORM_CLOUD_API_TOKEN`として設定してください。
 
 #### Cloudflare
