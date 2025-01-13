@@ -15,6 +15,9 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "cloudflared-01" {
     ingress_rule {
       hostname = cloudflare_record.pxmx01-mng.hostname
       service  = "https://192.168.20.2:8006"
+      origin_request {
+        no_tls_verify = true
+      }
     }
     ingress_rule {
       service = "http_status:404"
