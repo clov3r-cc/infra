@@ -8,7 +8,6 @@ resource "cloudflare_zero_trust_tunnel_cloudflared" "cloudflared-01" {
   secret     = base64sha256(random_password.tunnel_secret.result)
 }
 
-# Creates the configuration for the tunnel.
 resource "cloudflare_zero_trust_tunnel_cloudflared_config" "cloudflared-01" {
   tunnel_id  = cloudflare_zero_trust_tunnel_cloudflared.cloudflared-01.id
   account_id = local.cloudflare_account_id
