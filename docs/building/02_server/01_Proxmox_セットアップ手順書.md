@@ -14,6 +14,7 @@
   - [4.2. rootのパスワードを任意のものに変更する](#42-rootのパスワードを任意のものに変更する)
   - [4.3. 作業用ユーザを追加する](#43-作業用ユーザを追加する)
   - [4.4. SSHサーバの設定をする](#44-sshサーバの設定をする)
+  - [4.5. CI/CD用ユーザを追加する](#45-cicd用ユーザを追加する)
 - [5. 完了条件](#5-完了条件)
 
 <!-- /code_chunk_output -->
@@ -41,28 +42,51 @@
 
     ```shell
     cd /etc/apt/sources.list.d/
-    sed -i 's@^deb https://enterprise.proxmox.com@# deb https://enterprise.proxmox.com@' ./sources.list.d/pve-enterprise.list
-    sed -i 's@^deb https://enterprise.proxmox.com@# deb https://enterprise.proxmox.com@' ./sources.list.d/ceph.list
+
+    cp ./pve-enterprise.list ./pve-enterprise.list.orig
+    cp ./ceph.list ./ceph.list.orig
+
+    sed -i 's@^deb https://enterprise.proxmox.com@# deb https://enterprise.proxmox.com@' ./pve-enterprise.list
+    sed -i 's@^deb https://enterprise.proxmox.com@# deb https://enterprise.proxmox.com@' ./ceph.list
+
+    # 上記2点の差分のみが表示されることを確認する
+    diff -s ./pve-enterprise.list ./pve-enterprise.list.orig
+    diff -s ./ceph.list ./ceph.list.orig
+
+    rm *.list.orig
     ```
 
 3. 非エンタープライズ向けリポジトリへの参照を有効化する
 
     ```shell
-    cat <<EOF >> sources.list
+    # No such file or directory と出力されることを確認する
+    $ ls pve-no-subscription.list
+    ls: cannot access 'pve-no-subscription.list': No such file or directory
 
-    # PVE pve-no-subscription repository provided by proxmox.com,
-    # NOT recommended for production use
+    $ cat <<EOF > ./pve-no-subscription.list
+
+    # pve-no-subscription repository provided by proxmox.com
     deb http://download.proxmox.com/debian/pve bookworm pve-no-subscription
     EOF
+
+    # 出力があることを確認する
+    $ ls pve-no-subscription.list
     ```
 
     ```shell
-    cat <<EOF >> sources.list.d/ceph.list
+    # 出力がないことを確認する。出力が何も無ければ OK
+    grep 'no-subscription' ./ceph.list
 
+    cat <<EOF >> ./ceph.list
+
+    # no-subscription repository provided by proxmox.com
     deb http://download.proxmox.com/debian/ceph-quincy bookworm no-subscription
     deb http://download.proxmox.com/debian/ceph-reef bookworm no-subscription
     deb http://download.proxmox.com/debian/ceph-squid bookworm no-subscription
     EOF
+
+    # 出力があることを確認する
+    grep 'no-subscription' ./ceph.list
     ```
 
 4. パッケージの更新と必要なパッケージのインストールを行う
@@ -70,6 +94,7 @@
     ```shell
     apt update && apt upgrade -y && apt dist-upgrade -y && \
       apt install sudo vim -y
+    # エラーが表示されなければ OK
     ```
 
 ### 4.2. rootのパスワードを任意のものに変更する
@@ -80,6 +105,7 @@
     $ passwd
     New password:
     Retype new password:
+    # 下記が表示されれば OK
     passwd: password updated successfully
     ```
 
@@ -89,6 +115,10 @@
 
     ```shell
     $ USERNAME=lucky #適宜ユーザ名は変更する
+
+    # ユーザが存在しないことを確認する。出力が何も無ければ OK
+    $ grep "$USERNAME" /etc/passwd
+
     $ adduser "$USERNAME" --comment ''
     Adding user `lucky' ...
     Adding new group `lucky' (1000) ...
@@ -100,13 +130,22 @@
     passwd: password updated successfully
     Adding new user `lucky' to supplemental / extra groups `users' ...
     Adding user `lucky' to group `users' ...
+
+    # ユーザが存在することを確認する
+    $ grep "$USERNAME" /etc/passwd
     ```
 
 2. 作業用ユーザを`sudoers`グループに追加する
 
     ```shell
+    # ユーザが sudo グループに所属していないことを確認する
+    $ groups "$USERNAME"
+    lucky : lucky users
+
     $ gpasswd -a "$USERNAME" sudo
     Adding user lucky to group sudo
+
+    # ユーザが sudo グループに所属していることを確認する
     $ groups "$USERNAME"
     lucky : lucky sudo users
     ```
@@ -118,32 +157,49 @@
 1. sshdの設定を変更する
 
     ```shell
-    ### ポートを変更する
+    cd /etc/ssh/
+    cp ./sshd_config ./sshd_config.orig
+
+    # ポートを変更する
     NEW_SSH_PORT=60000 # 適宜ポートは変更する
-    sed -i -E "s/^#?Port .*$/Port ${NEW_SSH_PORT}/" /etc/ssh/sshd_config
+    sed -i -E "s/^#?Port .*$/Port ${NEW_SSH_PORT}/" ./sshd_config
 
-    ### root ユーザでのログインを禁止する
-    sed -i -E 's/^#?PermitRootLogin .*$/PermitRootLogin no/' /etc/ssh/sshd_config
+    # root ユーザでのログインを禁止する
+    sed -i -E 's/^#?PermitRootLogin .*$/PermitRootLogin no/' ./sshd_config
 
-    ### パスワード認証を禁止する
-    sed -i -E 's/^#?PasswordAuthentication .*$/PasswordAuthentication no/' /etc/ssh/sshd_config
+    # パスワード認証を禁止する
+    sed -i -E 's/^#?PasswordAuthentication .*$/PasswordAuthentication no/' ./sshd_config
+
+    # 上記3点の差分のみが表示されることを確認する
+    diff -s ./sshd_config ./sshd_config.orig
+    # 設定を検証する。出力が何も無ければ OK
+    sshd -t
+
+    rm ./sshd_config.orig
     ```
 
 2. 作業用ユーザにSSH公開鍵の設定をする
 
     ```shell
-    su - "$USERNAME"
-    mkdir ~/.ssh
-    chmod 700 ~/.ssh
-    curl https://github.com/Lucky3028.keys > ~/.ssh/authorized_keys
-    chmod 600 ~/.ssh/authorized_keys
-    exit
+    $ su - "$USERNAME"
+
+    $ mkdir ~/.ssh
+    $ chmod 700 ~/.ssh
+    $ curl https://github.com/Lucky3028.keys > ~/.ssh/authorized_keys
+    $ chmod 600 ~/.ssh/authorized_keys
+
+    # それぞれ以下のように権限設定がされていることを確認する
+    $ stat -c "%A %n" .ssh
+    drwx------ .ssh
+    $ stat -c "%A %n" .ssh/authorized_keys
+    -rw------- .ssh/authorized_keys
+
+    $ exit
     ```
 
 3. 設定変更を反映させる
 
     ```shell
-    sshd -t # 出力が何も無いことを確認する
     systemctl restart sshd
     ```
 
