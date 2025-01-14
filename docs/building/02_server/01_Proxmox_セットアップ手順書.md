@@ -226,6 +226,7 @@
 
     |            権限            |                              説明                               |
     | -------------------------- | --------------------------------------------------------------- |
+    | Pool.Allocate              | プール設定の編集                                                |
     | Datastore.Allocate         | ディスク等のデータを格納するボリュームの編集                    |
     | Datastore.AllocateSpace    | ディスク等のデータを格納するボリュームの利用                    |
     | Datastore.AllocateTemplate | ディスク等のデータを格納するボリュームに ISO などをアップロード |
@@ -233,6 +234,7 @@
     | SDN.Audit                  | ホスト NW の管理                                                |
     | SDN.Use                    | ホスト NW の利用                                                |
     | Sys.Audit                  | ホスト NW の参照                                                |
+    | Sys.Console                | 各 VM コンソールへのアクセス                                    |
     | Sys.Modify                 | ホスト NW の編集                                                |
     | VM.Allocate                | VM の作成                                                       |
     | VM.Audit                   | VM の参照                                                       |
@@ -246,6 +248,7 @@
     | VM.Config.Network          | NW 設定の編集                                                   |
     | VM.Config.Options          | その他 VM 設定の編集                                            |
     | VM.Migrate                 | VM を他ホストにマイグレーション                                 |
+    | VM.Monitor                 | VM の状況を確認                                                 |
     | VM.PowerMgmt               | VM の起動・停止など電源の管理                                   |
 
     ```shell
@@ -257,7 +260,7 @@
     sudo pveum role add "$MACHINEUSER_ROLE"
     # 何も出力されなければ OK
 
-    sudo pveum role modify TFMachineUser --privs Datastore.Allocate,Datastore.AllocateSpace,Datastore.AllocateTemplate,Datastore.Audit,SDN.Audit,SDN.Use,Sys.Audit,Sys.Modify,VM.Allocate,VM.Audit,VM.Clone,VM.Config.CDROM,VM.Config.CPU,VM.Config.Cloudinit,VM.Config.Disk,VM.Config.HWType,VM.Config.Memory,VM.Config.Network,VM.Config.Options,VM.Migrate,VM.PowerMgmt
+    sudo pveum role modify TFMachineUser --privs Pool.Allocate,Datastore.Allocate,Datastore.AllocateSpace,Datastore.AllocateTemplate,Datastore.Audit,SDN.Audit,Sys.Console,SDN.Use,Sys.Audit,Sys.Modify,VM.Allocate,VM.Audit,VM.Clone,VM.Config.CDROM,VM.Config.CPU,VM.Config.Cloudinit,VM.Config.Disk,VM.Config.HWType,VM.Config.Memory,VM.Config.Network,VM.Config.Options,VM.Migrate,VM.Monitor,VM.PowerMgmt
     # 何も出力されなければ OK
 
     # ロールが存在することを確認する。追加したロールと権限が表示されれば OK
