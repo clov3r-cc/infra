@@ -158,6 +158,120 @@
     ssh root@192.168.20.2 # will fail
     ```
 
+### 4.5. CI/CD用ユーザを追加する
+
+1. `Proxmox`ホストにSSH接続する
+
+    ```shell
+    ssh proxmox-01
+    ```
+
+2. ユーザに割り当てるロールを作成する
+
+    |            権限            |                              説明                               |
+    | -------------------------- | --------------------------------------------------------------- |
+    | Datastore.Allocate         | ディスク等のデータを格納するボリュームの編集                    |
+    | Datastore.AllocateSpace    | ディスク等のデータを格納するボリュームの利用                    |
+    | Datastore.AllocateTemplate | ディスク等のデータを格納するボリュームに ISO などをアップロード |
+    | Datastore.Audit            | ディスク等のデータを格納するボリュームの参照                    |
+    | SDN.Audit                  | ホスト NW の管理                                                |
+    | SDN.Use                    | ホスト NW の利用                                                |
+    | Sys.Audit                  | ホスト NW の参照                                                |
+    | Sys.Modify                 | ホスト NW の編集                                                |
+    | VM.Allocate                | VM の作成                                                       |
+    | VM.Audit                   | VM の参照                                                       |
+    | VM.Clone                   | VM のクローン                                                   |
+    | VM.Config.CDROM            | CD/DVD の挿入・排出                                             |
+    | VM.Config.CPU              | CPU 設定の編集                                                  |
+    | VM.Config.Cloudinit        | Cloud-init 設定の編集                                           |
+    | VM.Config.Disk             | ディスクの編集                                                  |
+    | VM.Config.HWType           | エミュレートされた HW 設定の編集                                |
+    | VM.Config.Memory           | メモリ設定の編集                                                |
+    | VM.Config.Network          | NW 設定の編集                                                   |
+    | VM.Config.Options          | その他 VM 設定の編集                                            |
+    | VM.Migrate                 | VM を他ホストにマイグレーション                                 |
+    | VM.PowerMgmt               | VM の起動・停止など電源の管理                                   |
+
+    ```shell
+    MACHINEUSER_ROLE='TFMachineUser'
+
+    # ロールが存在しないことを確認する。何も出力されなければ OK
+    sudo pveum role list | grep "$MACHINEUSER_ROLE"
+
+    sudo pveum role add "$MACHINEUSER_ROLE"
+    # 何も出力されなければ OK
+
+    sudo pveum role modify TFMachineUser --privs Datastore.Allocate,Datastore.AllocateSpace,Datastore.AllocateTemplate,Datastore.Audit,SDN.Audit,SDN.Use,Sys.Audit,Sys.Modify,VM.Allocate,VM.Audit,VM.Clone,VM.Config.CDROM,VM.Config.CPU,VM.Config.Cloudinit,VM.Config.Disk,VM.Config.HWType,VM.Config.Memory,VM.Config.Network,VM.Config.Options,VM.Migrate,VM.PowerMgmt
+    # 何も出力されなければ OK
+
+    # ロールが存在することを確認する。追加したロールと権限が表示されれば OK
+    sudo pveum role list | grep "$MACHINEUSER_ROLE"
+    ```
+
+3. ユーザを作成する
+
+    ```shell
+    # @pve でレルムに Proxmox VE authentication server を指定する
+    MACHINEUSER_NAME='machine-user@pve'
+
+    # ユーザが存在しないことを確認する。何も出力されなければ OK
+    sudo pveum user list | grep "$MACHINEUSER_NAME"
+
+    # pwgen options:
+    # -c アルファベット大文字を1つ以上
+    # -n 数字を1つ以上
+    # -s 完全にランダムで覚えにくいパスワードを生成する
+    # -y 記号を1つ以上
+    # -B 曖昧で間違えにくい文字を含まない
+    # NOTE: pwgen コマンドはファイルへのリダイレクトなどの場合は、1個しかパスワードを生成しない
+    MACHINEUSER_PASSWORD=$(pwgen -cnsyB 16)
+    sudo pveum user add "$MACHINEUSER_NAME" --password "$MACHINEUSER_PASSWORD"
+    # 何も出力されなければ OK
+
+    # ユーザが存在することを確認する。出力があれば OK
+    sudo pveum user list | grep "$MACHINEUSER_NAME"
+
+    # パスワードをメモする
+    echo "$MACHINEUSER_PASSWORD"
+    unset MACHINEUSER_PASSWORD
+    ```
+
+4. ユーザにロールを紐づける
+
+    ```shell
+    sudo pveum acl modify / -user "$MACHINEUSER_NAME" -role "$MACHINEUSER_ROLE"
+    # 何も出力されなければ OK
+    ```
+
+5. API トークンを作成する
+
+    ```shell
+    # トークンが存在しないことを確認する。何も出力されなければ OK
+    $ sudo pveum user token list "$MACHINEUSER_NAME"
+
+    # tf はトークンの ID
+    # -privsep 0 で、トークンの権限をユーザの権限と共通化（権限分離をしない）
+    $ sudo pveum user token add "$MACHINEUSER_NAME" tf -privsep 0
+    # トークンのシークレット値が出力されるので、メモしておく
+    ┌──────────────┬──────────────────────────────────────┐
+    │ key          │ value                                │
+    ╞══════════════╪══════════════════════════════════════╡
+    │ full-tokenid │ machine-user@pve!tf                  │
+    ├──────────────┼──────────────────────────────────────┤
+    │ info         │ {"privsep":1}                        │
+    ├──────────────┼──────────────────────────────────────┤
+    │ value        │ (シークレット値)                      │
+    └──────────────┴──────────────────────────────────────┘
+
+    # トークンが存在することを確認する。作成したトークンが出力されば OK
+    $ sudo pveum user token list "$MACHINEUSER_NAME"
+    ┌─────────┬─────────┬────────┬─────────┐
+    │ tokenid │ comment │ expire │ privsep │
+    ╞═════════╪═════════╪════════╪═════════╡
+    │ tf      │         │      0 │ 0       │
+    └─────────┴─────────┴────────┴─────────┘
+    ```
+
 ## 5. 完了条件
 
 - `Proxmox`ホストに対するSSH接続において、`root`ユーザとしてログインできないこと
