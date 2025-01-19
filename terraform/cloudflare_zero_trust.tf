@@ -26,9 +26,13 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "cloudflared-01" {
 }
 
 resource "cloudflare_zero_trust_access_application" "pxmx01-mng" {
-  zone_id          = cloudflare_zone.clov3r-cc.id
-  name             = "Access application for pxmx01-mng.${cloudflare_zone.clov3r-cc.zone}"
-  domain           = "pxmx01-mng.${cloudflare_zone.clov3r-cc.zone}"
+  zone_id = cloudflare_zone.clov3r-cc.id
+  name    = "Access application for pxmx01-mng.${cloudflare_zone.clov3r-cc.zone}"
+  domain  = "pxmx01-mng.${cloudflare_zone.clov3r-cc.zone}"
+  destinations {
+    type = "public"
+    uri  = "ssh-pxmx01-mng.${cloudflare_zone.clov3r-cc.zone}"
+  }
   session_duration = "24h"
 }
 
