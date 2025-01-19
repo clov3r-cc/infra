@@ -4,7 +4,7 @@ variable "cloudflare_api_token" {
   sensitive   = true
 }
 
-variable "pve_host_ssh_url" {
+variable "pve_host_ssh_port" {
   type        = string
   description = "Port to ssh proxmox host"
   sensitive   = true
