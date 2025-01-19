@@ -29,7 +29,7 @@ resource "cloudflare_zero_trust_access_application" "pxmx01-mng" {
   zone_id = cloudflare_zone.clov3r-cc.id
   name    = "Access application for pxmx01-mng.${cloudflare_zone.clov3r-cc.zone}"
   domain  = "pxmx01-mng.${cloudflare_zone.clov3r-cc.zone}"
-  destination = [{
+  destinations = [{
     type = "public"
     uri  = "ssh-pxmx01-mng.${cloudflare_zone.clov3r-cc.zone}"
   }]
