@@ -14,13 +14,6 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "cloudflared-01" {
   config {
     ingress_rule {
       hostname = cloudflare_record.pxmx01-mng.hostname
-      service  = "ssh://192.168.20.2:${var.pve_host_ssh_port}"
-      origin_request {
-        no_tls_verify = true
-      }
-    }
-    ingress_rule {
-      hostname = cloudflare_record.pxmx01-mng.hostname
       service  = "https://192.168.20.2:8006"
       origin_request {
         no_tls_verify = true
