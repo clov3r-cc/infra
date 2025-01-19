@@ -33,10 +33,6 @@ resource "cloudflare_zero_trust_access_application" "pxmx01-mng" {
     type = "public"
     uri  = "ssh-pxmx01-mng.${cloudflare_zone.clov3r-cc.zone}"
   }
-  destinations {
-    type = "public"
-    uri  = "pxmx01-mng.${cloudflare_zone.clov3r-cc.zone}"
-  }
   session_duration = "24h"
 }
 
