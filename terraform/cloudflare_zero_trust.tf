@@ -14,13 +14,6 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "cloudflared-01" {
   config {
     ingress_rule {
       hostname = cloudflare_record.pxmx01-mng.hostname
-      service  = "ssh://192.168.20.2:${var.pve_host_ssh_port}"
-      origin_request {
-        no_tls_verify = true
-      }
-    }
-    ingress_rule {
-      hostname = cloudflare_record.pxmx01-mng.hostname
       service  = "https://192.168.20.2:8006"
       origin_request {
         no_tls_verify = true
@@ -33,17 +26,9 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "cloudflared-01" {
 }
 
 resource "cloudflare_zero_trust_access_application" "pxmx01-mng" {
-  zone_id = cloudflare_zone.clov3r-cc.id
-  name    = "Access application for pxmx01-mng.${cloudflare_zone.clov3r-cc.zone}"
-  domain  = "pxmx01-mng.${cloudflare_zone.clov3r-cc.zone}"
-  destinations {
-    type = "public"
-    uri  = "ssh-pxmx01-mng.${cloudflare_zone.clov3r-cc.zone}"
-  }
-  destinations {
-    type = "public"
-    uri  = "pxmx01-mng.${cloudflare_zone.clov3r-cc.zone}"
-  }
+  zone_id          = cloudflare_zone.clov3r-cc.id
+  name             = "Access application for pxmx01-mng.${cloudflare_zone.clov3r-cc.zone}"
+  domain           = "pxmx01-mng.${cloudflare_zone.clov3r-cc.zone}"
   session_duration = "24h"
 }
 
