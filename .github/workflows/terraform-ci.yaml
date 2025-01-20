@@ -3,6 +3,7 @@ on:
   pull_request:
 env:
   TF_VAR_cloudflare_api_token: ${{ secrets.TF_VAR_CLOUDFLARE_API_TOKEN }}
+  TF_VAR_pm_host_ssh_port: ${{ secrets.TF_VAR_PM_HOST_SSH_PORT }}
   # Path from tfcmt working-directory
   TFCMT_CONFIG: ../.github/tfcmt-config.yaml
 permissions:
