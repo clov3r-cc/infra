@@ -2,8 +2,6 @@ name: Terraform CI
 on:
   pull_request:
 env:
-  TF_VAR_cloudflare_api_token: ${{ secrets.TF_VAR_CLOUDFLARE_API_TOKEN }}
-  TF_VAR_pm_host_ssh_port: ${{ secrets.TF_VAR_PM_HOST_SSH_PORT }}
   # Path from tfcmt working-directory
   TFCMT_CONFIG: ../.github/tfcmt-config.yaml
 permissions:
@@ -27,7 +25,11 @@ jobs:
         run: terraform init
       - name: Terraform Validate
         run: terraform validate -no-color
+      - name: Expose all Terraform variables to environment variables from secrets
+        run: curl -fsSL https://raw.githubusercontent.com/GiganticMinecraft/seichi_infra/refs/heads/main/.github/workflows/scripts/expose-all-tf-vars-to-github-env.sh | bash
+        env:
+          SECRETS_CONTEXT: ${{ toJson(secrets) }}
       - name: Terraform Plan
+        run: tfcmt plan -patch -- terraform plan -input=false -no-color -lock-timeout=10m
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: tfcmt plan -patch -- terraform plan -input=false -no-color -lock-timeout=10m
