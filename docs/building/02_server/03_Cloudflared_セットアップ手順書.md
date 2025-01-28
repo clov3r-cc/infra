@@ -124,7 +124,7 @@
     ssh root@192.168.20.4
 
     apt update && apt upgrade -y && apt dist-upgrade -y && \
-      apt install curl sudo vim -y
+      apt install curl libguestfs-tools sudo vim -y
     ```
 
 ### 4.5. コンテナ）作業用ユーザを追加する
