@@ -50,9 +50,3 @@ variable "vm_ssh_public_key" {
   type        = string
   description = "SSH public keys in base64"
 }
-
-variable "pm_host_ssh_port" {
-  type        = number
-  description = "Port to ssh proxmox host"
-  sensitive   = true
-}

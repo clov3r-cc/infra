@@ -20,10 +20,6 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "cloudflared-01" {
       }
     }
     ingress_rule {
-      hostname = cloudflare_record.ssh-pxmx01-mng.hostname
-      service  = "ssh://192.168.20.2:${var.pm_host_ssh_port}"
-    }
-    ingress_rule {
       service = "http_status:404"
     }
   }

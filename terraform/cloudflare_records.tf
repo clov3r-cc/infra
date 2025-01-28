@@ -99,13 +99,3 @@ resource "cloudflare_record" "pxmx01-mng" {
   ttl     = 1 # Auto
   comment = "for Cloudflare Tunnel with Proxmox#1"
 }
-
-resource "cloudflare_record" "ssh-pxmx01-mng" {
-  zone_id = cloudflare_zone.clov3r-cc.id
-  name    = "ssh-pxmx01-mng"
-  content = cloudflare_zero_trust_tunnel_cloudflared.cloudflared-01.cname
-  type    = "CNAME"
-  proxied = true
-  ttl     = 1 # Auto
-  comment = "for Cloudflare Tunnel with Proxmox#1"
-}
