@@ -13,8 +13,8 @@
   - [4.1. エンタープライズ向けリポジトリへの参照を非エンタープライズ向けのものに変更する](#41-エンタープライズ向けリポジトリへの参照を非エンタープライズ向けのものに変更する)
   - [4.2. rootのパスワードを任意のものに変更する](#42-rootのパスワードを任意のものに変更する)
   - [4.3. 作業用ユーザを追加する](#43-作業用ユーザを追加する)
-  - [4.4. SSHサーバの設定をする](#44-sshサーバの設定をする)
-  - [4.5. CI/CD用ユーザを追加する](#45-cicd用ユーザを追加する)
+  - [4.4. CI/CD用ユーザを追加する](#44-cicd用ユーザを追加する)
+  - [4.5. SSHサーバの設定をする](#45-sshサーバの設定をする)
 - [5. 完了条件](#5-完了条件)
 
 <!-- /code_chunk_output -->
@@ -150,35 +150,7 @@
     lucky : lucky sudo users
     ```
 
-### 4.4. SSHサーバの設定をする
-
-**注意: SSHポートの値はコマンドで参照している変数を参照します。適宜変更してください。**
-
-1. sshdの設定を変更する
-
-    ```shell
-    cd /etc/ssh/
-    cp ./sshd_config ./sshd_config.orig
-
-    # ポートを変更する
-    NEW_SSH_PORT=60000 # 適宜ポートは変更する
-    sed -i -E "s/^#?Port .*$/Port ${NEW_SSH_PORT}/" ./sshd_config
-
-    # root ユーザでのログインを禁止する
-    sed -i -E 's/^#?PermitRootLogin .*$/PermitRootLogin no/' ./sshd_config
-
-    # パスワード認証を禁止する
-    sed -i -E 's/^#?PasswordAuthentication .*$/PasswordAuthentication no/' ./sshd_config
-
-    # 上記3点の差分のみが表示されることを確認する
-    diff -s ./sshd_config ./sshd_config.orig
-    # 設定を検証する。出力が何も無ければ OK
-    sshd -t
-
-    rm ./sshd_config.orig
-    ```
-
-2. 作業用ユーザにSSH公開鍵の設定をする
+3. 作業用ユーザにSSH公開鍵の設定をする
 
     ```shell
     $ su - "$USERNAME"
@@ -197,32 +169,9 @@
     $ exit
     ```
 
-3. 設定変更を反映させる
+### 4.4. CI/CD用ユーザを追加する
 
-    ```shell
-    systemctl restart sshd
-    ```
-
-4. 別ターミナルで、以下のことを確認する
-    - 作業用ユーザとして公開鍵認証でSSH接続できること
-    - 作業用ユーザとしてパスワード認証でSSH接続できないこと
-    - `root`ユーザでSSH接続できないこと
-
-    ```shell
-    ssh -i ~/.ssh/id_ed25519 lucky@192.168.20.2 # will OK
-    ssh lucky@192.168.20.2 # will fail
-    ssh root@192.168.20.2 # will fail
-    ```
-
-### 4.5. CI/CD用ユーザを追加する
-
-1. `Proxmox`ホストにSSH接続する
-
-    ```shell
-    ssh proxmox-01
-    ```
-
-2. ユーザに割り当てるロールを作成する
+1. ユーザに割り当てるロールを作成する
 
     |            権限            |                              説明                               |
     | -------------------------- | --------------------------------------------------------------- |
@@ -252,7 +201,7 @@
     | VM.PowerMgmt               | VM の起動・停止など電源の管理                                   |
 
     ```shell
-    MACHINEUSER_ROLE='TFMachineUser'
+    MACHINEUSER_ROLE='MachineUser'
 
     # ロールが存在しないことを確認する。何も出力されなければ OK
     sudo pveum role list | grep "$MACHINEUSER_ROLE"
@@ -260,57 +209,45 @@
     sudo pveum role add "$MACHINEUSER_ROLE"
     # 何も出力されなければ OK
 
-    sudo pveum role modify TFMachineUser --privs Pool.Allocate,Datastore.Allocate,Datastore.AllocateSpace,Datastore.AllocateTemplate,Datastore.Audit,SDN.Audit,Sys.Console,SDN.Use,Sys.Audit,Sys.Modify,VM.Allocate,VM.Audit,VM.Clone,VM.Config.CDROM,VM.Config.CPU,VM.Config.Cloudinit,VM.Config.Disk,VM.Config.HWType,VM.Config.Memory,VM.Config.Network,VM.Config.Options,VM.Migrate,VM.Monitor,VM.PowerMgmt
+    sudo pveum role modify "$MACHINEUSER_ROLE" --privs Pool.Allocate,Datastore.Allocate,Datastore.AllocateSpace,Datastore.AllocateTemplate,Datastore.Audit,SDN.Audit,Sys.Console,SDN.Use,Sys.Audit,Sys.Modify,VM.Allocate,VM.Audit,VM.Clone,VM.Config.CDROM,VM.Config.CPU,VM.Config.Cloudinit,VM.Config.Disk,VM.Config.HWType,VM.Config.Memory,VM.Config.Network,VM.Config.Options,VM.Migrate,VM.Monitor,VM.PowerMgmt
     # 何も出力されなければ OK
 
     # ロールが存在することを確認する。追加したロールと権限が表示されれば OK
     sudo pveum role list | grep "$MACHINEUSER_ROLE"
     ```
 
-3. ユーザを作成する
+2. Proxmox上のユーザを作成する
 
     ```shell
     # @pve でレルムに Proxmox VE authentication server を指定する
-    MACHINEUSER_NAME='machine-user@pve'
+    MACHINEUSER_USERNAME='machine-user@pve'
 
     # ユーザが存在しないことを確認する。何も出力されなければ OK
-    sudo pveum user list | grep "$MACHINEUSER_NAME"
+    sudo pveum user list | grep "$MACHINEUSER_USERNAME"
 
-    # pwgen options:
-    # -c アルファベット大文字を1つ以上
-    # -n 数字を1つ以上
-    # -s 完全にランダムで覚えにくいパスワードを生成する
-    # -y 記号を1つ以上
-    # -B 曖昧で間違えにくい文字を含まない
-    # NOTE: pwgen コマンドはファイルへのリダイレクトなどの場合は、1個しかパスワードを生成しない
-    MACHINEUSER_PASSWORD=$(pwgen -cnsyB 16)
-    sudo pveum user add "$MACHINEUSER_NAME" --password "$MACHINEUSER_PASSWORD"
+    sudo pveum user add "$MACHINEUSER_USERNAME"
     # 何も出力されなければ OK
 
     # ユーザが存在することを確認する。出力があれば OK
-    sudo pveum user list | grep "$MACHINEUSER_NAME"
-
-    # パスワードをメモする
-    echo "$MACHINEUSER_PASSWORD"
-    unset MACHINEUSER_PASSWORD
+    sudo pveum user list | grep "$MACHINEUSER_USERNAME"
     ```
 
-4. ユーザにロールを紐づける
+3. ユーザにロールを紐づける
 
     ```shell
-    sudo pveum acl modify / -user "$MACHINEUSER_NAME" -role "$MACHINEUSER_ROLE"
+    sudo pveum acl modify / -user "$MACHINEUSER_USERNAME" -role "$MACHINEUSER_ROLE"
     # 何も出力されなければ OK
     ```
 
-5. API トークンを作成する
+4. API トークンを作成する
 
     ```shell
     # トークンが存在しないことを確認する。何も出力されなければ OK
-    $ sudo pveum user token list "$MACHINEUSER_NAME"
+    $ sudo pveum user token list "$MACHINEUSER_USERNAME"
 
     # tf はトークンの ID
     # -privsep 0 で、トークンの権限をユーザの権限と共通化（権限分離をしない）
-    $ sudo pveum user token add "$MACHINEUSER_NAME" tf -privsep 0
+    $ sudo pveum user token add "$MACHINEUSER_USERNAME" tf -privsep 0
     # トークンのシークレット値が出力されるので、メモしておく
     ┌──────────────┬──────────────────────────────────────┐
     │ key          │ value                                │
@@ -323,7 +260,7 @@
     └──────────────┴──────────────────────────────────────┘
 
     # トークンが存在することを確認する。作成したトークンが出力されば OK
-    $ sudo pveum user token list "$MACHINEUSER_NAME"
+    $ sudo pveum user token list "$MACHINEUSER_USERNAME"
     ┌─────────┬─────────┬────────┬─────────┐
     │ tokenid │ comment │ expire │ privsep │
     ╞═════════╪═════════╪════════╪═════════╡
@@ -331,7 +268,53 @@
     └─────────┴─────────┴────────┴─────────┘
     ```
 
+### 4.5. SSHサーバの設定をする
+
+**注意: SSHポートの値はコマンドで参照している変数を参照します。適宜変更してください。**
+
+1. sshdの設定を変更する
+
+    ```shell
+    cd /etc/ssh/
+    cp ./sshd_config ./sshd_config.orig
+
+    # ポートを変更する
+    NEW_SSH_PORT=60000 # 適宜ポートは変更する
+    sed -i -E "s/^#?Port .*$/Port ${NEW_SSH_PORT}/" ./sshd_config
+
+    # root ユーザでのログインを禁止する
+    sed -i -E 's/^#?PermitRootLogin .*$/PermitRootLogin no/' ./sshd_config
+
+    # パスワード認証を禁止する
+    sed -i -E 's/^#?PasswordAuthentication .*$/PasswordAuthentication no/' ./sshd_config
+
+    # 上記3点の差分のみが表示されることを確認する
+    diff -s ./sshd_config ./sshd_config.orig
+    # 設定を検証する。出力が何も無ければ OK
+    sshd -t
+
+    rm ./sshd_config.orig
+    ```
+
+2. 設定変更を反映させる
+
+    ```shell
+    systemctl restart sshd
+    ```
+
+3. 別ターミナルで、以下のことを確認する
+    - 作業用ユーザとして公開鍵認証でSSH接続できること
+    - 作業用ユーザとしてパスワード認証でSSH接続できないこと
+    - `root`ユーザでSSH接続できないこと
+
+    ```shell
+    ssh -i ~/.ssh/id_ed25519 lucky@192.168.20.2 # will OK
+    ssh lucky@192.168.20.2 # will fail
+    ssh root@192.168.20.2 # will fail
+    ```
+
 ## 5. 完了条件
 
+- パッケージの更新が行えること
 - `Proxmox`ホストに対するSSH接続において、`root`ユーザとしてログインできないこと
 - `Proxmox`ホストに対するSSH接続において、作業用ユーザが作成されていて、そのユーザとしてログインできること
