@@ -15,11 +15,13 @@ permissions:
 defaults:
   run:
     working-directory: ./terraform
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
 jobs:
   tf_apply:
     name: Apply Terraform
     runs-on: ubuntu-24.04
-    concurrency: tf_apply_on_main
     steps:
       - uses: actions/checkout@v4
       - uses: hashicorp/setup-terraform@v3
