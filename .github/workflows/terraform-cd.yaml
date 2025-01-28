@@ -3,10 +3,6 @@ on:
   push:
     branches:
       - main
-    paths:
-      - '**.tf'
-      - '**.tfvars'
-      - '.github/workflows/terraform-cd.yaml'
 env:
   # Path from tfcmt working-directory
   TFCMT_CONFIG: ../.github/tfcmt-config.yaml
