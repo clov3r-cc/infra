@@ -13,8 +13,8 @@
   - [4.1. エンタープライズ向けリポジトリへの参照を非エンタープライズ向けのものに変更する](#41-エンタープライズ向けリポジトリへの参照を非エンタープライズ向けのものに変更する)
   - [4.2. rootのパスワードを任意のものに変更する](#42-rootのパスワードを任意のものに変更する)
   - [4.3. 作業用ユーザを追加する](#43-作業用ユーザを追加する)
-  - [4.4. SSHサーバの設定をする](#44-sshサーバの設定をする)
-  - [4.5. CI/CD用ユーザを追加する](#45-cicd用ユーザを追加する)
+  - [4.4. CI/CD用ユーザを追加する](#44-cicd用ユーザを追加する)
+  - [4.5. SSHサーバの設定をする](#45-sshサーバの設定をする)
 - [5. 完了条件](#5-完了条件)
 
 <!-- /code_chunk_output -->
@@ -26,7 +26,7 @@
 ## 3. 前提条件
 
 - `Proxmox`がインストール済みで、起動していること
-- ホスト名: `lucky-proxmox-01`
+- ホスト名: `pve-01`
 
 ## 4. 作業手順
 
@@ -93,7 +93,7 @@
 
     ```shell
     apt update && apt upgrade -y && apt dist-upgrade -y && \
-      apt install sudo vim -y
+      apt install sudo pwgen vim -y
     # エラーが表示されなければ OK
     ```
 
@@ -150,7 +150,125 @@
     lucky : lucky sudo users
     ```
 
-### 4.4. SSHサーバの設定をする
+3. 作業用ユーザにSSH公開鍵の設定をする
+
+    ```shell
+    $ su - "$USERNAME"
+
+    $ mkdir ~/.ssh
+    $ chmod 700 ~/.ssh
+    $ curl https://github.com/Lucky3028.keys > ~/.ssh/authorized_keys
+    $ chmod 600 ~/.ssh/authorized_keys
+
+    # それぞれ以下のように権限設定がされていることを確認する
+    $ stat -c "%A %n" .ssh
+    drwx------ .ssh
+    $ stat -c "%A %n" .ssh/authorized_keys
+    -rw------- .ssh/authorized_keys
+
+    $ exit
+    ```
+
+### 4.4. CI/CD用ユーザを追加する
+
+1. ユーザに割り当てるロールを作成する
+
+    |            権限            |                              説明                               |
+    | -------------------------- | --------------------------------------------------------------- |
+    | Pool.Allocate              | プール設定の編集                                                |
+    | Datastore.Allocate         | ディスク等のデータを格納するボリュームの編集                    |
+    | Datastore.AllocateSpace    | ディスク等のデータを格納するボリュームの利用                    |
+    | Datastore.AllocateTemplate | ディスク等のデータを格納するボリュームに ISO などをアップロード |
+    | Datastore.Audit            | ディスク等のデータを格納するボリュームの参照                    |
+    | SDN.Audit                  | ホスト NW の管理                                                |
+    | SDN.Use                    | ホスト NW の利用                                                |
+    | Sys.Audit                  | ホスト NW の参照                                                |
+    | Sys.Console                | 各 VM コンソールへのアクセス                                    |
+    | Sys.Modify                 | ホスト NW の編集                                                |
+    | VM.Allocate                | VM の作成                                                       |
+    | VM.Audit                   | VM の参照                                                       |
+    | VM.Clone                   | VM のクローン                                                   |
+    | VM.Config.CDROM            | CD/DVD の挿入・排出                                             |
+    | VM.Config.CPU              | CPU 設定の編集                                                  |
+    | VM.Config.Cloudinit        | Cloud-init 設定の編集                                           |
+    | VM.Config.Disk             | ディスクの編集                                                  |
+    | VM.Config.HWType           | エミュレートされた HW 設定の編集                                |
+    | VM.Config.Memory           | メモリ設定の編集                                                |
+    | VM.Config.Network          | NW 設定の編集                                                   |
+    | VM.Config.Options          | その他 VM 設定の編集                                            |
+    | VM.Migrate                 | VM を他ホストにマイグレーション                                 |
+    | VM.Monitor                 | VM の状況を確認                                                 |
+    | VM.PowerMgmt               | VM の起動・停止など電源の管理                                   |
+
+    ```shell
+    MACHINEUSER_ROLE='MachineUser'
+
+    # ロールが存在しないことを確認する。何も出力されなければ OK
+    sudo pveum role list | grep "$MACHINEUSER_ROLE"
+
+    sudo pveum role add "$MACHINEUSER_ROLE"
+    # 何も出力されなければ OK
+
+    sudo pveum role modify "$MACHINEUSER_ROLE" --privs Pool.Allocate,Datastore.Allocate,Datastore.AllocateSpace,Datastore.AllocateTemplate,Datastore.Audit,SDN.Audit,Sys.Console,SDN.Use,Sys.Audit,Sys.Modify,VM.Allocate,VM.Audit,VM.Clone,VM.Config.CDROM,VM.Config.CPU,VM.Config.Cloudinit,VM.Config.Disk,VM.Config.HWType,VM.Config.Memory,VM.Config.Network,VM.Config.Options,VM.Migrate,VM.Monitor,VM.PowerMgmt
+    # 何も出力されなければ OK
+
+    # ロールが存在することを確認する。追加したロールと権限が表示されれば OK
+    sudo pveum role list | grep "$MACHINEUSER_ROLE"
+    ```
+
+2. Proxmox上のユーザを作成する
+
+    ```shell
+    # @pve でレルムに Proxmox VE authentication server を指定する
+    MACHINEUSER_USERNAME='machine-user@pve'
+
+    # ユーザが存在しないことを確認する。何も出力されなければ OK
+    sudo pveum user list | grep "$MACHINEUSER_USERNAME"
+
+    sudo pveum user add "$MACHINEUSER_USERNAME"
+    # 何も出力されなければ OK
+
+    # ユーザが存在することを確認する。出力があれば OK
+    sudo pveum user list | grep "$MACHINEUSER_USERNAME"
+    ```
+
+3. ユーザにロールを紐づける
+
+    ```shell
+    sudo pveum acl modify / -user "$MACHINEUSER_USERNAME" -role "$MACHINEUSER_ROLE"
+    # 何も出力されなければ OK
+    ```
+
+4. API トークンを作成する
+
+    ```shell
+    # トークンが存在しないことを確認する。何も出力されなければ OK
+    $ sudo pveum user token list "$MACHINEUSER_USERNAME"
+
+    # tf はトークンの ID
+    # -privsep 0 で、トークンの権限をユーザの権限と共通化（権限分離をしない）
+    $ sudo pveum user token add "$MACHINEUSER_USERNAME" tf -privsep 0
+    # トークンのシークレット値が出力されるので、メモしておく
+    ┌──────────────┬──────────────────────────────────────┐
+    │ key          │ value                                │
+    ╞══════════════╪══════════════════════════════════════╡
+    │ full-tokenid │ machine-user@pve!tf                  │
+    ├──────────────┼──────────────────────────────────────┤
+    │ info         │ {"privsep":1}                        │
+    ├──────────────┼──────────────────────────────────────┤
+    │ value        │ (シークレット値)                      │
+    └──────────────┴──────────────────────────────────────┘
+
+    # トークンが存在することを確認する。作成したトークンが出力されば OK
+    $ sudo pveum user token list "$MACHINEUSER_USERNAME"
+    ┌─────────┬─────────┬────────┬─────────┐
+    │ tokenid │ comment │ expire │ privsep │
+    ╞═════════╪═════════╪════════╪═════════╡
+    │ tf      │         │      0 │ 0       │
+    └─────────┴─────────┴────────┴─────────┘
+    ```
+
+### 4.5. SSHサーバの設定をする
 
 **注意: SSHポートの値はコマンドで参照している変数を参照します。適宜変更してください。**
 
@@ -178,32 +296,13 @@
     rm ./sshd_config.orig
     ```
 
-2. 作業用ユーザにSSH公開鍵の設定をする
-
-    ```shell
-    $ su - "$USERNAME"
-
-    $ mkdir ~/.ssh
-    $ chmod 700 ~/.ssh
-    $ curl https://github.com/Lucky3028.keys > ~/.ssh/authorized_keys
-    $ chmod 600 ~/.ssh/authorized_keys
-
-    # それぞれ以下のように権限設定がされていることを確認する
-    $ stat -c "%A %n" .ssh
-    drwx------ .ssh
-    $ stat -c "%A %n" .ssh/authorized_keys
-    -rw------- .ssh/authorized_keys
-
-    $ exit
-    ```
-
-3. 設定変更を反映させる
+2. 設定変更を反映させる
 
     ```shell
     systemctl restart sshd
     ```
 
-4. 別ターミナルで、以下のことを確認する
+3. 別ターミナルで、以下のことを確認する
     - 作業用ユーザとして公開鍵認証でSSH接続できること
     - 作業用ユーザとしてパスワード認証でSSH接続できないこと
     - `root`ユーザでSSH接続できないこと
@@ -214,121 +313,8 @@
     ssh root@192.168.20.2 # will fail
     ```
 
-### 4.5. CI/CD用ユーザを追加する
-
-1. `Proxmox`ホストにSSH接続する
-
-    ```shell
-    ssh proxmox-01
-    ```
-
-2. ユーザに割り当てるロールを作成する
-
-    |            権限            |                              説明                               |
-    | -------------------------- | --------------------------------------------------------------- |
-    | Datastore.Allocate         | ディスク等のデータを格納するボリュームの編集                    |
-    | Datastore.AllocateSpace    | ディスク等のデータを格納するボリュームの利用                    |
-    | Datastore.AllocateTemplate | ディスク等のデータを格納するボリュームに ISO などをアップロード |
-    | Datastore.Audit            | ディスク等のデータを格納するボリュームの参照                    |
-    | SDN.Audit                  | ホスト NW の管理                                                |
-    | SDN.Use                    | ホスト NW の利用                                                |
-    | Sys.Audit                  | ホスト NW の参照                                                |
-    | Sys.Modify                 | ホスト NW の編集                                                |
-    | VM.Allocate                | VM の作成                                                       |
-    | VM.Audit                   | VM の参照                                                       |
-    | VM.Clone                   | VM のクローン                                                   |
-    | VM.Config.CDROM            | CD/DVD の挿入・排出                                             |
-    | VM.Config.CPU              | CPU 設定の編集                                                  |
-    | VM.Config.Cloudinit        | Cloud-init 設定の編集                                           |
-    | VM.Config.Disk             | ディスクの編集                                                  |
-    | VM.Config.HWType           | エミュレートされた HW 設定の編集                                |
-    | VM.Config.Memory           | メモリ設定の編集                                                |
-    | VM.Config.Network          | NW 設定の編集                                                   |
-    | VM.Config.Options          | その他 VM 設定の編集                                            |
-    | VM.Migrate                 | VM を他ホストにマイグレーション                                 |
-    | VM.PowerMgmt               | VM の起動・停止など電源の管理                                   |
-
-    ```shell
-    MACHINEUSER_ROLE='TFMachineUser'
-
-    # ロールが存在しないことを確認する。何も出力されなければ OK
-    sudo pveum role list | grep "$MACHINEUSER_ROLE"
-
-    sudo pveum role add "$MACHINEUSER_ROLE"
-    # 何も出力されなければ OK
-
-    sudo pveum role modify TFMachineUser --privs Datastore.Allocate,Datastore.AllocateSpace,Datastore.AllocateTemplate,Datastore.Audit,SDN.Audit,SDN.Use,Sys.Audit,Sys.Modify,VM.Allocate,VM.Audit,VM.Clone,VM.Config.CDROM,VM.Config.CPU,VM.Config.Cloudinit,VM.Config.Disk,VM.Config.HWType,VM.Config.Memory,VM.Config.Network,VM.Config.Options,VM.Migrate,VM.PowerMgmt
-    # 何も出力されなければ OK
-
-    # ロールが存在することを確認する。追加したロールと権限が表示されれば OK
-    sudo pveum role list | grep "$MACHINEUSER_ROLE"
-    ```
-
-3. ユーザを作成する
-
-    ```shell
-    # @pve でレルムに Proxmox VE authentication server を指定する
-    MACHINEUSER_NAME='machine-user@pve'
-
-    # ユーザが存在しないことを確認する。何も出力されなければ OK
-    sudo pveum user list | grep "$MACHINEUSER_NAME"
-
-    # pwgen options:
-    # -c アルファベット大文字を1つ以上
-    # -n 数字を1つ以上
-    # -s 完全にランダムで覚えにくいパスワードを生成する
-    # -y 記号を1つ以上
-    # -B 曖昧で間違えにくい文字を含まない
-    # NOTE: pwgen コマンドはファイルへのリダイレクトなどの場合は、1個しかパスワードを生成しない
-    MACHINEUSER_PASSWORD=$(pwgen -cnsyB 16)
-    sudo pveum user add "$MACHINEUSER_NAME" --password "$MACHINEUSER_PASSWORD"
-    # 何も出力されなければ OK
-
-    # ユーザが存在することを確認する。出力があれば OK
-    sudo pveum user list | grep "$MACHINEUSER_NAME"
-
-    # パスワードをメモする
-    echo "$MACHINEUSER_PASSWORD"
-    unset MACHINEUSER_PASSWORD
-    ```
-
-4. ユーザにロールを紐づける
-
-    ```shell
-    sudo pveum acl modify / -user "$MACHINEUSER_NAME" -role "$MACHINEUSER_ROLE"
-    # 何も出力されなければ OK
-    ```
-
-5. API トークンを作成する
-
-    ```shell
-    # トークンが存在しないことを確認する。何も出力されなければ OK
-    $ sudo pveum user token list "$MACHINEUSER_NAME"
-
-    # tf はトークンの ID
-    # -privsep 0 で、トークンの権限をユーザの権限と共通化（権限分離をしない）
-    $ sudo pveum user token add "$MACHINEUSER_NAME" tf -privsep 0
-    # トークンのシークレット値が出力されるので、メモしておく
-    ┌──────────────┬──────────────────────────────────────┐
-    │ key          │ value                                │
-    ╞══════════════╪══════════════════════════════════════╡
-    │ full-tokenid │ machine-user@pve!tf                  │
-    ├──────────────┼──────────────────────────────────────┤
-    │ info         │ {"privsep":1}                        │
-    ├──────────────┼──────────────────────────────────────┤
-    │ value        │ (シークレット値)                      │
-    └──────────────┴──────────────────────────────────────┘
-
-    # トークンが存在することを確認する。作成したトークンが出力されば OK
-    $ sudo pveum user token list "$MACHINEUSER_NAME"
-    ┌─────────┬─────────┬────────┬─────────┐
-    │ tokenid │ comment │ expire │ privsep │
-    ╞═════════╪═════════╪════════╪═════════╡
-    │ tf      │         │      0 │ 0       │
-    └─────────┴─────────┴────────┴─────────┘
-    ```
-
 ## 5. 完了条件
 
+- パッケージの更新が行えること
 - `Proxmox`ホストに対するSSH接続において、`root`ユーザとしてログインできないこと
 - `Proxmox`ホストに対するSSH接続において、作業用ユーザが作成されていて、そのユーザとしてログインできること

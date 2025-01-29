@@ -210,7 +210,13 @@
 
 ### 4.7. ホスト）コンテナを特権モードで動作させる
 
-1. 特権モードで動作させるために、以下の書き込みをする
+1. ProxmoxホストにSSH接続する
+
+    ```shell
+    ssh proxmox-01
+    ```
+
+2. 特権モードで動作させるために、以下の書き込みをする
 
     ```shell
     cat << EOF | sudo tee -a /etc/pve/lxc/101.conf > /dev/null
@@ -220,7 +226,7 @@
     EOF
     ```
 
-2. コンテナを起動する
+3. コンテナを起動する
 
     ```shell
     sudo pct start 101
