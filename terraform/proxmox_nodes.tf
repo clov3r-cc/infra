@@ -18,6 +18,14 @@ locals {
   vm_public-net_subnet_cidr = "${local.vm_public-net_subnet_ipv4}/24"
 }
 
+resource "random_password" "vm_user_password" {
+  length      = 16
+  min_lower   = 3
+  min_upper   = 3
+  min_numeric = 3
+  min_special = 3
+}
+
 # module "k8s-gateway-nodes" {
 #   source = "./modules/k8s_node_vm"
 
@@ -106,6 +114,7 @@ module "k8s_worker_nodes__prod" {
     1 = local.pve_hosts["pve-01"]["host_name"]
   }
   vm_user            = var.vm_user
+  vm_user_password   = random_password.vm_user_password.result
   vm_ssh_public_key  = var.vm_ssh_public_key
   vm_template        = local.vm_template
   vm_os_disk_storage = local.vm_os_disk_storage

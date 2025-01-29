@@ -55,16 +55,6 @@ variable "worker_os_disk_size" {
   description = "The disk size for os attached to worker node."
 }
 
-resource "random_password" "worker_ci_user_password" {
-  count = length(local.workers_index)
-
-  length      = 16
-  min_lower   = 3
-  min_upper   = 3
-  min_numeric = 3
-  min_special = 3
-}
-
 resource "proxmox_vm_qemu" "worker" {
   for_each = var.worker_allocated_host
 

@@ -22,6 +22,12 @@ variable "vm_user" {
   description = "User name to access each VM with SSH."
 }
 
+variable "vm_user_password" {
+  type        = string
+  description = "Password for the user to access each VM."
+  sensitive   = true
+}
+
 variable "vm_ssh_public_key" {
   type        = string
   description = "The public key to ssh each VM."
