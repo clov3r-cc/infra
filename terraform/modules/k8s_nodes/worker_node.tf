@@ -87,7 +87,7 @@ resource "proxmox_vm_qemu" "worker" {
   # vcpus will be calculated by setting sockets and cores automatically
   vcpus = 0
   # "host" will cause kernel panic for RHEL
-  cpu_type = "x86-64-v4"
+  cpu_type = "x86-64-v3"
   numa     = true
 
   hotplug = "network,disk,usb,memory,cpu"
