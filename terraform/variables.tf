@@ -5,12 +5,6 @@ variable "cloudflare_api_token" {
   ephemeral   = true
 }
 
-variable "env_name" {
-  type        = string
-  description = "The stage of the development lifecycle for the k8s cluster. Example: `prod`, `dev`, `test`,..."
-  default     = "test"
-}
-
 variable "pve_api_token_id" {
   type        = string
   description = "The token ID to access Proxmox VE API."

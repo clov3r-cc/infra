@@ -2,7 +2,7 @@ terraform {
   required_providers {
     proxmox = {
       source  = "telmate/proxmox"
-      version = "~> 3.0"
+      version = "3.0.1-rc6"
     }
   }
 }
@@ -20,6 +20,12 @@ variable "env_name" {
 variable "vm_user" {
   type        = string
   description = "User name to access each VM with SSH."
+}
+
+variable "vm_user_password" {
+  type        = string
+  description = "Password for the user to access each VM."
+  sensitive   = true
 }
 
 variable "vm_ssh_public_key" {

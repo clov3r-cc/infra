@@ -51,18 +51,8 @@ variable "worker_first_internal-net_host-section" {
 }
 
 variable "worker_os_disk_size" {
-  type        = string
+  type        = number
   description = "The disk size for os attached to worker node."
-}
-
-resource "random_password" "worker_ci_user_password" {
-  count = length(local.workers_index)
-
-  length      = 16
-  min_lower   = 3
-  min_upper   = 3
-  min_numeric = 3
-  min_special = 3
 }
 
 resource "proxmox_vm_qemu" "worker" {
@@ -85,9 +75,8 @@ resource "proxmox_vm_qemu" "worker" {
   sockets = var.worker_sockets
   cores   = var.worker_cores
   # vcpus will be calculated by setting sockets and cores automatically
-  vcpus = 0
-  # "host" will cause kernel panic for RHEL
-  cpu_type = "x86-64-v4"
+  vcpus    = 0
+  cpu_type = "x86-64-v3"
   numa     = true
 
   hotplug = "network,disk,usb,memory,cpu"
@@ -111,7 +100,7 @@ resource "proxmox_vm_qemu" "worker" {
     virtio {
       virtio0 {
         disk {
-          size     = var.worker_os_disk_size
+          size     = "${var.worker_os_disk_size}G"
           storage  = var.vm_os_disk_storage
           iothread = true
         }
