@@ -51,7 +51,7 @@ variable "worker_first_internal-net_host-section" {
 }
 
 variable "worker_os_disk_size" {
-  type        = string
+  type        = number
   description = "The disk size for os attached to worker node."
 }
 
@@ -100,7 +100,7 @@ resource "proxmox_vm_qemu" "worker" {
     virtio {
       virtio0 {
         disk {
-          size     = var.worker_os_disk_size
+          size     = "${var.worker_os_disk_size}G"
           storage  = var.vm_os_disk_storage
           iothread = true
         }

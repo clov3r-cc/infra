@@ -46,5 +46,5 @@ module "k8s_worker_nodes__prod" {
   worker_internal-net_bridge             = local.vm_internal-net_bridge
   worker_internal-net_subnet_cidr        = local.vm_internal-net_subnet_cidr
   worker_first_internal-net_host-section = 21
-  worker_os_disk_size                    = "20G"
+  worker_os_disk_size                    = 20
 }
