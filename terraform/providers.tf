@@ -1,4 +1,6 @@
 terraform {
+  required_version = ">= 1.10.0"
+
   cloud {
     organization = "clov3r-cc"
 
@@ -10,11 +12,11 @@ terraform {
   required_providers {
     cloudflare = {
       source  = "cloudflare/cloudflare"
-      version = "~> 4.0"
+      version = "4.51.0"
     }
     random = {
       source  = "hashicorp/random"
-      version = "~> 3.0"
+      version = "3.6.3"
     }
     proxmox = {
       source  = "telmate/proxmox"
@@ -22,7 +24,7 @@ terraform {
     }
     null = {
       source  = "hashicorp/null"
-      version = "~> 3.0"
+      version = "3.2.3"
     }
   }
 }
