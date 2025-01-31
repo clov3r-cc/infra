@@ -16,7 +16,7 @@ EOT
 
   # Public network configuration
   vm_public-net_bridge      = "vmbr0"
-  vm_public-net_subnet_cidr = "192.168.102.131/24"
+  vm_public-net_subnet_cidr = "192.168.20.5/24"
   # Internal network configuration
   vm_internal-net_bridge      = "vmbr1"
   vm_internal-net_subnet_cidr = "192.168.8.0/24"
