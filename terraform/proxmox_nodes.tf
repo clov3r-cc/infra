@@ -25,7 +25,7 @@ resource "random_password" "vm_user_password" {
   min_special = 3
 }
 
-module "k8s_worker_nodes__prod" {
+module "k8s_nodes__prod" {
   source = "./modules/k8s_nodes"
 
   env_name = "prod"
