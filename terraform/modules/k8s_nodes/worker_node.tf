@@ -83,10 +83,11 @@ resource "proxmox_vm_qemu" "worker" {
   scsihw  = "virtio-scsi-single"
 
   # cloud-init configuration
-  os_type   = "cloud-init"
-  ciuser    = var.vm_user
-  ciupgrade = true
-  sshkeys   = base64decode(var.vm_ssh_public_key)
+  os_type    = "cloud-init"
+  ciuser     = var.vm_user
+  cipassword = var.vm_user_password
+  ciupgrade  = true
+  sshkeys    = base64decode(var.vm_ssh_public_key)
 
   network {
     id     = 0
