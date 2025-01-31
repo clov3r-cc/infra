@@ -55,8 +55,6 @@ module "k8s_nodes__prod" {
 
   control_plane_allocated_host = {
     1 = local.pve_hosts["pve-01"]["host_name"]
-    2 = local.pve_hosts["pve-01"]["host_name"]
-    3 = local.pve_hosts["pve-01"]["host_name"]
   }
   control_plane_first_vm_id                     = 811
   control_plane_memory                          = 1024 * 3
@@ -69,8 +67,6 @@ module "k8s_nodes__prod" {
 
   worker_allocated_host = {
     1 = local.pve_hosts["pve-01"]["host_name"]
-    2 = local.pve_hosts["pve-01"]["host_name"]
-    3 = local.pve_hosts["pve-01"]["host_name"]
   }
   worker_first_vm_id                     = 821
   worker_memory                          = 1024 * 6
