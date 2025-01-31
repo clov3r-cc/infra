@@ -146,3 +146,5 @@ resource "proxmox_vm_qemu" "gateway" {
     ]
   }
 }
+
+# TODO: add ssh secret key
