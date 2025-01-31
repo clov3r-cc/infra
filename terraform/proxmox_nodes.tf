@@ -40,7 +40,7 @@ module "k8s_worker_nodes__prod" {
   vm_os_disk_storage = local.vm_os_disk_storage
 
   worker_first_vm_id                     = 821
-  worker_memory                          = 2048
+  worker_memory                          = 1024 * 6
   worker_sockets                         = 1
   worker_cores                           = 3
   worker_internal-net_bridge             = local.vm_internal-net_bridge
