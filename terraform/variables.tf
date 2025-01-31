@@ -34,12 +34,6 @@ variable "pve_cf_client_secret" {
   sensitive   = true
 }
 
-variable "vm_user" {
-  type        = string
-  description = "The default user for all VMs"
-  default     = "ubuntu"
-}
-
 variable "vm_ssh_public_key" {
   type        = string
   description = "SSH public keys in base64"

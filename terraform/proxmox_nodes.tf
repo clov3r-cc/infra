@@ -8,6 +8,7 @@ locals {
 
   vm_template        = "alma-9"
   vm_os_disk_storage = "local-lvm"
+  vm_user            = "machine-user"
 
   # Public network configuration
   vm_public-net_bridge      = "vmbr0"
@@ -30,7 +31,7 @@ resource "random_password" "vm_user_password" {
 
 #   env_name = "prod"
 
-#   vm_user            = var.vm_user
+#   vm_user            = local.vm_user
 #   vm_user_password   = random_password.vm_user_password.result
 #   vm_ssh_public_key  = var.vm_ssh_public_key
 #   vm_template        = local.vm_template
