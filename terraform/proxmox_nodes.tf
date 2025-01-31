@@ -9,13 +9,12 @@ locals {
   vm_template        = "alma-9"
   vm_os_disk_storage = "local-lvm"
 
+  # Public network configuration
+  vm_public-net_bridge      = "vmbr0"
+  vm_public-net_subnet_cidr = "192.168.102.131/24"
   # Internal network configuration
   vm_internal-net_bridge      = "vmbr1"
   vm_internal-net_subnet_cidr = "192.168.8.0/24"
-  # Public network configuration
-  vm_public-net_bridge      = "vmbr0"
-  vm_public-net_subnet_ipv4 = "192.168.102.131"
-  vm_public-net_subnet_cidr = "${local.vm_public-net_subnet_ipv4}/24"
 }
 
 resource "random_password" "vm_user_password" {
