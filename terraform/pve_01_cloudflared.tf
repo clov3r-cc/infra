@@ -8,16 +8,6 @@ resource "cloudflare_zero_trust_tunnel_cloudflared" "cloudflared-01" {
   secret     = base64sha256(random_password.tunnel_secret.result)
 }
 
-resource "cloudflare_record" "pxmx01-mng" {
-  zone_id = cloudflare_zone.clov3r-cc.id
-  name    = "pxmx01-mng"
-  content = cloudflare_zero_trust_tunnel_cloudflared.cloudflared-01.cname
-  type    = "CNAME"
-  proxied = true
-  ttl     = 1 # Auto
-  comment = "for Cloudflare Tunnel with Proxmox#1"
-}
-
 resource "cloudflare_zero_trust_tunnel_cloudflared_config" "cloudflared-01" {
   tunnel_id  = cloudflare_zero_trust_tunnel_cloudflared.cloudflared-01.id
   account_id = local.cloudflare_account_id
@@ -32,41 +22,5 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "cloudflared-01" {
     ingress_rule {
       service = "http_status:404"
     }
-  }
-}
-
-resource "cloudflare_zero_trust_access_application" "pxmx01-mng" {
-  zone_id          = cloudflare_zone.clov3r-cc.id
-  name             = "Access application for pxmx01-mng.${cloudflare_zone.clov3r-cc.zone}"
-  domain           = "pxmx01-mng.${cloudflare_zone.clov3r-cc.zone}"
-  session_duration = "24h"
-}
-
-resource "cloudflare_zero_trust_access_policy" "pxmx01-mng" {
-  application_id = cloudflare_zero_trust_access_application.pxmx01-mng.id
-  zone_id        = cloudflare_zone.clov3r-cc.id
-  name           = "Web Login Policy for pxmx01-mng.${cloudflare_zone.clov3r-cc.zone}"
-  precedence     = "1"
-  decision       = "allow"
-  include {
-    group = [cloudflare_zero_trust_access_group.allow_github.id]
-  }
-}
-
-resource "cloudflare_zero_trust_access_service_token" "managed" {
-  name     = "managed token"
-  zone_id  = cloudflare_zone.clov3r-cc.id
-  duration = "8760h" # 1year
-}
-
-# Service Token での認証はアクション（`decision`）を`Service Auth`（`non_identity`）にする必要がある
-resource "cloudflare_zero_trust_access_policy" "pxmx01-mng__srv-token" {
-  application_id = cloudflare_zero_trust_access_application.pxmx01-mng.id
-  zone_id        = cloudflare_zone.clov3r-cc.id
-  name           = "CLI Policy for pxmx01-mng.${cloudflare_zone.clov3r-cc.zone}"
-  precedence     = "2"
-  decision       = "non_identity"
-  include {
-    service_token = [cloudflare_zero_trust_access_service_token.managed.id]
   }
 }
