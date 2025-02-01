@@ -77,3 +77,29 @@ module "k8s_nodes__prod" {
   worker_first_internal-net_host-section = 21
   worker_os_disk_size                    = 20
 }
+
+resource "cloudflare_record" "ssh_prod-k8s-gw-01" {
+  zone_id = cloudflare_zone.clov3r-cc.id
+  name    = "ssh-prod-k8s-gw-01"
+  content = cloudflare_zero_trust_tunnel_cloudflared.cloudflared-01.cname
+  type    = "A"
+  ttl     = 1
+}
+
+resource "cloudflare_zero_trust_access_application" "ssh_prod-k8s-gw-01" {
+  zone_id          = cloudflare_zone.clov3r-cc.id
+  name             = "Access application for ${cloudflare_record.ssh_prod-k8s-gw-01.hostname}"
+  domain           = cloudflare_record.ssh_prod-k8s-gw-01.hostname
+  session_duration = "24h"
+}
+
+resource "cloudflare_zero_trust_access_policy" "ssh_prod-k8s-gw-01" {
+  application_id = cloudflare_zero_trust_access_application.ssh_prod-k8s-gw-01.id
+  zone_id        = cloudflare_zone.clov3r-cc.id
+  name           = "Web Login Policy for ${cloudflare_record.ssh_prod-k8s-gw-01.hostname}"
+  precedence     = "1"
+  decision       = "allow"
+  include {
+    group = [cloudflare_zero_trust_access_group.allow_github.id]
+  }
+}
