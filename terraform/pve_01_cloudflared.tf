@@ -20,10 +20,6 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "cloudflared-01" {
       }
     }
     ingress_rule {
-      hostname = cloudflare_record.ssh_prod-k8s-gw-01.hostname
-      service  = "ssh://${module.k8s_nodes__prod.gateway.ip0}:22"
-    }
-    ingress_rule {
       service = "http_status:404"
     }
   }
