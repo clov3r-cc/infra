@@ -82,8 +82,10 @@ resource "cloudflare_record" "ssh_prod-k8s-gw-01" {
   zone_id = cloudflare_zone.clov3r-cc.id
   name    = "ssh-prod-k8s-gw-01"
   content = cloudflare_zero_trust_tunnel_cloudflared.cloudflared-01.cname
-  type    = "A"
-  ttl     = 1
+  type    = "CNAME"
+  proxied = true
+  ttl     = 1 # Auto
+  comment = "SSH to prod-k8s-gw-01"
 }
 
 resource "cloudflare_zero_trust_access_application" "ssh_prod-k8s-gw-01" {
