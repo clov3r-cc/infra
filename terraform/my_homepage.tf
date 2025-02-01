@@ -28,3 +28,23 @@ resource "cloudflare_pages_domain" "www-clov3r-cc" {
   project_name = cloudflare_pages_project.homepage.name
   domain       = "www.${local.domain}"
 }
+
+resource "cloudflare_record" "homepage" {
+  zone_id = cloudflare_zone.clov3r-cc.id
+  type    = "CNAME"
+  name    = local.domain
+  content = "${cloudflare_pages_project.homepage.name}.pages.dev"
+  proxied = true
+  ttl     = 1 # Auto
+  comment = "for my homepage in Cloudflare Pages"
+}
+
+resource "cloudflare_record" "homepage__www" {
+  zone_id = cloudflare_zone.clov3r-cc.id
+  type    = "CNAME"
+  name    = "www"
+  content = "${cloudflare_pages_project.homepage.name}.pages.dev"
+  proxied = true
+  ttl     = 1 # Auto
+  comment = "for my homepage in Cloudflare Pages"
+}

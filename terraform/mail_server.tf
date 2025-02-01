@@ -1,33 +1,3 @@
-resource "cloudflare_record" "homepage" {
-  zone_id = cloudflare_zone.clov3r-cc.id
-  type    = "CNAME"
-  name    = local.domain
-  content = "${cloudflare_pages_project.homepage.name}.pages.dev"
-  proxied = true
-  ttl     = 1 # Auto
-  comment = "for my homepage in Cloudflare Pages"
-}
-
-resource "cloudflare_record" "homepage__www" {
-  zone_id = cloudflare_zone.clov3r-cc.id
-  type    = "CNAME"
-  name    = "www"
-  content = "${cloudflare_pages_project.homepage.name}.pages.dev"
-  proxied = true
-  ttl     = 1 # Auto
-  comment = "for my homepage in Cloudflare Pages"
-}
-
-resource "cloudflare_record" "auth0_domain" {
-  zone_id = cloudflare_zone.clov3r-cc.id
-  type    = "CNAME"
-  name    = "auth"
-  content = "dev-ylboliln6z4iuhd7-cd-jhudqctvydtf51ka.edge.tenants.jp.auth0.com"
-  proxied = false
-  ttl     = 1 # Auto
-  comment = "for Auth0"
-}
-
 resource "cloudflare_record" "mail-server__primary" {
   zone_id  = cloudflare_zone.clov3r-cc.id
   type     = "MX"
@@ -78,24 +48,4 @@ resource "cloudflare_record" "mail-server__dkim" {
   proxied = false
   ttl     = 1 # Auto
   comment = "for DKIM authentication"
-}
-
-resource "cloudflare_record" "github-pages_domain_verification" {
-  zone_id = cloudflare_zone.clov3r-cc.id
-  type    = "TXT"
-  name    = "_gh-clov3r-cc-o"
-  content = "3da337285a"
-  proxied = false
-  ttl     = 1 # Auto
-  comment = "for GitHub Pages Domain Verification"
-}
-
-resource "cloudflare_record" "pxmx01-mng" {
-  zone_id = cloudflare_zone.clov3r-cc.id
-  name    = "pxmx01-mng"
-  content = cloudflare_zero_trust_tunnel_cloudflared.cloudflared-01.cname
-  type    = "CNAME"
-  proxied = true
-  ttl     = 1 # Auto
-  comment = "for Cloudflare Tunnel with Proxmox#1"
 }
