@@ -2,7 +2,7 @@ locals {
   pve_hosts = {
     "pve-01" = {
       host_name      = "pve-01"
-      console_domain = "pxmx01-mng.${cloudflare_zone.clov3r-cc.zone}"
+      console_domain = "192.168.20.2"
     }
   }
 
