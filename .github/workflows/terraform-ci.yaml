@@ -35,16 +35,6 @@ jobs:
           oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
           oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
           tags: tag:gha
-      # Test setup SSH key
-      - name: Setup SSH key
-        run: |
-          echo "whoami: $(whoami)"
-          mkdir ~/.ssh
-          touch ~/.ssh/authorized_keys
-          curl -q https://github.com/Lucky3028.keys >> ~/.ssh/authorized_keys
-          chmod 755 ~
-          chmod 700 ~/.ssh
-          chmod 600 ~/.ssh/authorized_keys
       - name: Terraform Plan
         run: tfcmt plan -patch -- terraform plan -input=false -no-color -lock-timeout=10m
         env:
