@@ -270,17 +270,11 @@
 
 ### 4.5. SSHサーバの設定をする
 
-**注意: SSHポートの値はコマンドで参照している変数を参照します。適宜変更してください。**
-
 1. sshdの設定を変更する
 
     ```shell
     cd /etc/ssh/
     cp ./sshd_config ./sshd_config.orig
-
-    # ポートを変更する
-    NEW_SSH_PORT=60000 # 適宜ポートは変更する
-    sed -i -E "s/^#?Port .*$/Port ${NEW_SSH_PORT}/" ./sshd_config
 
     # root ユーザでのログインを禁止する
     sed -i -E 's/^#?PermitRootLogin .*$/PermitRootLogin no/' ./sshd_config
@@ -288,7 +282,7 @@
     # パスワード認証を禁止する
     sed -i -E 's/^#?PasswordAuthentication .*$/PasswordAuthentication no/' ./sshd_config
 
-    # 上記3点の差分のみが表示されることを確認する
+    # 上記の差分のみが表示されることを確認する
     diff -s ./sshd_config ./sshd_config.orig
     # 設定を検証する。出力が何も無ければ OK
     sshd -t
