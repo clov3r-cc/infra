@@ -161,10 +161,6 @@
 1. `sshd`の設定を変更する
 
     ```shell
-    ### ポートを変更する
-    NEW_SSH_PORT=60000 # 適宜ポートは変更する
-    sed -i -E "s/^#?Port .*$/Port ${NEW_SSH_PORT}/" /etc/ssh/sshd_config
-
     ### root ユーザでのログインを禁止する
     sed -i -E 's/^#?PermitRootLogin .*$/PermitRootLogin no/' /etc/ssh/sshd_config
 
