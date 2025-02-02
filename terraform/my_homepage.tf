@@ -30,7 +30,7 @@ resource "cloudflare_pages_domain" "www-clov3r-cc" {
 }
 
 resource "cloudflare_record" "homepage" {
-  zone_id = cloudflare_zone.clov3r-cc.id
+  zone_id = data.cloudflare_zone.clov3r-cc.id
   type    = "CNAME"
   name    = local.domain
   content = "${cloudflare_pages_project.homepage.name}.pages.dev"
@@ -40,7 +40,7 @@ resource "cloudflare_record" "homepage" {
 }
 
 resource "cloudflare_record" "homepage__www" {
-  zone_id = cloudflare_zone.clov3r-cc.id
+  zone_id = data.cloudflare_zone.clov3r-cc.id
   type    = "CNAME"
   name    = "www"
   content = "${cloudflare_pages_project.homepage.name}.pages.dev"
