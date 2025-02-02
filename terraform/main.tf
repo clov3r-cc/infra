@@ -5,7 +5,7 @@ locals {
   domain                = "clov3r.cc"
 }
 
-resource "cloudflare_zone" "clov3r-cc" {
+data "cloudflare_zone" "clov3r-cc" {
   account_id = local.cloudflare_account_id
-  zone       = local.domain
+  name       = local.domain
 }
