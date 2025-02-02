@@ -2,7 +2,7 @@ locals {
   pve_hosts = {
     "pve-01" = {
       host_name      = "pve-01"
-      console_domain = "192.168.20.2"
+      console_domain = "192.168.20.2:8006"
     }
   }
 
