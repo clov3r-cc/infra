@@ -171,7 +171,65 @@
 
 ### 4.4. CI/CD用ユーザを追加する
 
-1. ユーザに割り当てるロールを作成する
+1. Linux上のユーザを追加する
+
+    ```shell
+    $ USERNAME=machine-user
+
+    # ユーザが存在しないことを確認する。出力が何も無ければ OK
+    $ grep "$USERNAME" /etc/passwd
+
+    $ adduser "$USERNAME" --comment ''
+    Adding user `machine-user' ...
+    Adding new group `machine-user' (1001) ...
+    Adding new user `machine-user' (1001) with group `machine-user (1001)' ...
+    Creating home directory `/home/machine-user' ...
+    Copying files from `/etc/skel' ...
+    New password:
+    Retype new password:
+    passwd: password updated successfully
+    Adding new user `machine-user' to supplemental / extra groups `users' ...
+    Adding user `machine-user' to group `users' ...
+
+    # ユーザが存在することを確認する
+    $ grep "$USERNAME" /etc/passwd
+    ```
+
+2. 作業用ユーザを`sudoers`グループに追加する
+
+    ```shell
+    # ユーザが sudo グループに所属していないことを確認する
+    $ groups "$USERNAME"
+    machine-user : machine-user users
+
+    $ gpasswd -a "$USERNAME" sudo
+    Adding user machine-user to group sudo
+
+    # ユーザが sudo グループに所属していることを確認する
+    $ groups "$USERNAME"
+    machine-user : machine-user sudo users
+    ```
+
+3. 作業用ユーザにSSH公開鍵の設定をする
+
+    ```shell
+    $ su - "$USERNAME"
+
+    $ mkdir ~/.ssh
+    $ chmod 700 ~/.ssh
+    $ curl https://github.com/Lucky3028.keys > ~/.ssh/authorized_keys
+    $ chmod 600 ~/.ssh/authorized_keys
+
+    # それぞれ以下のように権限設定がされていることを確認する
+    $ stat -c "%A %n" .ssh
+    drwx------ .ssh
+    $ stat -c "%A %n" .ssh/authorized_keys
+    -rw------- .ssh/authorized_keys
+
+    $ exit
+    ```
+
+4. ユーザに割り当てるロールを作成する
 
     |            権限            |                              説明                               |
     | -------------------------- | --------------------------------------------------------------- |
@@ -204,55 +262,55 @@
     MACHINEUSER_ROLE='MachineUser'
 
     # ロールが存在しないことを確認する。何も出力されなければ OK
-    sudo pveum role list | grep "$MACHINEUSER_ROLE"
+    pveum role list | grep "$MACHINEUSER_ROLE"
 
-    sudo pveum role add "$MACHINEUSER_ROLE"
+    pveum role add "$MACHINEUSER_ROLE"
     # 何も出力されなければ OK
 
-    sudo pveum role modify "$MACHINEUSER_ROLE" --privs Pool.Allocate,Datastore.Allocate,Datastore.AllocateSpace,Datastore.AllocateTemplate,Datastore.Audit,SDN.Audit,Sys.Console,SDN.Use,Sys.Audit,Sys.Modify,VM.Allocate,VM.Audit,VM.Clone,VM.Config.CDROM,VM.Config.CPU,VM.Config.Cloudinit,VM.Config.Disk,VM.Config.HWType,VM.Config.Memory,VM.Config.Network,VM.Config.Options,VM.Migrate,VM.Monitor,VM.PowerMgmt
+    pveum role modify "$MACHINEUSER_ROLE" --privs Pool.Allocate,Datastore.Allocate,Datastore.AllocateSpace,Datastore.AllocateTemplate,Datastore.Audit,SDN.Audit,Sys.Console,SDN.Use,Sys.Audit,Sys.Modify,VM.Allocate,VM.Audit,VM.Clone,VM.Config.CDROM,VM.Config.CPU,VM.Config.Cloudinit,VM.Config.Disk,VM.Config.HWType,VM.Config.Memory,VM.Config.Network,VM.Config.Options,VM.Migrate,VM.Monitor,VM.PowerMgmt
     # 何も出力されなければ OK
 
     # ロールが存在することを確認する。追加したロールと権限が表示されれば OK
-    sudo pveum role list | grep "$MACHINEUSER_ROLE"
+    pveum role list | grep "$MACHINEUSER_ROLE"
     ```
 
-2. Proxmox上のユーザを作成する
+5. Proxmox上のユーザを作成する
 
     ```shell
     # @pve でレルムに Proxmox VE authentication server を指定する
     MACHINEUSER_USERNAME='machine-user@pve'
 
     # ユーザが存在しないことを確認する。何も出力されなければ OK
-    sudo pveum user list | grep "$MACHINEUSER_USERNAME"
+    pveum user list | grep "$MACHINEUSER_USERNAME"
 
-    sudo pveum user add "$MACHINEUSER_USERNAME"
+    pveum user add "$MACHINEUSER_USERNAME"
     # 何も出力されなければ OK
 
     # ユーザが存在することを確認する。出力があれば OK
-    sudo pveum user list | grep "$MACHINEUSER_USERNAME"
+    pveum user list | grep "$MACHINEUSER_USERNAME"
     ```
 
-3. ユーザにロールを紐づける
+6. ユーザにロールを紐づける
 
     ```shell
-    sudo pveum acl modify / -user "$MACHINEUSER_USERNAME" -role "$MACHINEUSER_ROLE"
+    pveum acl modify / -user "$MACHINEUSER_USERNAME" -role "$MACHINEUSER_ROLE"
     # 何も出力されなければ OK
     ```
 
-4. API トークンを作成する
+7. API トークンを作成する
 
     ```shell
     # トークンが存在しないことを確認する。何も出力されなければ OK
-    $ sudo pveum user token list "$MACHINEUSER_USERNAME"
+    $ pveum user token list "$MACHINEUSER_USERNAME"
 
     # tf はトークンの ID
     # -privsep 0 で、トークンの権限をユーザの権限と共通化（権限分離をしない）
-    $ sudo pveum user token add "$MACHINEUSER_USERNAME" tf -privsep 0
+    $ pveum user token add "$MACHINEUSER_USERNAME" tf -privsep 0
     # トークンのシークレット値が出力されるので、メモしておく
     ┌──────────────┬──────────────────────────────────────┐
     │ key          │ value                                │
     ╞══════════════╪══════════════════════════════════════╡
-    │ full-tokenid │ machine-user@pve!tf                  │
+    │ full-tokenid │ machine-user@pam!tf                  │
     ├──────────────┼──────────────────────────────────────┤
     │ info         │ {"privsep":1}                        │
     ├──────────────┼──────────────────────────────────────┤
@@ -260,7 +318,7 @@
     └──────────────┴──────────────────────────────────────┘
 
     # トークンが存在することを確認する。作成したトークンが出力されば OK
-    $ sudo pveum user token list "$MACHINEUSER_USERNAME"
+    $ pveum user token list "$MACHINEUSER_USERNAME"
     ┌─────────┬─────────┬────────┬─────────┐
     │ tokenid │ comment │ expire │ privsep │
     ╞═════════╪═════════╪════════╪═════════╡
@@ -299,11 +357,15 @@
 3. 別ターミナルで、以下のことを確認する
     - 作業用ユーザとして公開鍵認証でSSH接続できること
     - 作業用ユーザとしてパスワード認証でSSH接続できないこと
+    - CI/CD用ユーザとして公開鍵認証でSSH接続できること
+    - CI/CD用ユーザとしてパスワード認証でSSH接続できないこと
     - `root`ユーザでSSH接続できないこと
 
     ```shell
     ssh -i ~/.ssh/id_ed25519 lucky@192.168.20.2 # will OK
     ssh lucky@192.168.20.2 # will fail
+    ssh -i ~/.ssh/id_ed25519 machine-user@192.168.20.2 # will OK
+    ssh machine-user@192.168.20.2 # will fail
     ssh root@192.168.20.2 # will fail
     ```
 
@@ -312,3 +374,4 @@
 - パッケージの更新が行えること
 - `Proxmox`ホストに対するSSH接続において、`root`ユーザとしてログインできないこと
 - `Proxmox`ホストに対するSSH接続において、作業用ユーザが作成されていて、そのユーザとしてログインできること
+- `Proxmox`ホストに対するSSH接続において、CI/CD用ユーザが作成されていて、そのユーザとしてログインできること
