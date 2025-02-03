@@ -4,7 +4,7 @@ resource "random_password" "tunnel_secret" {
 
 resource "cloudflare_zero_trust_tunnel_cloudflared" "cloudflared-01" {
   account_id    = local.cloudflare_account_id
-  name          = "Terraform tunnel to proxmox-01 container in lucky-proxmox-01"
+  name          = "proxmox-01 container in proxmox-01"
   tunnel_secret = base64sha256(random_password.tunnel_secret.result)
 }
 
