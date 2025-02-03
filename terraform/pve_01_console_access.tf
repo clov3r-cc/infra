@@ -1,7 +1,7 @@
-resource "cloudflare_record" "pxmx01-mng" {
-  zone_id = data.cloudflare_zone.clov3r-cc.id
+resource "cloudflare_dns_record" "pxmx01-mng" {
+  zone_id = local.cloudflare_zone_id
   name    = "pxmx01-mng"
-  content = cloudflare_zero_trust_tunnel_cloudflared.cloudflared-01.cname
+  content = "${cloudflare_zero_trust_tunnel_cloudflared.cloudflared-01.id}.cfargotunnel.com"
   type    = "CNAME"
   proxied = true
   ttl     = 1 # Auto
@@ -9,37 +9,44 @@ resource "cloudflare_record" "pxmx01-mng" {
 }
 
 resource "cloudflare_zero_trust_access_application" "pxmx01-mng" {
-  zone_id          = data.cloudflare_zone.clov3r-cc.id
-  name             = "Access application for ${cloudflare_record.pxmx01-mng.hostname}"
-  domain           = cloudflare_record.pxmx01-mng.hostname
+  zone_id          = local.cloudflare_zone_id
+  name             = "Access application for ${cloudflare_dns_record.pxmx01-mng.name}"
+  domain           = cloudflare_dns_record.pxmx01-mng.name
   session_duration = "24h"
+  policies = [{
+    id         = cloudflare_zero_trust_access_policy.allow_github.id
+    precedence = "1"
+    }, {
+    id         = cloudflare_zero_trust_access_policy.allow_service_token.id
+    precedence = "2"
+  }]
 }
 
-resource "cloudflare_zero_trust_access_policy" "pxmx01-mng" {
-  application_id = cloudflare_zero_trust_access_application.pxmx01-mng.id
-  zone_id        = data.cloudflare_zone.clov3r-cc.id
-  name           = "Web Login Policy for ${cloudflare_record.pxmx01-mng.hostname}"
-  precedence     = "1"
-  decision       = "allow"
-  include {
-    group = [cloudflare_zero_trust_access_group.allow_github.id]
-  }
+resource "cloudflare_zero_trust_access_policy" "allow_github" {
+  account_id = local.cloudflare_account_id
+  name       = "To SSO with GitHub"
+  decision   = "allow"
+  include = [{
+    group = {
+      id = cloudflare_zero_trust_access_group.allow_github.id
+    }
+  }]
 }
 
-resource "cloudflare_zero_trust_access_service_token" "managed" {
+resource "cloudflare_zero_trust_access_service_token" "this" {
   name     = "managed token"
-  zone_id  = data.cloudflare_zone.clov3r-cc.id
-  duration = "8760h" # 1year
+  zone_id  = local.cloudflare_zone_id
+  duration = "${24 * 365}h" # 1y
 }
 
 # Service Token での認証はアクション（`decision`）を`Service Auth`（`non_identity`）にする必要がある
-resource "cloudflare_zero_trust_access_policy" "pxmx01-mng__srv-token" {
-  application_id = cloudflare_zero_trust_access_application.pxmx01-mng.id
-  zone_id        = data.cloudflare_zone.clov3r-cc.id
-  name           = "CLI Policy for ${cloudflare_record.pxmx01-mng.hostname}"
-  precedence     = "2"
-  decision       = "non_identity"
-  include {
-    service_token = [cloudflare_zero_trust_access_service_token.managed.id]
-  }
+resource "cloudflare_zero_trust_access_policy" "allow_service_token" {
+  account_id = local.cloudflare_account_id
+  name       = "Allow bypass by service token"
+  decision   = "non_identity"
+  include = [{
+    service_token = {
+      token_id = cloudflare_zero_trust_access_service_token.this.id
+    }
+  }]
 }
