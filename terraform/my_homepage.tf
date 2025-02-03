@@ -21,12 +21,20 @@ resource "cloudflare_pages_domain" "clov3r-cc" {
   account_id   = local.cloudflare_account_id
   project_name = cloudflare_pages_project.homepage.name
   name         = local.domain
+
+  lifecycle {
+    ignore_changes = all
+  }
 }
 
 resource "cloudflare_pages_domain" "www-clov3r-cc" {
   account_id   = local.cloudflare_account_id
   project_name = cloudflare_pages_project.homepage.name
   name         = "www.${local.domain}"
+
+  lifecycle {
+    ignore_changes = all
+  }
 }
 
 resource "cloudflare_dns_record" "homepage" {

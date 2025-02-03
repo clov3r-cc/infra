@@ -16,9 +16,9 @@ resource "cloudflare_zero_trust_access_application" "pxmx01-mng" {
   session_duration = "24h"
   policies = [{
     id         = cloudflare_zero_trust_access_policy.allow_github.id
-    precedence = "1"
+    precedence = 0
     }, {
     id         = cloudflare_zero_trust_access_policy.allow_service_token.id
-    precedence = "2"
+    precedence = 1
   }]
 }
