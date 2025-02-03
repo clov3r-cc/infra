@@ -1,5 +1,5 @@
 resource "cloudflare_dns_record" "pxmx01-mng" {
-  zone_id = data.cloudflare_zone.clov3r-cc.id
+  zone_id = local.cloudflare_zone_id
   name    = "pxmx01-mng"
   content = "${cloudflare_zero_trust_tunnel_cloudflared.cloudflared-01.id}.cfargotunnel.com"
   type    = "CNAME"
@@ -9,7 +9,7 @@ resource "cloudflare_dns_record" "pxmx01-mng" {
 }
 
 resource "cloudflare_zero_trust_access_application" "pxmx01-mng" {
-  zone_id          = data.cloudflare_zone.clov3r-cc.id
+  zone_id          = local.cloudflare_zone_id
   name             = "Access application for ${cloudflare_dns_record.pxmx01-mng.name}"
   domain           = cloudflare_dns_record.pxmx01-mng.name
   session_duration = "24h"
@@ -35,7 +35,7 @@ resource "cloudflare_zero_trust_access_policy" "allow_github" {
 
 resource "cloudflare_zero_trust_access_service_token" "this" {
   name     = "managed token"
-  zone_id  = data.cloudflare_zone.clov3r-cc.id
+  zone_id  = local.cloudflare_zone_id
   duration = "${24 * 365}h" # 1y
 }
 

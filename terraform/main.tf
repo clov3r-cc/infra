@@ -6,7 +6,3 @@ locals {
 
   domain = "clov3r.cc"
 }
-
-data "cloudflare_zone" "clov3r-cc" {
-  zone_id = local.cloudflare_zone_id
-}
