@@ -1,12 +1,7 @@
-resource "cloudflare_zero_trust_access_group" "allow_github" {
-  zone_id = local.cloudflare_zone_id
-  name    = "Allow GitHub"
-  include = [{
-    # GitHub
-    login_method = {
-      id = "3b628f5e-ce37-44d3-9182-ab59c1331f53"
-    }
-  }]
+# 2025/2/3: provder cloudflare/cloudflare can't include `login_method` in access group
+data "cloudflare_zero_trust_access_group" "allow_github" {
+  account_id = local.cloudflare_account_id
+  group_id   = "82e31d68-40a9-458c-a3f8-da668c6f2db7"
 }
 
 resource "cloudflare_zero_trust_access_policy" "allow_github" {
@@ -15,7 +10,7 @@ resource "cloudflare_zero_trust_access_policy" "allow_github" {
   decision   = "allow"
   include = [{
     group = {
-      id = cloudflare_zero_trust_access_group.allow_github.id
+      id = data.cloudflare_zero_trust_access_group.allow_github.group_id
     }
   }]
 }
