@@ -15,6 +15,7 @@
   - [4.3. 作業用ユーザを追加する](#43-作業用ユーザを追加する)
   - [4.4. CI/CD用ユーザを追加する](#44-cicd用ユーザを追加する)
   - [4.5. SSHサーバの設定をする](#45-sshサーバの設定をする)
+  - [4.6. cloud-init の準備をする](#46-cloud-init-の準備をする)
 - [5. 完了条件](#5-完了条件)
 
 <!-- /code_chunk_output -->
@@ -369,9 +370,79 @@
     ssh root@192.168.20.2 # will fail
     ```
 
+### 4.6. cloud-init の準備をする
+
+1. snippets を有効化する
+
+    ```shell
+    $ sudo pvesm set local --content iso,backup,snippets,vztmpl
+    # 何も出力されなければ OK
+
+    # local が表示されれば OK
+    $ sudo pvesm status -content snippets
+    Name         Type     Status           Total            Used       Available        %
+    local         dir     active        98497780         7374676        86073556    7.49%
+
+    # snippets ディレクトリが表示されれば OK
+    $ ls /var/lib/vz/
+    dump  images  snippets  template
+    ```
+
+2. 作業端末に Red Hat Enterprise Linux の cloud-init 用イメージをダウンロードする
+
+    ここでは、Red Hat Enterprise Linux 9.4 (x86_64) の KVM Guest Image をダウンロードすることします。
+
+    ダウンロードは、[Red Hat Customer Portal](https://access.redhat.com/downloads/content/479/ver=/rhel---9/9.4/x86_64/product-software) から行うことができます。
+
+    ダウンロード先を Windows 標準のダウンロードフォルダ、ダウンロードできたファイル名を`rhel-9.4-x86_64-kvm.qcow2`とします。
+
+3. ダウンロードしたイメージを Proxmox ホストにアップロードする
+
+    WSL 上の Ubuntu 24.04 からアップロードする手順を記載します。
+
+    ```shell
+    sftp proxmox-01:/tmp/ <<< $'put /mnt/c/Users/Lucky/Downloads/rhel-9.4-x86_64-kvm.qcow2'
+    # エラーが出力されなければ OK
+    ```
+
+4. アップロードしたイメージを移動する
+
+    ```shell
+    sudo mv /tmp/rhel-9.4-x86_64-kvm.qcow2 /var/lib/vz/template/iso/
+    # エラーが出力されなければ OK
+    ```
+
+5. VM のテンプレートを作成する
+
+    ```shell
+    ISO_DIR='/var/lib/vz/template/iso'
+    ISO_NAME="rhel-9.4-x86_64-kvm.qcow2"
+
+    echo 'Customizing iso...'
+    sudo virt-customize -a "$ISO_DIR/$ISO_NAME" --run-command 'echo -n >/etc/machine-id'
+    echo 'OK!!!'
+    echo ''
+
+    echo 'Creating VM template...'
+    VM_TMPL_ID=901
+    VM_TMPL_NAME="rhel-9.4"
+    VM_DISK_STORAGE=local-lvm
+    sudo qm destroy "$VM_TMPL_ID" --purge || true
+    sudo qm create $VM_TMPL_ID --name $VM_TMPL_NAME --memory 2048 --cores 2 --net0 virtio,bridge=vmbr0
+    sudo qm set $VM_TMPL_ID --scsihw virtio-scsi-single
+    sudo qm set $VM_TMPL_ID --virtio0 "${VM_DISK_STORAGE}:0,import-from=$ISO_DIR/$ISO_NAME"
+    sudo qm set $VM_TMPL_ID --boot c --bootdisk virtio0
+    sudo qm set $VM_TMPL_ID --ide2 "${VM_DISK_STORAGE}:cloudinit"
+    sudo qm set $VM_TMPL_ID --serial0 socket --vga serial0
+    sudo qm set $VM_TMPL_ID --agent enabled=1,fstrim_cloned_disks=1
+    sudo qm template $VM_TMPL_ID
+    echo 'OK!!!'
+    ```
+
 ## 5. 完了条件
 
 - パッケージの更新が行えること
 - `Proxmox`ホストに対するSSH接続において、`root`ユーザとしてログインできないこと
 - `Proxmox`ホストに対するSSH接続において、作業用ユーザが作成されていて、そのユーザとしてログインできること
 - `Proxmox`ホストに対するSSH接続において、CI/CD用ユーザが作成されていて、そのユーザとしてログインできること
+- cloud-init に使用する VM のテンプレートとスニペットの設定がされていること
