@@ -1,0 +1,42 @@
+#cloud-config
+# Password won't expire
+chpasswd:
+  expire: False
+groups:
+  - sudo
+  - users
+users:
+  - name: root
+    # Disable password login
+    lock_passwd: True
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: sudo
+    shell: /bin/bash
+    home: /root
+    password: ${CI_ROOT_PASSWORD}
+  - name: ${CI_MACHINEUSER_NAME}
+    # Disable password login
+    lock_passwd: True
+    sudo: ALL=(ALL) ALL
+    groups: users
+    shell: /bin/bash
+    home: /home/${CI_MACHINEUSER_NAME}
+    password: ${CI_MACHINEUSER_PASSWORD}
+    ssh-authorized-keys:
+      - ${CI_MACHINEUSER_SSH_PUBKEY}
+# Deny password authentication
+ssh_pwauth: False
+# Disable root login via ssh
+disable_root: True
+keyboard:
+  layout: us
+  model: pc105
+locale: en_US.UTF-8
+timezone: Asia/Tokyo
+package_update: True
+package_upgrade: True
+rh_subscription:
+  activation-key: ${CI_RHEL_ACTIVATION_KEY}
+  org: ${CI_RHEL_ORG}
+runcmd:
+  - systemctl reboot

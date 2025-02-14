@@ -3,6 +3,8 @@ locals {
 
   gateway_internal-net_subnet-mask = split("/", var.gateway_internal-net_subnet_cidr)[1]
   gateway_internal-net_default_gw  = cidrhost(var.gateway_internal-net_subnet_cidr, 1)
+
+  ci_config_filename__gateway = "k8s-vm_ci-config__gateway.yaml"
 }
 
 variable "gateway_allocated_host" {
@@ -65,7 +67,47 @@ variable "gateway_os_disk_size" {
   description = "The disk size for os attached to gateway node."
 }
 
+resource "random_password" "vm_root_password__gateway" {
+  length  = 16
+  special = true
+}
+
+resource "random_password" "vm_user_password__gateway" {
+  length      = 16
+  min_lower   = 3
+  min_upper   = 3
+  min_numeric = 3
+  min_special = 3
+}
+
+resource "null_resource" "vm_ci_config__gateway" {
+  connection {
+    type        = "ssh"
+    host        = "192.168.20.2"
+    user        = var.vm_user
+    private_key = base64decode(var.vm_ssh_private_key)
+  }
+  provisioner "file" {
+    content = templatefile("${path.module}/resources/k8s-vm-cloud-init.yaml.tftpl", {
+      CI_ROOT_PASSWORD          = random_password.vm_root_password__gateway.result,
+      CI_MACHINEUSER_NAME       = var.vm_user,
+      CI_MACHINEUSER_PASSWORD   = random_password.vm_user_password__gateway.result,
+      CI_MACHINEUSER_SSH_PUBKEY = base64decode(var.vm_ssh_public_key),
+      CI_RHEL_ACTIVATION_KEY    = var.rhel_activation_key,
+      CI_RHEL_ORG               = var.rhel_org,
+    })
+    destination = "/tmp/${var.env_name}__${local.ci_config_filename__gateway}"
+  }
+  provisioner "remote-exec" {
+    inline = [
+      "echo ${random_password.vm_user_password__gateway.result} | sudo -S mv /tmp/${var.env_name}__${local.ci_config_filename__gateway} /var/lib/vz/snippets/",
+    ]
+  }
+}
+
 resource "proxmox_vm_qemu" "gateway" {
+  depends_on = [null_resource.vm_ci_config__gateway]
+
   name        = "${var.env_name}-k8s-gw-01"
   target_node = var.gateway_allocated_host
   vmid        = var.gateway_vm_id
@@ -91,11 +133,8 @@ resource "proxmox_vm_qemu" "gateway" {
   scsihw  = "virtio-scsi-single"
 
   # cloud-init configuration
-  os_type    = "cloud-init"
-  ciuser     = var.vm_user
-  cipassword = var.vm_user_password
-  ciupgrade  = true
-  sshkeys    = base64decode(var.vm_ssh_public_key)
+  os_type  = "cloud-init"
+  cicustom = "user=local:snippets/${var.env_name}__${local.ci_config_filename__gateway}"
 
   network {
     id     = 0
@@ -147,4 +186,26 @@ resource "proxmox_vm_qemu" "gateway" {
   }
 }
 
-# TODO: add ssh secret key
+resource "null_resource" "gateway_privision_ssh_private_key" {
+  connection {
+    type        = "ssh"
+    host        = "192.168.20.2"
+    user        = var.vm_user
+    private_key = base64decode(var.vm_ssh_private_key)
+  }
+  provisioner "remote-exec" {
+    inline = [
+      "mkdir /home/${var.vm_user}/.ssh",
+      "chmod 700 /home/${var.vm_user}/.ssh",
+    ]
+  }
+  provisioner "file" {
+    content     = base64decode(var.vm_ssh_private_key)
+    destination = "/home/${var.vm_user}/.ssh/id_ed25519"
+  }
+  provisioner "remote-exec" {
+    inline = [
+      "chmod 600 /home/${var.vm_user}/.ssh/id_ed25519",
+    ]
+  }
+}
