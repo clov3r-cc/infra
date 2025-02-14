@@ -25,7 +25,7 @@ jobs:
           cli_config_credentials_token: ${{ secrets.TERRAFORM_CLOUD_API_TOKEN }}
       - uses: shmokmt/actions-setup-tfcmt@v2
       - name: Terraform Format
-        run: terraform fmt -check
+        run: terraform fmt -check -recursive
       - name: Terraform Init
         run: terraform init
       - name: Terraform Validate
