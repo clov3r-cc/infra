@@ -1,5 +1,6 @@
 #cloud-config
 hostname: ${CI_HOSTNAME}
+prefer_fqdn_over_hostname: False
 # Password won't expire
 chpasswd:
   expire: False
