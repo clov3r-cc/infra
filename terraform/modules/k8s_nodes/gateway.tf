@@ -235,7 +235,7 @@ resource "null_resource" "gateway_privision_ssh_private_key__gateway" {
   }
 }
 
-resource "null_resource" "gateway_privision_ip_forwarding" {
+resource "null_resource" "gateway_privision_ip_routing" {
   connection {
     type        = "ssh"
     host        = proxmox_vm_qemu.gateway.ssh_host
@@ -243,13 +243,13 @@ resource "null_resource" "gateway_privision_ip_forwarding" {
     private_key = base64decode(var.vm_ssh_private_key)
   }
   provisioner "file" {
-    source      = "${path.module}/resources/ip_forwarding.sh"
-    destination = "/tmp/ip_forwarding.sh"
+    source      = "${path.module}/resources/ip-routing.sh"
+    destination = "/tmp/ip-routing.sh"
   }
   provisioner "remote-exec" {
     inline = [
-      "chmod +x /tmp/ip_forwarding.sh",
-      "echo '${random_password.vm_user_password__gateway.result}' | sudo -S /tmp/ip_forwarding.sh",
+      "chmod +x /tmp/ip-routing.sh",
+      "echo '${random_password.vm_user_password__gateway.result}' | sudo -S /tmp/ip-routing.sh",
     ]
   }
 }
