@@ -187,7 +187,7 @@ resource "proxmox_vm_qemu" "gateway" {
   }
 }
 
-resource "null_resource" "gateway_privision_ssh_private_key__pve" {
+resource "null_resource" "gateway_provision_ssh_private_key__pve" {
   connection {
     type        = "ssh"
     host        = "192.168.20.2"
@@ -211,7 +211,7 @@ resource "null_resource" "gateway_privision_ssh_private_key__pve" {
   }
 }
 
-resource "null_resource" "gateway_privision_ssh_private_key__gateway" {
+resource "null_resource" "gateway_provision_ssh_private_key__gateway" {
   connection {
     type        = "ssh"
     host        = proxmox_vm_qemu.gateway.ssh_host
@@ -235,7 +235,7 @@ resource "null_resource" "gateway_privision_ssh_private_key__gateway" {
   }
 }
 
-resource "null_resource" "gateway_privision_ip_routing" {
+resource "null_resource" "gateway_provision_ip_routing" {
   connection {
     type        = "ssh"
     host        = proxmox_vm_qemu.gateway.ssh_host
