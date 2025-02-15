@@ -111,6 +111,8 @@ resource "proxmox_vm_qemu" "worker" {
   bios        = "seabios"
   onboot      = true
   agent       = 1
+  clone       = var.vm_template
+  full_clone  = true
   tags        = "${var.env_name};terraform;k8s;worker"
   qemu_os     = "l26"
 

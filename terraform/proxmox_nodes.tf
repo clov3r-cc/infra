@@ -23,14 +23,6 @@ EOT
   vm_internal-net_subnet_cidr = "192.168.8.0/24"
 }
 
-resource "random_password" "vm_user_password" {
-  length      = 16
-  min_lower   = 3
-  min_upper   = 3
-  min_numeric = 3
-  min_special = 3
-}
-
 module "prod__k8s_nodes" {
   source = "./modules/k8s_nodes"
 
