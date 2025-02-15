@@ -42,6 +42,8 @@ jobs:
           tags: tag:gha
       - name: Terraform Plan
         run: terraform plan -input=false -no-color -lock-timeout=10m -out=tfplan_result
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
       - name: Terraform Apply
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
