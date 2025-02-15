@@ -73,7 +73,8 @@ resource "random_password" "vm_user_password__worker" {
 }
 
 resource "null_resource" "vm_ci_config__worker" {
-  for_each = var.worker_allocated_host
+  for_each   = var.worker_allocated_host
+  depends_on = [null_resource.vm_ci_config__worker]
 
   connection {
     type        = "ssh"
