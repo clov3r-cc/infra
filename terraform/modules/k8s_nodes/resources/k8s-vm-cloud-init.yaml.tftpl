@@ -45,3 +45,6 @@ runcmd:
   # passwd in users field fails to set password
   - echo 'root:${CI_ROOT_PASSWORD}' | chpasswd
   - echo '${CI_MACHINEUSER_NAME}:${CI_MACHINEUSER_PASSWORD}' | chpasswd
+  # disable sudo warnings b/c we can't pass password in stdin
+  - echo '' >> /etc/sudoers.d/90-cloud-init-users
+  - echo 'Defaults    lecture = "never"' >> /etc/sudoers.d/90-cloud-init-users
