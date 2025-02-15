@@ -6,9 +6,10 @@ locals {
     }
   }
 
+  machine_user = "machine-user"
+
   vm_template        = "rhel-9.4"
   vm_os_disk_storage = "local-lvm"
-  vm_user            = "machine-user"
   vm_ssh_public_key  = <<EOT
 c3NoLWVkMjU1MTkgQUFBQUMzTnphQzFsWkRJMU5URTVBQUFBSUVDNnNGZzc0MXpsb01QVU9wblht
 bVN0ZFZVaHkvOW91c1BCSjZJNm5YMzMgbWFjaGluZS11c2VyQGx1Y2t5LXByb3htb3gtMDEK
@@ -36,7 +37,7 @@ module "prod__k8s_nodes" {
   env_name = "prod"
 
   vm_template         = local.vm_template
-  vm_user             = local.vm_user
+  vm_user             = local.machine_user
   vm_ssh_public_key   = local.vm_ssh_public_key
   vm_ssh_private_key  = var.vm_ssh_private_key
   vm_os_disk_storage  = local.vm_os_disk_storage
