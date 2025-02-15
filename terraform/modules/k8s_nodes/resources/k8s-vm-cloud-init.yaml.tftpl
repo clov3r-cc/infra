@@ -35,6 +35,12 @@ locale: en_US.UTF-8
 timezone: Asia/Tokyo
 package_update: True
 package_upgrade: True
+packages:
+  # To set locale properly
+  - glibc-all-langpacks
+  - langpacks-en
+  # Use vim as a default text editor
+  - vim-enhanced
 rh_subscription:
   activation-key: ${CI_RHEL_ACTIVATION_KEY}
   org: ${CI_RHEL_ORG}
