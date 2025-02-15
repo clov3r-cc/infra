@@ -13,7 +13,7 @@ users:
     groups: sudo
     shell: /bin/bash
     home: /root
-    password: ${CI_ROOT_PASSWORD}
+    plain_text_passwd: ${CI_ROOT_PASSWORD}
   - name: ${CI_MACHINEUSER_NAME}
     # Disable password login
     lock_passwd: True
@@ -21,7 +21,7 @@ users:
     groups: users
     shell: /bin/bash
     home: /home/${CI_MACHINEUSER_NAME}
-    password: ${CI_MACHINEUSER_PASSWORD}
+    plain_text_passwd: ${CI_MACHINEUSER_PASSWORD}
     ssh-authorized-keys:
       - ${CI_MACHINEUSER_SSH_PUBKEY}
 # Deny password authentication
