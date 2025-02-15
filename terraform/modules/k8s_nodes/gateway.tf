@@ -68,8 +68,11 @@ variable "gateway_os_disk_size" {
 }
 
 resource "random_password" "vm_root_password__gateway" {
-  length  = 16
-  special = true
+  length      = 16
+  min_lower   = 3
+  min_upper   = 3
+  min_numeric = 3
+  special     = false
 }
 
 resource "random_password" "vm_user_password__gateway" {
@@ -77,7 +80,7 @@ resource "random_password" "vm_user_password__gateway" {
   min_lower   = 3
   min_upper   = 3
   min_numeric = 3
-  min_special = 3
+  special     = false
 }
 
 resource "null_resource" "vm_ci_config__gateway" {
@@ -90,7 +93,7 @@ resource "null_resource" "vm_ci_config__gateway" {
   provisioner "file" {
     content = templatefile("${path.module}/resources/k8s-vm-cloud-init.yaml.tftpl", {
       CI_HOSTNAME               = "${var.env_name}-k8s-gw-01",
-      CI_ROOT_PASSWORD          = "aaa",
+      CI_ROOT_PASSWORD          = random_password.vm_root_password__gateway.result,
       CI_MACHINEUSER_NAME       = var.vm_user,
       CI_MACHINEUSER_PASSWORD   = random_password.vm_user_password__gateway.result,
       CI_MACHINEUSER_SSH_PUBKEY = base64decode(var.vm_ssh_public_key),
@@ -187,7 +190,7 @@ resource "proxmox_vm_qemu" "gateway" {
   }
 }
 
-resource "null_resource" "gateway_privision_ssh_private_key__pve" {
+resource "null_resource" "gateway_provision_ssh_private_key__pve" {
   connection {
     type        = "ssh"
     host        = "192.168.20.2"
@@ -211,7 +214,7 @@ resource "null_resource" "gateway_privision_ssh_private_key__pve" {
   }
 }
 
-resource "null_resource" "gateway_privision_ssh_private_key__gateway" {
+resource "null_resource" "gateway_provision_ssh_private_key__gateway" {
   connection {
     type        = "ssh"
     host        = proxmox_vm_qemu.gateway.ssh_host
@@ -235,7 +238,7 @@ resource "null_resource" "gateway_privision_ssh_private_key__gateway" {
   }
 }
 
-resource "null_resource" "gateway_privision_ip_forwarding" {
+resource "null_resource" "gateway_provision_ip_routing" {
   connection {
     type        = "ssh"
     host        = proxmox_vm_qemu.gateway.ssh_host
@@ -243,13 +246,14 @@ resource "null_resource" "gateway_privision_ip_forwarding" {
     private_key = base64decode(var.vm_ssh_private_key)
   }
   provisioner "file" {
-    source      = "${path.module}/resources/ip_forwarding.sh"
-    destination = "/tmp/ip_forwarding.sh"
+    source      = "${path.module}/resources/ip-routing.sh"
+    destination = "/tmp/ip-routing.sh"
   }
   provisioner "remote-exec" {
     inline = [
-      "chmod +x /tmp/ip_forwarding.sh",
-      "echo '${random_password.vm_user_password__gateway.result}' | sudo -S /tmp/ip_forwarding.sh",
+      "chmod +x /tmp/ip-routing.sh",
+      "cloud-init status --wait > /dev/null 2>&1",
+      "echo '${random_password.vm_user_password__gateway.result}' | sudo -S /tmp/ip-routing.sh",
     ]
   }
 }

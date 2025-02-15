@@ -58,8 +58,11 @@ variable "worker_os_disk_size" {
 resource "random_password" "vm_root_password__worker" {
   for_each = var.worker_allocated_host
 
-  length  = 16
-  special = true
+  length      = 16
+  min_lower   = 3
+  min_upper   = 3
+  min_numeric = 3
+  special     = false
 }
 
 resource "random_password" "vm_user_password__worker" {
@@ -69,7 +72,7 @@ resource "random_password" "vm_user_password__worker" {
   min_lower   = 3
   min_upper   = 3
   min_numeric = 3
-  min_special = 3
+  special     = false
 }
 
 resource "null_resource" "vm_ci_config__worker" {
