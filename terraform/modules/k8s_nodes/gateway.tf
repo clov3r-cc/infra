@@ -100,7 +100,7 @@ resource "null_resource" "vm_ci_config__gateway" {
   }
   provisioner "remote-exec" {
     inline = [
-      "echo ${random_password.vm_user_password__gateway.result} | sudo -S mv /tmp/${var.env_name}__${local.ci_config_filename__gateway} /var/lib/vz/snippets/",
+      "echo '${random_password.vm_user_password__gateway.result}' | sudo -S mv /tmp/${var.env_name}__${local.ci_config_filename__gateway} /var/lib/vz/snippets/",
     ]
   }
 }

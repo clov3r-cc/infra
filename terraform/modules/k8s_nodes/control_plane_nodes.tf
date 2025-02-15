@@ -94,7 +94,7 @@ resource "null_resource" "vm_ci_config__control_plane" {
   }
   provisioner "remote-exec" {
     inline = [
-      "echo ${random_password.vm_user_password__control_plane[each.key].result} | sudo -S mv /tmp/${var.env_name}__k8s-vm_ci-config__cp-${format("%02d", index(local.control_planes_index, each.key) + 1)}.yaml /var/lib/vz/snippets/",
+      "echo '${random_password.vm_user_password__control_plane[each.key].result}' | sudo -S mv /tmp/${var.env_name}__k8s-vm_ci-config__cp-${format("%02d", index(local.control_planes_index, each.key) + 1)}.yaml /var/lib/vz/snippets/",
     ]
   }
 }
