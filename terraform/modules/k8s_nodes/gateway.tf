@@ -89,6 +89,7 @@ resource "null_resource" "vm_ci_config__gateway" {
   }
   provisioner "file" {
     content = templatefile("${path.module}/resources/k8s-vm-cloud-init.yaml.tftpl", {
+      CI_HOSTNAME               = "${var.env_name}-k8s-gw-01",
       CI_ROOT_PASSWORD          = random_password.vm_root_password__gateway.result,
       CI_MACHINEUSER_NAME       = var.vm_user,
       CI_MACHINEUSER_PASSWORD   = random_password.vm_user_password__gateway.result,
@@ -186,7 +187,7 @@ resource "proxmox_vm_qemu" "gateway" {
   }
 }
 
-resource "null_resource" "gateway_privision_ssh_private_key" {
+resource "null_resource" "gateway_privision_ssh_private_key__pve" {
   connection {
     type        = "ssh"
     host        = "192.168.20.2"
@@ -206,6 +207,49 @@ resource "null_resource" "gateway_privision_ssh_private_key" {
   provisioner "remote-exec" {
     inline = [
       "chmod 600 /home/${var.vm_user}/.ssh/id_ed25519",
+    ]
+  }
+}
+
+resource "null_resource" "gateway_privision_ssh_private_key__gateway" {
+  connection {
+    type        = "ssh"
+    host        = proxmox_vm_qemu.gateway.ssh_host
+    user        = var.vm_user
+    private_key = base64decode(var.vm_ssh_private_key)
+  }
+  provisioner "remote-exec" {
+    inline = [
+      "mkdir /home/${var.vm_user}/.ssh",
+      "chmod 700 /home/${var.vm_user}/.ssh",
+    ]
+  }
+  provisioner "file" {
+    content     = base64decode(var.vm_ssh_private_key)
+    destination = "/home/${var.vm_user}/.ssh/id_ed25519"
+  }
+  provisioner "remote-exec" {
+    inline = [
+      "chmod 600 /home/${var.vm_user}/.ssh/id_ed25519",
+    ]
+  }
+}
+
+resource "null_resource" "gateway_privision_ip_forwarding" {
+  connection {
+    type        = "ssh"
+    host        = proxmox_vm_qemu.gateway.ssh_host
+    user        = var.vm_user
+    private_key = base64decode(var.vm_ssh_private_key)
+  }
+  provisioner "file" {
+    source      = "${path.module}/resources/ip_forwarding.sh"
+    destination = "/tmp/ip_forwarding.sh"
+  }
+  provisioner "remote-exec" {
+    inline = [
+      "chmod +x /tmp/ip_forwarding.sh",
+      "echo '${random_password.vm_user_password__gateway.result}' | sudo -S /tmp/ip_forwarding.sh",
     ]
   }
 }

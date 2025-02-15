@@ -83,6 +83,7 @@ resource "null_resource" "vm_ci_config__control_plane" {
   }
   provisioner "file" {
     content = templatefile("${path.module}/resources/k8s-vm-cloud-init.yaml.tftpl", {
+      CI_HOSTNAME               = "${var.env_name}-k8s-cp-${format("%02d", index(local.control_planes_index, each.key) + 1)}",
       CI_ROOT_PASSWORD          = random_password.vm_root_password__control_plane[each.key].result,
       CI_MACHINEUSER_NAME       = var.vm_user,
       CI_MACHINEUSER_PASSWORD   = random_password.vm_user_password__control_plane[each.key].result,
