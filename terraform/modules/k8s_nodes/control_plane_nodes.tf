@@ -55,8 +55,53 @@ variable "control_plane_os_disk_size" {
   description = "The disk size for os attached to control plane node."
 }
 
-resource "proxmox_vm_qemu" "control_plane" {
+resource "random_password" "vm_root_password__control_plane" {
   for_each = var.control_plane_allocated_host
+
+  length  = 16
+  special = true
+}
+
+resource "random_password" "vm_user_password__control_plane" {
+  for_each = var.control_plane_allocated_host
+
+  length      = 16
+  min_lower   = 3
+  min_upper   = 3
+  min_numeric = 3
+  min_special = 3
+}
+
+resource "null_resource" "vm_ci_config__control_plane" {
+  for_each = var.control_plane_allocated_host
+
+  connection {
+    type        = "ssh"
+    host        = "192.168.20.2"
+    user        = var.vm_user
+    private_key = base64decode(var.vm_ssh_private_key)
+  }
+  provisioner "file" {
+    content = templatefile("${path.module}/resources/k8s-vm-cloud-init.yaml.tftpl", {
+      CI_ROOT_PASSWORD          = random_password.vm_root_password__control_plane[each.key].result,
+      CI_MACHINEUSER_NAME       = var.vm_user,
+      CI_MACHINEUSER_PASSWORD   = random_password.vm_user_password__control_plane[each.key].result,
+      CI_MACHINEUSER_SSH_PUBKEY = base64decode(var.vm_ssh_public_key),
+      CI_RHEL_ACTIVATION_KEY    = var.rhel_activation_key,
+      CI_RHEL_ORG               = var.rhel_org,
+    })
+    destination = "/tmp/${var.env_name}__k8s-vm_ci-config__cp-${format("%02d", index(local.control_planes_index, each.key) + 1)}.yaml"
+  }
+  provisioner "remote-exec" {
+    inline = [
+      "echo ${random_password.vm_user_password__control_plane[each.key].result} | sudo -S mv /tmp/${var.env_name}__k8s-vm_ci-config__cp-${format("%02d", index(local.control_planes_index, each.key) + 1)}.yaml /var/lib/vz/snippets/",
+    ]
+  }
+}
+
+resource "proxmox_vm_qemu" "control_plane" {
+  for_each   = var.control_plane_allocated_host
+  depends_on = [null_resource.vm_ci_config__control_plane]
 
   name        = "${var.env_name}-k8s-cp-${format("%02d", index(local.control_planes_index, each.key) + 1)}"
   target_node = each.value
@@ -65,8 +110,6 @@ resource "proxmox_vm_qemu" "control_plane" {
   bios        = "seabios"
   onboot      = true
   agent       = 1
-  clone       = var.vm_template
-  full_clone  = true
   tags        = "${var.env_name};terraform;k8s;control_plane"
   qemu_os     = "l26"
 
@@ -83,11 +126,8 @@ resource "proxmox_vm_qemu" "control_plane" {
   scsihw  = "virtio-scsi-single"
 
   # cloud-init configuration
-  os_type    = "cloud-init"
-  ciuser     = var.vm_user
-  cipassword = var.vm_user_password
-  ciupgrade  = true
-  sshkeys    = base64decode(var.vm_ssh_public_key)
+  os_type  = "cloud-init"
+  cicustom = "user=local:snippets/${var.env_name}__k8s-vm_ci-config__cp-${format("%02d", index(local.control_planes_index, each.key) + 1)}.yaml"
 
   network {
     id     = 0

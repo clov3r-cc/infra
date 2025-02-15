@@ -1,11 +1,11 @@
-output "k8s_gateway_node__prod" {
-  value = module.k8s_nodes__prod.gateway
+output "prod__k8s_gateway_node" {
+  value = module.prod__k8s_nodes.gateway
 }
 
-output "k8s_worker_nodes__prod" {
-  value = module.k8s_nodes__prod.worker_nodes
+output "prod__k8s_worker_nodes" {
+  value = module.prod__k8s_nodes.worker_nodes
 }
 
-output "k8s_control_plane_nodes__prod" {
-  value = module.k8s_nodes__prod.control_plane_nodes
+output "prod__k8s_control_plane_nodes" {
+  value = module.prod__k8s_nodes.control_plane_nodes
 }

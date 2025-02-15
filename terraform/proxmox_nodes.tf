@@ -6,7 +6,7 @@ locals {
     }
   }
 
-  vm_template        = "alma-9"
+  vm_template        = "rhel-9.4"
   vm_os_disk_storage = "local-lvm"
   vm_user            = "machine-user"
   vm_ssh_public_key  = <<EOT
@@ -30,16 +30,18 @@ resource "random_password" "vm_user_password" {
   min_special = 3
 }
 
-module "k8s_nodes__prod" {
+module "prod__k8s_nodes" {
   source = "./modules/k8s_nodes"
 
   env_name = "prod"
 
-  vm_user            = local.vm_user
-  vm_user_password   = random_password.vm_user_password.result
-  vm_ssh_public_key  = local.vm_ssh_public_key
-  vm_template        = local.vm_template
-  vm_os_disk_storage = local.vm_os_disk_storage
+  vm_template         = local.vm_template
+  vm_user             = local.vm_user
+  vm_ssh_public_key   = local.vm_ssh_public_key
+  vm_ssh_private_key  = var.vm_ssh_private_key
+  vm_os_disk_storage  = local.vm_os_disk_storage
+  rhel_org            = var.rhel_org
+  rhel_activation_key = var.rhel_activation_key
 
   gateway_allocated_host            = local.pve_hosts["pve-01"]["host_name"]
   gateway_vm_id                     = 801
