@@ -11,14 +11,12 @@ users:
     sudo: ALL=(ALL) NOPASSWD:ALL
     shell: /bin/bash
     home: /root
-    plain_text_passwd: ${CI_ROOT_PASSWORD}
   - name: ${CI_MACHINEUSER_NAME}
     # Disable password login
     lock_passwd: True
     sudo: ALL=(ALL) ALL
     shell: /bin/bash
     home: /home/${CI_MACHINEUSER_NAME}
-    plain_text_passwd: ${CI_MACHINEUSER_PASSWORD}
     ssh_authorized_keys:
       - ${CI_MACHINEUSER_SSH_PUBKEY}
 # Deny password authentication
@@ -43,3 +41,7 @@ packages:
 rh_subscription:
   activation-key: ${CI_RHEL_ACTIVATION_KEY}
   org: ${CI_RHEL_ORG}
+runcmd:
+  # passwd in users field fails to set password
+  - echo 'root:${CI_ROOT_PASSWORD}' | chpasswd
+  - echo '${CI_MACHINEUSER_NAME}:${CI_MACHINEUSER_PASSWORD}' | chpasswd
