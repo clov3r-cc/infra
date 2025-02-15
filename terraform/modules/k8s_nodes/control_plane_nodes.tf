@@ -59,7 +59,10 @@ resource "random_password" "vm_root_password__control_plane" {
   for_each = var.control_plane_allocated_host
 
   length  = 16
-  special = true
+  min_lower   = 3
+  min_upper   = 3
+  min_numeric = 3
+  special = false
 }
 
 resource "random_password" "vm_user_password__control_plane" {
@@ -69,7 +72,7 @@ resource "random_password" "vm_user_password__control_plane" {
   min_lower   = 3
   min_upper   = 3
   min_numeric = 3
-  min_special = 3
+  special = false
 }
 
 resource "null_resource" "vm_ci_config__control_plane" {

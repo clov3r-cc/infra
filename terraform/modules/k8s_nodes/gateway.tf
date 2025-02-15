@@ -68,8 +68,11 @@ variable "gateway_os_disk_size" {
 }
 
 resource "random_password" "vm_root_password__gateway" {
-  length  = 16
-  special = true
+  length      = 16
+  min_lower   = 3
+  min_upper   = 3
+  min_numeric = 3
+  special     = false
 }
 
 resource "random_password" "vm_user_password__gateway" {
@@ -77,7 +80,7 @@ resource "random_password" "vm_user_password__gateway" {
   min_lower   = 3
   min_upper   = 3
   min_numeric = 3
-  min_special = 3
+  special     = false
 }
 
 resource "null_resource" "vm_ci_config__gateway" {
