@@ -2,15 +2,11 @@
 # Password won't expire
 chpasswd:
   expire: False
-groups:
-  - sudo
-  - users
 users:
   - name: root
     # Disable password login
     lock_passwd: True
     sudo: ALL=(ALL) NOPASSWD:ALL
-    groups: sudo
     shell: /bin/bash
     home: /root
     plain_text_passwd: ${CI_ROOT_PASSWORD}
@@ -18,7 +14,6 @@ users:
     # Disable password login
     lock_passwd: True
     sudo: ALL=(ALL) ALL
-    groups: users
     shell: /bin/bash
     home: /home/${CI_MACHINEUSER_NAME}
     plain_text_passwd: ${CI_MACHINEUSER_PASSWORD}
