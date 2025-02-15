@@ -56,7 +56,7 @@ module "prod__k8s_nodes" {
   gateway_public-net_subnet_cidr    = local.vm_public-net_subnet_cidr
   gateway_internal-net_bridge       = local.vm_internal-net_bridge
   gateway_internal-net_subnet_cidr  = local.vm_internal-net_subnet_cidr
-  gateway_internal-net_host-section = 2
+  gateway_internal-net_host-section = 1
   gateway_os_disk_size              = 20
 
   control_plane_allocated_host = {
