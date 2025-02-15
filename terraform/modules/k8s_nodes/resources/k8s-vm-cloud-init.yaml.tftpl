@@ -44,7 +44,6 @@ rh_subscription:
 runcmd:
   # make SELinux permissive
   - sed -i 's/^SELINUX=enforcing/SELINUX=permissive/' /etc/selinux/config
-  - systemctl reboot
   # passwd in users field fails to set password
   - echo 'root:${CI_ROOT_PASSWORD}' | chpasswd
   - echo '${CI_MACHINEUSER_NAME}:${CI_MACHINEUSER_PASSWORD}' | chpasswd
