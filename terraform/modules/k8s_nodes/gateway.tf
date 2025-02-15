@@ -84,7 +84,7 @@ resource "null_resource" "vm_ci_config__gateway" {
   connection {
     type        = "ssh"
     host        = "192.168.20.2"
-    user        = var.vm_user
+    user        = var.pve_user
     private_key = base64decode(var.vm_ssh_private_key)
   }
   provisioner "file" {
@@ -100,7 +100,7 @@ resource "null_resource" "vm_ci_config__gateway" {
   }
   provisioner "remote-exec" {
     inline = [
-      "echo ${random_password.vm_user_password__gateway.result} | sudo -S mv /tmp/${var.env_name}__${local.ci_config_filename__gateway} /var/lib/vz/snippets/",
+      "echo '${var.pve_user_password}' | sudo -S mv /tmp/${var.env_name}__${local.ci_config_filename__gateway} /var/lib/vz/snippets/",
     ]
   }
 }
@@ -190,7 +190,7 @@ resource "null_resource" "gateway_privision_ssh_private_key" {
   connection {
     type        = "ssh"
     host        = "192.168.20.2"
-    user        = var.vm_user
+    user        = var.pve_user
     private_key = base64decode(var.vm_ssh_private_key)
   }
   provisioner "remote-exec" {

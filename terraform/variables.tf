@@ -34,6 +34,12 @@ variable "pve_cf_client_secret" {
   sensitive   = true
 }
 
+variable "pve_user_password" {
+  type        = string
+  description = "The password for the Proxmox user."
+  sensitive   = true
+}
+
 variable "vm_ssh_private_key" {
   type        = string
   description = "The private SSH key base64 encoded for the machine user."

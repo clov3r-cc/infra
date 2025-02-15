@@ -78,7 +78,7 @@ resource "null_resource" "vm_ci_config__control_plane" {
   connection {
     type        = "ssh"
     host        = "192.168.20.2"
-    user        = var.vm_user
+    user        = var.pve_user
     private_key = base64decode(var.vm_ssh_private_key)
   }
   provisioner "file" {
@@ -94,7 +94,7 @@ resource "null_resource" "vm_ci_config__control_plane" {
   }
   provisioner "remote-exec" {
     inline = [
-      "echo ${random_password.vm_user_password__control_plane[each.key].result} | sudo -S mv /tmp/${var.env_name}__k8s-vm_ci-config__cp-${format("%02d", index(local.control_planes_index, each.key) + 1)}.yaml /var/lib/vz/snippets/",
+      "echo '${var.pve_user_password}' | sudo -S mv /tmp/${var.env_name}__k8s-vm_ci-config__cp-${format("%02d", index(local.control_planes_index, each.key) + 1)}.yaml /var/lib/vz/snippets/",
     ]
   }
 }

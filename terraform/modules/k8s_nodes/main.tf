@@ -21,6 +21,17 @@ variable "env_name" {
   }
 }
 
+variable "pve_user" {
+  type        = string
+  description = "The user name for the Proxmox user."
+}
+
+variable "pve_user_password" {
+  type        = string
+  description = "The password for the Proxmox user."
+  sensitive   = true
+}
+
 variable "vm_user" {
   type        = string
   description = "User name to access each VM with SSH."
