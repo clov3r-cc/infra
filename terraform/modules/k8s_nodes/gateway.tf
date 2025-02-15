@@ -210,3 +210,27 @@ resource "null_resource" "gateway_privision_ssh_private_key__pve" {
     ]
   }
 }
+
+resource "null_resource" "gateway_privision_ssh_private_key__gateway" {
+  connection {
+    type        = "ssh"
+    host        = proxmox_vm_qemu.gateway.ssh_host
+    user        = var.vm_user
+    private_key = base64decode(var.vm_ssh_private_key)
+  }
+  provisioner "remote-exec" {
+    inline = [
+      "mkdir /home/${var.vm_user}/.ssh",
+      "chmod 700 /home/${var.vm_user}/.ssh",
+    ]
+  }
+  provisioner "file" {
+    content     = base64decode(var.vm_ssh_private_key)
+    destination = "/home/${var.vm_user}/.ssh/id_ed25519"
+  }
+  provisioner "remote-exec" {
+    inline = [
+      "chmod 600 /home/${var.vm_user}/.ssh/id_ed25519",
+    ]
+  }
+}
