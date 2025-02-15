@@ -252,6 +252,7 @@ resource "null_resource" "gateway_provision_ip_routing" {
   provisioner "remote-exec" {
     inline = [
       "chmod +x /tmp/ip-routing.sh",
+      "cloud-init status --wait > /dev/null 2>&1",
       "echo '${random_password.vm_user_password__gateway.result}' | sudo -S /tmp/ip-routing.sh",
     ]
   }
