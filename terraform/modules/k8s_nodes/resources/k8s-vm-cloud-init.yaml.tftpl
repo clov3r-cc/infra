@@ -49,4 +49,6 @@ runcmd:
   - sed -i -e 's/^#PermitRootLogin prohibit-password/PermitRootLogin no/' /etc/ssh/sshd_config
   - sed -i -e 's/^#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
   - sed -i -e 's/^#KbdInteractiveAuthentication yes/KbdInteractiveAuthentication no/' /etc/ssh/sshd_config
+  - sed -i -e 's/^GSSAPIAuthentication yes/GSSAPIAuthentication no/' /etc/ssh/sshd_config.d/50-redhat.conf
+  - sed -i -e 's/^X11Forwarding yes/X11Forwarding no/' /etc/ssh/sshd_config.d/50-redhat.conf
   - systemctl restart sshd
