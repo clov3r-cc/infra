@@ -19,10 +19,6 @@ users:
     home: /home/${CI_MACHINEUSER_NAME}
     ssh_authorized_keys:
       - ${CI_MACHINEUSER_SSH_PUBKEY}
-# Deny password authentication
-ssh_pwauth: False
-# Disable root login via ssh
-disable_root: True
 keyboard:
   layout: us
   model: pc105
