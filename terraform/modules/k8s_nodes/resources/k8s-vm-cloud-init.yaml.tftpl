@@ -19,7 +19,7 @@ users:
     shell: /bin/bash
     home: /home/${CI_MACHINEUSER_NAME}
     plain_text_passwd: ${CI_MACHINEUSER_PASSWORD}
-    ssh-authorized-keys:
+    ssh_authorized_keys:
       - ${CI_MACHINEUSER_SSH_PUBKEY}
 # Deny password authentication
 ssh_pwauth: False
