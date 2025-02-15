@@ -36,6 +36,9 @@ module "prod__k8s_nodes" {
 
   env_name = "prod"
 
+  pve_user          = local.machine_user
+  pve_user_password = var.pve_user_password
+
   vm_template         = local.vm_template
   vm_user             = local.machine_user
   vm_ssh_public_key   = local.vm_ssh_public_key
