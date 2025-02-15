@@ -51,3 +51,8 @@ runcmd:
   # disable sudo warnings b/c we can't pass password in stdin
   - echo '' >> /etc/sudoers.d/90-cloud-init-users
   - echo 'Defaults    lecture = "never"' >> /etc/sudoers.d/90-cloud-init-users
+  # change sshd config
+  - sed -i -e 's/^#PermitRootLogin prohibit-password/PermitRootLogin no/' /etc/ssh/sshd_config
+  - sed -i -e 's/^#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
+  - sed -i -e 's/^#KbdInteractiveAuthentication yes/KbdInteractiveAuthentication no/' /etc/ssh/sshd_config
+  - systemctl restart sshd
