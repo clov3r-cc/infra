@@ -105,7 +105,7 @@ resource "null_resource" "vm_ci_config__worker" {
 
 resource "proxmox_vm_qemu" "worker" {
   for_each   = var.worker_allocated_host
-  depends_on = [null_resource.vm_ci_config__worker]
+  depends_on = [null_resource.vm_ci_config__worker, null_resource.gateway_provision_ip_routing]
 
   name        = "${var.env_name}-k8s-wk-${format("%02d", index(local.workers_index, each.key) + 1)}"
   target_node = each.value

@@ -105,7 +105,7 @@ resource "null_resource" "vm_ci_config__control_plane" {
 
 resource "proxmox_vm_qemu" "control_plane" {
   for_each   = var.control_plane_allocated_host
-  depends_on = [null_resource.vm_ci_config__control_plane]
+  depends_on = [null_resource.vm_ci_config__control_plane, null_resource.gateway_provision_ip_routing]
 
   name        = "${var.env_name}-k8s-cp-${format("%02d", index(local.control_planes_index, each.key) + 1)}"
   target_node = each.value
