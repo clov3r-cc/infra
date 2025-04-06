@@ -20,7 +20,7 @@ terraform {
     }
     proxmox = {
       source  = "telmate/proxmox"
-      version = "3.0.1-rc7"
+      version = "3.0.1-rc8"
     }
     null = {
       source  = "hashicorp/null"
