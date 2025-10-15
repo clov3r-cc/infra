@@ -6,6 +6,8 @@ locals {
 }
 
 data "cloudflare_zone" "clov3r-cc" {
-  account_id = local.cloudflare_account_id
-  name       = local.domain
+  account = {
+    id = local.cloudflare_account_id
+  }
+  name = local.domain
 }

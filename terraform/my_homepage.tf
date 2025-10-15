@@ -26,7 +26,7 @@ resource "cloudflare_pages_domain" "clov3r-cc" {
 resource "cloudflare_pages_domain" "www-clov3r-cc" {
   account_id   = local.cloudflare_account_id
   project_name = cloudflare_pages_project.homepage.name
-  domain       = "www.${local.domain}"
+  name         = "www.${local.domain}"
 }
 
 resource "cloudflare_record" "homepage" {
