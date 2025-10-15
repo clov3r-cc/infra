@@ -1,4 +1,4 @@
-resource "cloudflare_record" "mail-server__primary" {
+resource "cloudflare_dns_record" "mail-server__primary" {
   zone_id  = data.cloudflare_zone.clov3r-cc.id
   type     = "MX"
   name     = local.domain
@@ -9,7 +9,7 @@ resource "cloudflare_record" "mail-server__primary" {
   comment  = "for primary mail server in Sakura Internet"
 }
 
-resource "cloudflare_record" "mail-server__secondary" {
+resource "cloudflare_dns_record" "mail-server__secondary" {
   zone_id  = data.cloudflare_zone.clov3r-cc.id
   type     = "MX"
   name     = local.domain
@@ -20,7 +20,7 @@ resource "cloudflare_record" "mail-server__secondary" {
   comment  = "for secondary mail server in Sakura Internet"
 }
 
-resource "cloudflare_record" "mail-server__spf" {
+resource "cloudflare_dns_record" "mail-server__spf" {
   zone_id = data.cloudflare_zone.clov3r-cc.id
   type    = "TXT"
   name    = local.domain
@@ -30,7 +30,7 @@ resource "cloudflare_record" "mail-server__spf" {
   comment = "for SPF authentication"
 }
 
-resource "cloudflare_record" "mail-server__dmarc" {
+resource "cloudflare_dns_record" "mail-server__dmarc" {
   zone_id = data.cloudflare_zone.clov3r-cc.id
   type    = "TXT"
   name    = "_dmarc"
@@ -40,7 +40,7 @@ resource "cloudflare_record" "mail-server__dmarc" {
   comment = "for DMARC authentication"
 }
 
-resource "cloudflare_record" "mail-server__dkim" {
+resource "cloudflare_dns_record" "mail-server__dkim" {
   zone_id = data.cloudflare_zone.clov3r-cc.id
   type    = "TXT"
   name    = "rs20240724._domainkey"

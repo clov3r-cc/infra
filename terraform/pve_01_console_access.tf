@@ -1,6 +1,6 @@
 # TODO: Fix me
 
-# resource "cloudflare_record" "pxmx01-mng" {
+# resource "cloudflare_dns_record" "pxmx01-mng" {
 #   zone_id = data.cloudflare_zone.clov3r-cc.id
 #   name    = "pxmx01-mng"
 #   content = cloudflare_zero_trust_tunnel_cloudflared.cloudflared-01.cname
@@ -12,15 +12,15 @@
 
 # resource "cloudflare_zero_trust_access_application" "pxmx01-mng" {
 #   zone_id          = data.cloudflare_zone.clov3r-cc.id
-#   name             = "Access application for ${cloudflare_record.pxmx01-mng.hostname}"
-#   domain           = cloudflare_record.pxmx01-mng.hostname
+#   name             = "Access application for ${cloudflare_dns_record.pxmx01-mng.hostname}"
+#   domain           = cloudflare_dns_record.pxmx01-mng.hostname
 #   session_duration = "24h"
 # }
 
 # resource "cloudflare_zero_trust_access_policy" "pxmx01-mng" {
 #   application_id = cloudflare_zero_trust_access_application.pxmx01-mng.id
 #   zone_id        = data.cloudflare_zone.clov3r-cc.id
-#   name           = "Web Login Policy for ${cloudflare_record.pxmx01-mng.hostname}"
+#   name           = "Web Login Policy for ${cloudflare_dns_record.pxmx01-mng.hostname}"
 #   precedence     = "1"
 #   decision       = "allow"
 #   include {
@@ -38,7 +38,7 @@
 # resource "cloudflare_zero_trust_access_policy" "pxmx01-mng__srv-token" {
 #   application_id = cloudflare_zero_trust_access_application.pxmx01-mng.id
 #   zone_id        = data.cloudflare_zone.clov3r-cc.id
-#   name           = "CLI Policy for ${cloudflare_record.pxmx01-mng.hostname}"
+#   name           = "CLI Policy for ${cloudflare_dns_record.pxmx01-mng.hostname}"
 #   precedence     = "2"
 #   decision       = "non_identity"
 #   include {
