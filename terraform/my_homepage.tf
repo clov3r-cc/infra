@@ -20,7 +20,7 @@ resource "cloudflare_pages_project" "homepage" {
 resource "cloudflare_pages_domain" "clov3r-cc" {
   account_id   = local.cloudflare_account_id
   project_name = cloudflare_pages_project.homepage.name
-  domain       = local.domain
+  name         = local.domain
 }
 
 resource "cloudflare_pages_domain" "www-clov3r-cc" {
