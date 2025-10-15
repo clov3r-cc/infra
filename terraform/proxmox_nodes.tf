@@ -8,7 +8,7 @@ locals {
 
   machine_user = "machine-user"
 
-  vm_template        = "rhel-9.4"
+  vm_template        = "alma-9.5"
   vm_os_disk_storage = "local-lvm"
   vm_ssh_public_key  = <<EOT
 c3NoLWVkMjU1MTkgQUFBQUMzTnphQzFsWkRJMU5URTVBQUFBSUVDNnNGZzc0MXpsb01QVU9wblht
