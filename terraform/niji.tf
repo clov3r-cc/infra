@@ -1,4 +1,4 @@
-resource "cloudflare_record" "auth0_domain" {
+resource "cloudflare_dns_record" "auth0_domain" {
   zone_id = data.cloudflare_zone.clov3r-cc.id
   type    = "CNAME"
   name    = "auth"

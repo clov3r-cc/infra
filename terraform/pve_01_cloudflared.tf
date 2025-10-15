@@ -15,7 +15,7 @@
 #   account_id = local.cloudflare_account_id
 #   config {
 #     ingress_rule {
-#       hostname = cloudflare_record.pxmx01-mng.hostname
+#       hostname = cloudflare_dns_record.pxmx01-mng.hostname
 #       service  = "https://192.168.20.2:8006"
 #       origin_request {
 #         no_tls_verify = true
