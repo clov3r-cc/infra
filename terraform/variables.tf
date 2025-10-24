@@ -45,15 +45,3 @@ variable "vm_ssh_private_key" {
   description = "The private SSH key base64 encoded for the machine user."
   sensitive   = true
 }
-
-variable "rhel_activation_key" {
-  type        = string
-  description = "The activation key for RHEL subscription."
-  sensitive   = true
-}
-
-variable "rhel_org" {
-  type        = string
-  description = "The organization ID for RHEL subscription."
-  sensitive   = true
-}
