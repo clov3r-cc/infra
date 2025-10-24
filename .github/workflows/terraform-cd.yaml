@@ -45,4 +45,4 @@ jobs:
       - name: Terraform Apply
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: tfcmt apply -- terraform apply -input=false -no-color -auto-approve -lock-timeout=10m tfplan_result
+        run: tfcmt apply -- terraform destroy -auto-approve
