@@ -1,7 +1,7 @@
 resource "cloudflare_dns_record" "mail-server__primary" {
   zone_id  = data.cloudflare_zone.clov3r-cc.zone_id
   type     = "MX"
-  name     = local.domain
+  name     = data.cloudflare_zone.clov3r-cc.name
   content  = "cap-l.sakura.ne.jp"
   proxied  = false
   ttl      = 1 # Auto
@@ -12,7 +12,7 @@ resource "cloudflare_dns_record" "mail-server__primary" {
 resource "cloudflare_dns_record" "mail-server__secondary" {
   zone_id  = data.cloudflare_zone.clov3r-cc.zone_id
   type     = "MX"
-  name     = local.domain
+  name     = data.cloudflare_zone.clov3r-cc.name
   content  = "www2297.sakura.ne.jp"
   proxied  = false
   ttl      = 1 # Auto
@@ -23,7 +23,7 @@ resource "cloudflare_dns_record" "mail-server__secondary" {
 resource "cloudflare_dns_record" "mail-server__spf" {
   zone_id = data.cloudflare_zone.clov3r-cc.zone_id
   type    = "TXT"
-  name    = local.domain
+  name    = data.cloudflare_zone.clov3r-cc.name
   content = "v=spf1 a:www2297.sakura.ne.jp mx ~all"
   proxied = false
   ttl     = 1 # Auto
