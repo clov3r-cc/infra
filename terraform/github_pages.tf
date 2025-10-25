@@ -1,4 +1,4 @@
-resource "cloudflare_record" "github-pages_domain_verification" {
+resource "cloudflare_dns_record" "github-pages_domain_verification" {
   zone_id = data.cloudflare_zone.clov3r-cc.id
   type    = "TXT"
   name    = "_gh-clov3r-cc-o"

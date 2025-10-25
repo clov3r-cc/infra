@@ -29,7 +29,7 @@ resource "cloudflare_pages_domain" "www-clov3r-cc" {
   domain       = "www.${local.domain}"
 }
 
-resource "cloudflare_record" "homepage" {
+resource "cloudflare_dns_record" "homepage" {
   zone_id = data.cloudflare_zone.clov3r-cc.id
   type    = "CNAME"
   name    = local.domain
@@ -39,7 +39,7 @@ resource "cloudflare_record" "homepage" {
   comment = "for my homepage in Cloudflare Pages"
 }
 
-resource "cloudflare_record" "homepage__www" {
+resource "cloudflare_dns_record" "homepage__www" {
   zone_id = data.cloudflare_zone.clov3r-cc.id
   type    = "CNAME"
   name    = "www"
