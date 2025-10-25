@@ -36,7 +36,7 @@ resource "cloudflare_dns_record" "homepage" {
   content = "${cloudflare_pages_project.homepage.name}.pages.dev"
   proxied = true
   ttl     = 1 # Auto
-  comment = "for my homepage in Cloudflare Pages"
+  comment = "for my homepage in Cloudflare Pages (This resource is managed with Terraform)"
 }
 
 resource "cloudflare_dns_record" "homepage__www" {
@@ -46,5 +46,5 @@ resource "cloudflare_dns_record" "homepage__www" {
   content = "${cloudflare_pages_project.homepage.name}.pages.dev"
   proxied = true
   ttl     = 1 # Auto
-  comment = "for my homepage in Cloudflare Pages"
+  comment = "for my homepage in Cloudflare Pages (This resource is managed with Terraform)"
 }
