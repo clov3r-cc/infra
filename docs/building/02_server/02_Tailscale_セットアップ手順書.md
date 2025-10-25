@@ -49,11 +49,11 @@
 
 1. LXCコンテナ用のイメージテンプレートを取得する
 
-    ここでは、Debianの2025年1月現在のLTSであるDebian 12.xのイメージを使用する。
+    ここでは、Debianの2025年8月現在のLTSであるDebian 13.xのイメージを使用する。
 
     ```shell
     # Debianのバージョン
-    $ DEBIAN_MAJOR_VER=12
+    $ DEBIAN_MAJOR_VER=13
     $ IMAGE_TEMPLATE=$(sudo pveam available | grep system | grep "debian-${DEBIAN_MAJOR_VER}-standard" | awk '{print $2}')
     # ダウンロードする先のProxmox上ストレージ
     $ STORAGE=local

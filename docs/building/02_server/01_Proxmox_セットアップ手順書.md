@@ -26,7 +26,7 @@
 
 ## 3. 前提条件
 
-- `Proxmox`がインストール済みで、起動していること
+- `Proxmox 9.x`がインストール済みで、起動していること
 - ホスト名: `pve-01`
 
 ## 4. 作業手順
@@ -44,50 +44,55 @@
     ```shell
     cd /etc/apt/sources.list.d/
 
-    cp ./pve-enterprise.list ./pve-enterprise.list.orig
-    cp ./ceph.list ./ceph.list.orig
+    sed -i.bak 's/^/# /g' pve-enterprise.sources
+    sed -i.bak 's/^/# /g' ceph.sources
 
-    sed -i 's@^deb https://enterprise.proxmox.com@# deb https://enterprise.proxmox.com@' ./pve-enterprise.list
-    sed -i 's@^deb https://enterprise.proxmox.com@# deb https://enterprise.proxmox.com@' ./ceph.list
+    # 上記差分のみが表示されることを確認する
+    diff -s ./pve-enterprise.sources ./pve-enterprise.sources.bak
+    diff -s ./ceph.sources ./ceph.sources.bak
 
-    # 上記2点の差分のみが表示されることを確認する
-    diff -s ./pve-enterprise.list ./pve-enterprise.list.orig
-    diff -s ./ceph.list ./ceph.list.orig
-
-    rm *.list.orig
+    rm *.sources.bak
     ```
 
 3. 非エンタープライズ向けリポジトリへの参照を有効化する
 
     ```shell
     # No such file or directory と出力されることを確認する
-    $ ls pve-no-subscription.list
-    ls: cannot access 'pve-no-subscription.list': No such file or directory
+    $ ls proxmox.sources
+    ls: cannot access 'proxmox.sources': No such file or directory
 
-    $ cat <<EOF > ./pve-no-subscription.list
-
-    # pve-no-subscription repository provided by proxmox.com
-    deb http://download.proxmox.com/debian/pve bookworm pve-no-subscription
+    $ cat <<EOF > ./proxmox.sources
+    Types: deb
+    URIs: http://download.proxmox.com/debian/pve
+    Suites: trixie
+    Components: pve-no-subscription
+    Signed-By: /usr/share/keyrings/proxmox-archive-keyring.gpg
     EOF
 
     # 出力があることを確認する
-    $ ls pve-no-subscription.list
+    $ ls proxmox.sources
     ```
 
     ```shell
     # 出力がないことを確認する。出力が何も無ければ OK
-    grep 'no-subscription' ./ceph.list
+    grep 'no-subscription' ./ceph.sources
 
-    cat <<EOF >> ./ceph.list
+    cp ./ceph.sources ./ceph.sources.bak
+
+    cat <<EOF >> ./ceph.sources
 
     # no-subscription repository provided by proxmox.com
-    deb http://download.proxmox.com/debian/ceph-quincy bookworm no-subscription
-    deb http://download.proxmox.com/debian/ceph-reef bookworm no-subscription
-    deb http://download.proxmox.com/debian/ceph-squid bookworm no-subscription
+    Types: deb
+    URIs: http://download.proxmox.com/debian/ceph-squid
+    Suites: trixie
+    Components: no-subscription
+    Signed-By: /usr/share/keyrings/proxmox-archive-keyring.gpg
     EOF
 
-    # 出力があることを確認する
-    grep 'no-subscription' ./ceph.list
+    # 上記差分のみが表示されることを確認する
+    diff -s ./ceph.sources.bak ./ceph.sources
+
+    rm ceph.sources.bak
     ```
 
 4. パッケージの更新と必要なパッケージのインストールを行う
