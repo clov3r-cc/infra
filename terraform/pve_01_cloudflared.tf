@@ -6,17 +6,19 @@ resource "cloudflare_zero_trust_tunnel_cloudflared" "cloudflared-01" {
 resource "cloudflare_zero_trust_tunnel_cloudflared_config" "cloudflared-01" {
   tunnel_id  = cloudflare_zero_trust_tunnel_cloudflared.cloudflared-01.id
   account_id = data.cloudflare_account.me.account_id
-  config {
-    ingress_rule {
-      hostname = cloudflare_dns_record.pxmx01-mng.hostname
-      service  = "https://192.168.20.2:8006"
-      origin_request {
-        no_tls_verify = true
+  config = {
+    ingress = [
+      {
+        hostname = cloudflare_dns_record.pxmx01-mng.hostname
+        service  = "https://192.168.20.2:8006"
+        origin_request = {
+          no_tls_verify = true
+        }
+      },
+      {
+        service = "http_status:404"
       }
-    }
-    ingress_rule {
-      service = "http_status:404"
-    }
+    ]
   }
 }
 
