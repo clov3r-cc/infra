@@ -1,6 +1,6 @@
 resource "cloudflare_zero_trust_access_group" "allow_github" {
   account_id = data.cloudflare_account.me.account_id
-  name       = "Allow GitHub"
+  name       = "Allow GitHub (This resource is managed with Terraform)"
   include = [{
     # GitHub
     login_method = {
