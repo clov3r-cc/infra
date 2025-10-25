@@ -1,5 +1,5 @@
 resource "cloudflare_dns_record" "mail-server__primary" {
-  zone_id  = data.cloudflare_zone.clov3r-cc.id
+  zone_id  = data.cloudflare_zone.clov3r-cc.zone_id
   type     = "MX"
   name     = local.domain
   content  = "cap-l.sakura.ne.jp"
@@ -10,7 +10,7 @@ resource "cloudflare_dns_record" "mail-server__primary" {
 }
 
 resource "cloudflare_dns_record" "mail-server__secondary" {
-  zone_id  = data.cloudflare_zone.clov3r-cc.id
+  zone_id  = data.cloudflare_zone.clov3r-cc.zone_id
   type     = "MX"
   name     = local.domain
   content  = "www2297.sakura.ne.jp"
@@ -21,7 +21,7 @@ resource "cloudflare_dns_record" "mail-server__secondary" {
 }
 
 resource "cloudflare_dns_record" "mail-server__spf" {
-  zone_id = data.cloudflare_zone.clov3r-cc.id
+  zone_id = data.cloudflare_zone.clov3r-cc.zone_id
   type    = "TXT"
   name    = local.domain
   content = "v=spf1 a:www2297.sakura.ne.jp mx ~all"
@@ -31,7 +31,7 @@ resource "cloudflare_dns_record" "mail-server__spf" {
 }
 
 resource "cloudflare_dns_record" "mail-server__dmarc" {
-  zone_id = data.cloudflare_zone.clov3r-cc.id
+  zone_id = data.cloudflare_zone.clov3r-cc.zone_id
   type    = "TXT"
   name    = "_dmarc"
   content = "v=DMARC1; p=none; aspf=r; adkim=r"
