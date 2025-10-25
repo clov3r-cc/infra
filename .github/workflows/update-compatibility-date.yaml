@@ -9,18 +9,21 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: '3.14'
-      - name: Install dependencies
-        run: pip install requests
       - name: Get latest compatibility_date
         id: get_date
         run: |
-          LATEST_DATE=$(python .github/fetch-compatibility-date.py)
+          URL="https://developers.cloudflare.com/workers/configuration/compatibility-flags/"
+          HTML=$(curl -sS "$URL")
+          if [ -z "$HTML" ]; then
+            echo "Error: Failed to fetch HTML" >&2
+            exit 1
+          fi
+          DATES=$(echo "$HTML" | grep -oP '<td><strong>Default as of</strong></td><td>\K[0-9]{4}-[0-9]{2}-[0-9]{2}')
+          if [ -z "$DATES" ]; then
+            echo "Error: No dates found" >&2
+            exit 1
+          fi
+          LATEST_DATE=$(echo "$DATES" | sort | tail -1)
           echo "latest_date=$LATEST_DATE" >> $GITHUB_OUTPUT
           echo "Latest compatibility_date: $LATEST_DATE"
       - name: Find all compatibility_dates in Terraform files
