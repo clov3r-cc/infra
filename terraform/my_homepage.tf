@@ -16,7 +16,7 @@ resource "cloudflare_pages_project" "homepage" {
     }
   }
 
-  lifecycle = {
+  lifecycle {
     ignore_changes = ["build_config", "canonical_deployment", "created_on", "domains", "latest_deployment", "subdomain"]
   }
 }
