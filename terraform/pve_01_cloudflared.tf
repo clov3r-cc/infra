@@ -19,6 +19,9 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "cloudflared-01" {
         service = "http_status:404"
       }
     ]
+    warp_routing = {
+      enabled = false
+    }
   }
 }
 
