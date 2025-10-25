@@ -17,7 +17,7 @@ resource "cloudflare_pages_project" "homepage" {
   }
 
   lifecycle {
-    ignore_changes = [build_config, latest_deployment]
+    ignore_changes = [build_config]
   }
 }
 
