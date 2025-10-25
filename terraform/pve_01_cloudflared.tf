@@ -25,7 +25,7 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "cloudflared-01" {
 resource "cloudflare_dns_record" "pxmx01-mng" {
   zone_id = data.cloudflare_zone.clov3r-cc.zone_id
   name    = "pxmx01-mng"
-  content = cloudflare_zero_trust_tunnel_cloudflared.cloudflared-01.cname
+  content = cloudflare_zero_trust_tunnel_cloudflared.cloudflared-01.id
   type    = "CNAME"
   proxied = true
   ttl     = 1 # Auto
