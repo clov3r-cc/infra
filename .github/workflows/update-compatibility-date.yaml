@@ -84,7 +84,7 @@ jobs:
           fi
       - name: Create Pull Request
         if: steps.find_dates.outputs.found == 'true' && steps.check_update.outputs.needs_update == 'true'
-        uses: peter-evans/create-pull-request@v6
+        uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "chore: update Cloudflare Workers compatibility_date to ${{ steps.get_date.outputs.latest_date }}"
