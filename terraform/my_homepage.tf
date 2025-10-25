@@ -1,5 +1,5 @@
 resource "cloudflare_pages_project" "homepage" {
-  account_id        = local.cloudflare_account_id
+  account_id        = data.cloudflare_account.me.account_id
   name              = "my-home"
   production_branch = "main"
   deployment_configs = {
@@ -18,21 +18,21 @@ resource "cloudflare_pages_project" "homepage" {
 }
 
 resource "cloudflare_pages_domain" "clov3r-cc" {
-  account_id   = local.cloudflare_account_id
+  account_id   = data.cloudflare_account.me.account_id
   project_name = cloudflare_pages_project.homepage.name
-  name         = local.domain
+  name         = data.cloudflare_zone.clov3r-cc.name
 }
 
 resource "cloudflare_pages_domain" "www-clov3r-cc" {
-  account_id   = local.cloudflare_account_id
+  account_id   = data.cloudflare_account.me.account_id
   project_name = cloudflare_pages_project.homepage.name
-  name         = "www.${local.domain}"
+  name         = "www.${data.cloudflare_zone.clov3r-cc.name}"
 }
 
 resource "cloudflare_dns_record" "homepage" {
   zone_id = data.cloudflare_zone.clov3r-cc.zone_id
   type    = "CNAME"
-  name    = local.domain
+  name    = data.cloudflare_zone.clov3r-cc.name
   content = "${cloudflare_pages_project.homepage.name}.pages.dev"
   proxied = true
   ttl     = 1 # Auto
