@@ -15,6 +15,10 @@ resource "cloudflare_pages_project" "homepage" {
       usage_model                          = "standard" # In free plan, we can select only standard model (default value in GUI)
     }
   }
+
+  lifecycle {
+    ignore_changes = [build_config]
+  }
 }
 
 resource "cloudflare_pages_domain" "clov3r-cc" {
