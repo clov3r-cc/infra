@@ -5,5 +5,5 @@ resource "cloudflare_dns_record" "github-pages_domain_verification" {
   content = "3da337285a"
   proxied = false
   ttl     = 1 # Auto
-  comment = "for GitHub Pages Domain Verification"
+  comment = "for GitHub Pages Domain Verification (This resource is managed with Terraform)"
 }
