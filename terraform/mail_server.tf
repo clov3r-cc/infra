@@ -41,7 +41,7 @@ resource "cloudflare_dns_record" "mail-server__dmarc" {
 }
 
 resource "cloudflare_dns_record" "mail-server__dkim" {
-  zone_id = data.cloudflare_zone.clov3r-cc.id
+  zone_id = data.cloudflare_zone.clov3r-cc.zone_id
   type    = "TXT"
   name    = "rs20240724._domainkey"
   content = "v=DKIM1; k=rsa; p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyQIeA9A4KNo/2kj9fAK+iknZQ2pxP10mvqLc5hO1vTiv/GEDgzGGtxKfoUs2eEfwA1C8L419HivskfJPnEsgbFJ0L3KzINc+Gsfh2K+ntKqB4L/cs23PkNdKKJeJPqDVuME4r3VXXaULxktaa/OTDD1zmOrmh4GsNW73Pu/u9rHr/AA0nerMj3kfgG7YZfb7aZrvKWE1hc4diDEOUYT3ejFsu713+wOmSPTyijRXSHH3BhuajKjoGtSRBlwVOhAcQNDyFzBGV3YuJveRUcbKFew3JiBxMgnyps+rFhfY09uU74WSliSgX2owcvp4DGtSP7YDT3vtgZRaHwxiWgQkYwIDAQAB"
