@@ -45,9 +45,9 @@ resource "cloudflare_zero_trust_access_policy" "pxmx01-mng" {
   name       = "Web Login Policy for ${cloudflare_dns_record.pxmx01-mng.name}.${data.cloudflare_zone.clov3r-cc.name}"
   decision   = "allow"
   include = [{
-    group = [{
+    group = {
       id = cloudflare_zero_trust_access_group.allow_github.id
-    }]
+    }
   }]
 }
 
