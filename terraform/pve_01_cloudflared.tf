@@ -35,7 +35,7 @@ resource "cloudflare_dns_record" "pxmx01-mng" {
 resource "cloudflare_zero_trust_access_application" "pxmx01-mng" {
   zone_id          = data.cloudflare_zone.clov3r-cc.zone_id
   name             = "Access application for ${cloudflare_dns_record.pxmx01-mng.name}.${data.cloudflare_zone.clov3r-cc.name} (This resource is managed with Terraform)"
-  domain           = ${cloudflare_dns_record.pxmx01-mng.name}.${data.cloudflare_zone.clov3r-cc.name}
+  domain           = "${cloudflare_dns_record.pxmx01-mng.name}.${data.cloudflare_zone.clov3r-cc.name}"
   session_duration = "24h"
 }
 
