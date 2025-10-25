@@ -1,11 +1,6 @@
-resource "random_password" "tunnel_secret__cloudflared-01" {
-  length = 64
-}
-
 resource "cloudflare_zero_trust_tunnel_cloudflared" "cloudflared-01" {
   account_id = data.cloudflare_account.me.account_id
   name       = "Terraform tunnel for proxmox-01 container in proxmox-01 (This resource is managed with Terraform)"
-  secret     = base64sha256(random_password.tunnel_secret__cloudflared-01.result)
 }
 
 resource "cloudflare_zero_trust_tunnel_cloudflared_config" "cloudflared-01" {
