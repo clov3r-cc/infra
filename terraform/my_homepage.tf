@@ -1,5 +1,5 @@
 resource "cloudflare_pages_project" "homepage" {
-  account_id        = local.cloudflare_account_id
+  account_id        = data.cloudflare_account.me.account_id
   name              = "my-home"
   production_branch = "main"
   deployment_configs = {
@@ -18,13 +18,13 @@ resource "cloudflare_pages_project" "homepage" {
 }
 
 resource "cloudflare_pages_domain" "clov3r-cc" {
-  account_id   = local.cloudflare_account_id
+  account_id   = data.cloudflare_account.me.account_id
   project_name = cloudflare_pages_project.homepage.name
   name         = data.cloudflare_zone.clov3r-cc.name
 }
 
 resource "cloudflare_pages_domain" "www-clov3r-cc" {
-  account_id   = local.cloudflare_account_id
+  account_id   = data.cloudflare_account.me.account_id
   project_name = cloudflare_pages_project.homepage.name
   name         = "www.${data.cloudflare_zone.clov3r-cc.name}"
 }

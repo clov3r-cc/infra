@@ -1,5 +1,5 @@
 resource "cloudflare_zero_trust_access_group" "allow_github" {
-  account_id = local.cloudflare_account_id
+  account_id = data.cloudflare_account.me.account_id
   name       = "Allow GitHub"
   include = [{
     # GitHub
