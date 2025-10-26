@@ -239,17 +239,17 @@
 
     |            権限            |                              説明                               |
     | -------------------------- | --------------------------------------------------------------- |
-    | Pool.Allocate              | プール設定の編集                                                |
     | Datastore.Allocate         | ディスク等のデータを格納するボリュームの編集                    |
     | Datastore.AllocateSpace    | ディスク等のデータを格納するボリュームの利用                    |
     | Datastore.AllocateTemplate | ディスク等のデータを格納するボリュームに ISO などをアップロード |
     | Datastore.Audit            | ディスク等のデータを格納するボリュームの参照                    |
-    | SDN.Audit                  | ホスト NW の管理                                                |
+    | Pool.Allocate              | プールの作成・編集・削除                                        |
+    | SDN.Audit                  | ホスト NW の参照                                                |
     | SDN.Use                    | ホスト NW の利用                                                |
     | Sys.Audit                  | ホスト NW の参照                                                |
     | Sys.Console                | 各 VM コンソールへのアクセス                                    |
     | Sys.Modify                 | ホスト NW の編集                                                |
-    | VM.Allocate                | VM の作成                                                       |
+    | VM.Allocate                | VM の作成・削除                                                 |
     | VM.Audit                   | VM の参照                                                       |
     | VM.Clone                   | VM のクローン                                                   |
     | VM.Config.CDROM            | CD/DVD の挿入・排出                                             |
@@ -261,7 +261,6 @@
     | VM.Config.Network          | NW 設定の編集                                                   |
     | VM.Config.Options          | その他 VM 設定の編集                                            |
     | VM.Migrate                 | VM を他ホストにマイグレーション                                 |
-    | VM.Monitor                 | VM の状況を確認                                                 |
     | VM.PowerMgmt               | VM の起動・停止など電源の管理                                   |
 
     ```shell
