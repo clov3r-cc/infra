@@ -392,44 +392,46 @@
     dump  images  snippets  template
     ```
 
-2. 作業端末に Red Hat Enterprise Linux の cloud-init 用イメージをダウンロードする
+2. 作業端末に Alma Linux の cloud-init 用イメージをダウンロードする
 
-    ここでは、Red Hat Enterprise Linux 9.4 (x86_64) の KVM Guest Image をダウンロードすることします。
+    ここでは、Alma Linux 9.6 (x86_64) の Generic Cloud イメージ をダウンロードすることします。
 
-    ダウンロードは、[Red Hat Customer Portal](https://access.redhat.com/downloads/content/479/ver=/rhel---9/9.4/x86_64/product-software) から行うことができます。
-
-    ダウンロード先を Windows 標準のダウンロードフォルダ、ダウンロードできたファイル名を`rhel-9.4-x86_64-kvm.qcow2`とします。
-
-3. ダウンロードしたイメージを Proxmox ホストにアップロードする
-
-    WSL 上の Ubuntu 24.04 からアップロードする手順を記載します。
+    ダウンロード先URLは、[AlmaLinux OS の取得](https://almalinux.org/ja/get-almalinux/#Cloud_Images) を参照してください。
 
     ```shell
-    sftp proxmox-01:/tmp/ <<< $'put /mnt/c/Users/Lucky/Downloads/rhel-9.4-x86_64-kvm.qcow2'
+    ssh proxmox-01
+    VER='9.6'
+    QCOW_NAME="Alma-$VER.x86_64.qcow2"
+    curl -o "$QCOW_NAME" https://repo.almalinux.org/almalinux/9/cloud/x86_64/images/AlmaLinux-9-GenericCloud-latest.x86_64.qcow2
+    # エラーが出力されなければ OK
+
+    # チェックサムを照合
+    DOWNLOADED_CHECKSUM=$(curl -sS https://repo.almalinux.org/almalinux/9/cloud/x86_64/images/CHECKSUM | grep "GenericCloud-$VER" | awk '{print $1}')
+    FILE_CHECKSUM=$(sha256sum "$QCOW_NAME" | awk '{print $1}')
+    if [ $DOWNLOADED_CHECKSUM = $FILE_CHECKSUM ]; then echo 'OK.'; else echo 'CHECKSUM UNMATCHED!!'; fi
+    # OK. と出力されればよい
+    ```
+
+3. アップロードしたイメージを移動する
+
+    ```shell
+    sudo mv "$QCOW_NAME" /var/lib/vz/template/iso/
     # エラーが出力されなければ OK
     ```
 
-4. アップロードしたイメージを移動する
-
-    ```shell
-    sudo mv /tmp/rhel-9.4-x86_64-kvm.qcow2 /var/lib/vz/template/iso/
-    # エラーが出力されなければ OK
-    ```
-
-5. VM のテンプレートを作成する
+4. VM のテンプレートを作成する
 
     ```shell
     ISO_DIR='/var/lib/vz/template/iso'
-    ISO_NAME="rhel-9.4-x86_64-kvm.qcow2"
 
     echo 'Customizing iso...'
-    sudo virt-customize -a "$ISO_DIR/$ISO_NAME" --run-command 'echo -n >/etc/machine-id'
+    sudo virt-customize -a "$ISO_DIR/$QCOW_NAME" --run-command 'echo -n >/etc/machine-id'
     echo 'OK!!!'
     echo ''
 
     echo 'Creating VM template...'
     VM_TMPL_ID=901
-    VM_TMPL_NAME="rhel-9.4"
+    VM_TMPL_NAME="alma-$VER"
     VM_DISK_STORAGE=local-lvm
     sudo qm destroy "$VM_TMPL_ID" --purge || true
     sudo qm create $VM_TMPL_ID --name $VM_TMPL_NAME --memory 2048 --cores 2 --net0 virtio,bridge=vmbr0
@@ -440,7 +442,7 @@
     sudo qm set $VM_TMPL_ID --serial0 socket --vga serial0
     sudo qm set $VM_TMPL_ID --agent enabled=1,fstrim_cloned_disks=1
     sudo qm template $VM_TMPL_ID
-    echo 'OK!!!'
+    echo 'OK.'
     ```
 
 ## 5. 完了条件
