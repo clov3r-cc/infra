@@ -1,7 +1,9 @@
 name: Update Cloudflare Workers Compatibility Date
 on:
   schedule:
-    - cron: '0 0 * * 1'  # 毎週月曜日 9:00 JST (00:00 UTC)
+    # 毎週土曜日 15:00 UTC (毎週日曜日 0:00 JST)
+    # https://crontab.guru/#0_15_*_*_6
+    - cron: '0 15 * * 6'
   workflow_dispatch:
 jobs:
   update-compatibility-date:
