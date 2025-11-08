@@ -39,7 +39,7 @@
 1. LXCコンテナのリストを更新する
 
     ```shell
-    ssh proxmox-01
+    ssh pve-01
 
     sudo pveam update
     # update successful と表示されればOK
@@ -54,7 +54,7 @@
     ```shell
     # Debianのバージョン
     $ DEBIAN_MAJOR_VER=13
-    $ IMAGE_TEMPLATE=$(sudo pveam available | grep system | grep "debian-${DEBIAN_MAJOR_VER}-standard" | awk '{print $2}')
+    $ IMAGE_TEMPLATE=$(sudo pveam available | grep system | grep "debian-${DEBIAN_MAJOR_VER}-standard" | awk '{print $2}' | tee /dev/tty)
     # ダウンロードする先のProxmox上ストレージ
     $ STORAGE=local
     $ sudo pveam download "$STORAGE" "$IMAGE_TEMPLATE"
@@ -68,7 +68,7 @@
 
     ```shell
     ### rootユーザのパスワードを格納する
-    ROOT_PASSWORD_TXT=root-password.txt
+    ROOT_PASSWORD_TXT=$(mktemp)
     # pwgen options:
     # -c アルファベット大文字を1つ以上
     # -n 数字を1つ以上
@@ -76,14 +76,12 @@
     # -y 記号を1つ以上
     # -B 曖昧で間違えにくい文字を含まない
     # NOTE: pwgen コマンドはファイルへのリダイレクトなどの場合は、1個しかパスワードを生成しない
-    pwgen -cnsyB 16 > "$ROOT_PASSWORD_TXT"
+    pwgen -cnsyB 16 | tee "$ROOT_PASSWORD_TXT"
     ROOT_PASSWORD=$(cat "$ROOT_PASSWORD_TXT")
-    # メモ用にコンソールにパスワードを出力
-    echo "$ROOT_PASSWORD"
 
     ### SSH公開鍵をGitHubからとってくる
-    SSH_PUBLIC_KEY_TXT=ssh-public-key.txt
-    curl -o "$SSH_PUBLIC_KEY_TXT" https://github.com/Lucky3028.keys
+    SSH_PUBLIC_KEY_TXT=$(mktemp)
+    curl -sS https://github.com/Lucky3028.keys | tee "$SSH_PUBLIC_KEY_TXT"
 
     ### LXCコンテナを作成する
     VM_ID=101
@@ -99,14 +97,14 @@
       --cores 1 \
       --memory 256 \
       --swap 0 \
-      --net0 name=eth0,bridge=vmbr0,ip=192.168.20.3/24,gw=192.168.20.1,firewall=1 \
+      --net0 name=eth0,bridge=vmbr3,ip=192.168.120.3/24,gw=192.168.120.1,firewall=1 \
       --onboot 1 \
       --timezone Asia/Tokyo \
       --start 1
     # エラーが表示されなければOK
 
     # 不要なファイルを削除
-    rm "$ROOT_PASSWORD_TXT"
+    rm "$ROOT_PASSWORD_TXT" "$SSH_PUBLIC_KEY_TXT"
 
     exit
     ```
@@ -116,7 +114,7 @@
 1. パッケージの更新と必要なパッケージのインストールを行う
 
     ```shell
-    ssh root@192.168.20.3
+    ssh root@192.168.120.3
 
     apt update && apt upgrade -y && apt dist-upgrade -y && \
       apt install curl sudo vim -y
@@ -129,11 +127,6 @@
     ```shell
     $ USERNAME=lucky #適宜ユーザ名は変更する
     $ adduser "$USERNAME" --comment ''
-    Adding user `lucky' ...
-    Adding new group `lucky' (1000) ...
-    Adding new user `lucky' (1000) with group `lucky (1000)' ...
-    Creating home directory `/home/lucky' ...
-    Copying files from `/etc/skel' ...
     New password:
     Retype new password:
     passwd: password updated successfully
@@ -168,7 +161,7 @@
     su - "$USERNAME"
     mkdir ~/.ssh
     chmod 700 ~/.ssh
-    curl https://github.com/Lucky3028.keys > ~/.ssh/authorized_keys
+    curl -sS https://github.com/Lucky3028.keys > ~/.ssh/authorized_keys
     chmod 600 ~/.ssh/authorized_keys
     exit
     ```
@@ -191,15 +184,15 @@
     - `root`ユーザでSSH接続できないこと
 
     ```shell
-    ssh -i ~/.ssh/id_ed25519 lucky@192.168.20.3 # will OK
-    ssh lucky@192.168.20.3 # will fail
-    ssh root@192.168.20.3 # will fail
+    ssh -i ~/.ssh/id_ed25519 lucky@192.168.120.3 # will OK
+    ssh -o PubkeyAuthentication=no lucky@192.168.120.3 # will fail
+    ssh root@192.168.120.3 # will fail
     ```
 
 5. コンテナを停止する
 
     ```shell
-    ssh -p 60000 lucky@192.168.20.3
+    ssh -p 60000 lucky@192.168.120.3
 
     sudo systemctl poweroff
     ```
@@ -236,8 +229,9 @@
     ```shell
     ssh tailscale-01
 
-    sudo sed -i 's/^#net.ipv4.ip_forward=1$/net.ipv4.ip_forward=1/' /etc/sysctl.conf
-    sudo sed -i 's/^#net.ipv6.conf.all.forwarding=1$/net.ipv6.conf.all.forwarding=1/' /etc/sysctl.conf
+    echo 'net.ipv4.ip_forward = 1' | sudo tee /etc/sysctl.d/99-tailscale.conf
+    echo 'net.ipv6.conf.all.forwarding = 1' | sudo tee -a /etc/sysctl.d/99-tailscale.conf
+    sudo sysctl -p /etc/sysctl.d/99-tailscale.conf
 
     ### 再起動させる
     sudo systemctl reboot
@@ -249,7 +243,7 @@
     ssh tailscale-01
 
     curl -fsSL https://tailscale.com/install.sh | sh
-    sudo tailscale up --advertise-routes=192.168.20.0/24 --advertise-exit-node --accept-routes
+    sudo tailscale up --advertise-routes=192.168.120.0/24 --advertise-exit-node --accept-routes
 
     exit
     ```
