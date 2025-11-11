@@ -16,6 +16,8 @@
   - [4.4. CI/CD用ユーザを追加する](#44-cicd用ユーザを追加する)
   - [4.5. SSHサーバの設定をする](#45-sshサーバの設定をする)
   - [4.6. cloud-init の準備をする](#46-cloud-init-の準備をする)
+    - [4.6.1. Red Hat Enterprise Linux の VM テンプレートを作成する](#461-red-hat-enterprise-linux-の-vm-テンプレートを作成する)
+    - [4.6.2. Alma Linux の VM テンプレートを作成する](#462-alma-linux-の-vm-テンプレートを作成する)
 - [5. 完了条件](#5-完了条件)
 
 <!-- /code_chunk_output -->
@@ -392,34 +394,100 @@
     dump  images  snippets  template
     ```
 
-2. 作業端末に Alma Linux の cloud-init 用イメージをダウンロードする
+#### 4.6.1. Red Hat Enterprise Linux の VM テンプレートを作成する
 
-    ここでは、Alma Linux 9.6 (x86_64) の Generic Cloud イメージ をダウンロードすることします。
+ここでは、Red Hat Enterprise Linux 10.1 (x86_64) の Generic Cloud イメージ を使用します。
 
-    ダウンロード先URLは、[AlmaLinux OS の取得](https://almalinux.org/ja/get-almalinux/#Cloud_Images) を参照してください。
+1. イメージをダウンロードする
+
+    ダウンロード先URLは、[Red Hat Customer Portal](https://access.redhat.com/downloads/content/479/ver=/rhel---10/10.1/x86_64/product-software) を参照してください。
+
+    イメージの種類は Red Hat Enterprise Linux 10.1 KVM Guest Image を使用します。
+
+2. チェックサムを確認する
+
+    照合元のチェックサムはダウンロード元URLと同じページに記載されています。
+
+    ```shell
+    sha256sum /mnt/c/Users/Lucky/Downloads/rhel-10.1-x86_64-kvm.qcow2
+    ```
+
+3. イメージを Proxmox ホストにアップロードする
+
+    ```shell
+    sftp proxmox-01 <<< $'put /mnt/c/Users/Lucky/Downloads/rhel-10.1-x86_64-kvm.qcow2 ./'
+    # エラーが出力されなければ OK
+    ```
+
+4. アップロードしたイメージを移動する
 
     ```shell
     ssh proxmox-01
-    VER='9.6'
+    VER='10.1'
+    QCOW_NAME="rhel-${VER}-x86_64-kvm.qcow2"
+    sudo mv "$QCOW_NAME" /var/lib/vz/template/iso/
+    # エラーが出力されなければ OK
+    ```
+
+5. VM のテンプレートを作成する
+
+    ```shell
+    ISO_DIR='/var/lib/vz/template/iso'
+
+    echo 'Customizing iso...'
+    sudo virt-customize -a "$ISO_DIR/$QCOW_NAME" --run-command 'echo -n > /etc/machine-id'
+    echo 'OK!!!'
+    echo ''
+
+    echo 'Creating VM template...'
+    VM_TMPL_ID=901
+    VM_TMPL_NAME="rhel-$VER"
+    VM_DISK_STORAGE=local-lvm
+    sudo qm destroy "$VM_TMPL_ID" --purge || true
+    sudo qm create $VM_TMPL_ID --name $VM_TMPL_NAME --memory 2048 --cores 2 --net0 virtio,bridge=vmbr0
+    sudo qm set $VM_TMPL_ID --scsihw virtio-scsi-single
+    sudo qm set $VM_TMPL_ID --virtio0 "${VM_DISK_STORAGE}:0,import-from=$ISO_DIR/$QCOW_NAME"
+    sudo qm set $VM_TMPL_ID --boot c --bootdisk virtio0
+    sudo qm set $VM_TMPL_ID --ide2 "${VM_DISK_STORAGE}:cloudinit"
+    sudo qm set $VM_TMPL_ID --serial0 socket --vga serial0
+    sudo qm set $VM_TMPL_ID --agent enabled=1,fstrim_cloned_disks=1
+    sudo qm template $VM_TMPL_ID
+    # WARNING: Combining activation change with other commands is not advised.
+    # という警告は無視できる
+    echo 'OK.'
+    ```
+
+#### 4.6.2. Alma Linux の VM テンプレートを作成する
+
+ここでは、Alma Linux 10.0 (x86_64) の Generic Cloud イメージ をダウンロードすることします。
+
+1. イメージをダウンロードする
+
+    ダウンロード先URLは、[産業サイバーセキュリティセンターの Alma Linux ISO ミラー](https://ftp.udx.icscoe.jp/Linux/almalinux/10.0/cloud/x86_64/images/) を参照してください。
+
+    ```shell
+    ssh proxmox-01
+    MAJOR_VER='10'
+    VER="${MAJOR_VER}.0"
     QCOW_NAME="Alma-$VER.x86_64.qcow2"
-    curl -o "$QCOW_NAME" https://repo.almalinux.org/almalinux/9/cloud/x86_64/images/AlmaLinux-9-GenericCloud-latest.x86_64.qcow2
+    curl -o "$QCOW_NAME" "https://ftp.udx.icscoe.jp/Linux/almalinux/$VER/cloud/x86_64/images/AlmaLinux-${MAJOR_VER}-GenericCloud-latest.x86_64.qcow2"
     # エラーが出力されなければ OK
 
     # チェックサムを照合
-    DOWNLOADED_CHECKSUM=$(curl -sS https://repo.almalinux.org/almalinux/9/cloud/x86_64/images/CHECKSUM | grep "GenericCloud-$VER" | awk '{print $1}')
-    FILE_CHECKSUM=$(sha256sum "$QCOW_NAME" | awk '{print $1}')
+    | DOWNLOADED_CHECKSUM=$(curl -sS https://repo.almalinux.org/almalinux/${MAJOR_VER}/cloud/x86_64/images/CHECKSUM | grep "GenericCloud-$VER" | awk '{print $1}') |
+    | FILE_CHECKSUM=$(sha256sum "$QCOW_NAME"                                                                        | awk '{print $1}')        |                   |
     if [ $DOWNLOADED_CHECKSUM = $FILE_CHECKSUM ]; then echo 'OK.'; else echo 'CHECKSUM UNMATCHED!!'; fi
     # OK. と出力されればよい
     ```
 
-3. アップロードしたイメージを移動する
+2. アップロードしたイメージを移動する
 
     ```shell
     sudo mv "$QCOW_NAME" /var/lib/vz/template/iso/
     # エラーが出力されなければ OK
     ```
 
-4. VM のテンプレートを作成する
+3. VM のテンプレートを作成する
 
     ```shell
     ISO_DIR='/var/lib/vz/template/iso'
@@ -430,18 +498,20 @@
     echo ''
 
     echo 'Creating VM template...'
-    VM_TMPL_ID=901
+    VM_TMPL_ID=902
     VM_TMPL_NAME="alma-$VER"
     VM_DISK_STORAGE=local-lvm
     sudo qm destroy "$VM_TMPL_ID" --purge || true
     sudo qm create $VM_TMPL_ID --name $VM_TMPL_NAME --memory 2048 --cores 2 --net0 virtio,bridge=vmbr0
     sudo qm set $VM_TMPL_ID --scsihw virtio-scsi-single
-    sudo qm set $VM_TMPL_ID --virtio0 "${VM_DISK_STORAGE}:0,import-from=$ISO_DIR/$ISO_NAME"
+    sudo qm set $VM_TMPL_ID --virtio0 "${VM_DISK_STORAGE}:0,import-from=$ISO_DIR/$QCOW_NAME"
     sudo qm set $VM_TMPL_ID --boot c --bootdisk virtio0
     sudo qm set $VM_TMPL_ID --ide2 "${VM_DISK_STORAGE}:cloudinit"
     sudo qm set $VM_TMPL_ID --serial0 socket --vga serial0
     sudo qm set $VM_TMPL_ID --agent enabled=1,fstrim_cloned_disks=1
     sudo qm template $VM_TMPL_ID
+    # WARNING: Combining activation change with other commands is not advised.
+    # という警告は無視できる
     echo 'OK.'
     ```
 
