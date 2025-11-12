@@ -14,7 +14,7 @@ users:
   - name: ${CI_MACHINEUSER_NAME}
     # パスワードでの SSH ログインを無効化
     lock_passwd: True
-    sudo: ALL=(ALL) ALL
+    sudo: ALL=(ALL) NOPASSWD:ALL
     shell: /bin/bash
     home: /home/${CI_MACHINEUSER_NAME}
     ssh_authorized_keys:
