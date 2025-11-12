@@ -1,0 +1,47 @@
+#cloud-config
+hostname: ${CI_HOSTNAME}
+prefer_fqdn_over_hostname: False
+# Password won't expire
+chpasswd:
+  expire: False
+users:
+  - name: root
+    # Disable password login
+    lock_passwd: True
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    home: /root
+  - name: ${CI_MACHINEUSER_NAME}
+    # Disable password login
+    lock_passwd: True
+    sudo: ALL=(ALL) ALL
+    shell: /bin/bash
+    home: /home/${CI_MACHINEUSER_NAME}
+    ssh_authorized_keys:
+      - ${CI_MACHINEUSER_SSH_PUBKEY}
+keyboard:
+  layout: us
+  model: pc105
+locale: en_US.UTF-8
+timezone: Asia/Tokyo
+package_update: True
+packages:
+  # To set locale properly
+  - glibc-all-langpacks
+  - langpacks-en
+  # Use vim as a default text editor
+  - vim-enhanced
+runcmd:
+  # passwd in users field fails to set password
+  - echo 'root:${CI_ROOT_PASSWORD}' | chpasswd
+  - echo '${CI_MACHINEUSER_NAME}:${CI_MACHINEUSER_PASSWORD}' | chpasswd
+  # disable sudo warnings b/c we can't pass password in stdin
+  - echo '' >> /etc/sudoers.d/90-cloud-init-users
+  - echo 'Defaults    lecture = "never"' >> /etc/sudoers.d/90-cloud-init-users
+  # change sshd config
+  - sed -i -e 's/^#PermitRootLogin prohibit-password/PermitRootLogin no/' /etc/ssh/sshd_config
+  - sed -i -e 's/^#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
+  - sed -i -e 's/^#KbdInteractiveAuthentication yes/KbdInteractiveAuthentication no/' /etc/ssh/sshd_config
+  - sed -i -e 's/^GSSAPIAuthentication yes/GSSAPIAuthentication no/' /etc/ssh/sshd_config.d/50-redhat.conf
+  - sed -i -e 's/^X11Forwarding yes/X11Forwarding no/' /etc/ssh/sshd_config.d/50-redhat.conf
+  - systemctl restart sshd
