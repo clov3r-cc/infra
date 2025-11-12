@@ -40,6 +40,7 @@ jobs:
           oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
           oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
           tags: tag:gha
+      - run: terraform destroy -target='module.prod__zabbix_servers' -auto-approve
       - name: Terraform Plan
         run: terraform plan -input=false -no-color -lock-timeout=10m -out=tfplan_result
       - name: Terraform Apply

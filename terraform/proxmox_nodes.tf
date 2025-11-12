@@ -11,8 +11,8 @@ locals {
   vm_template__alma  = "alma-10.0"
   vm_os_disk_storage = "local-lvm"
   vm_ssh_public_key  = <<EOT
-QUFBQUMzTnphQzFsWkRJMU5URTVBQUFBSU1IWitzblhERk5WSzg5c2ZLQXExVUxFSTV5Ukx4cVdR
-SFlpVlRHVVZsYjgK
+c3NoLWVkMjU1MTkgQUFBQUMzTnphQzFsWkRJMU5URTVBQUFBSU1IWitzblhERk5WSzg5c2ZLQXEx
+VUxFSTV5Ukx4cVdRSFlpVlRHVVZsYjgK
 EOT
 
   # Public network configuration
