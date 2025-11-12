@@ -39,10 +39,10 @@ runcmd:
   - echo '' >> /etc/sudoers.d/90-cloud-init-users
   - echo 'Defaults    lecture = "never"' >> /etc/sudoers.d/90-cloud-init-users
   # `/etc/sudoers.d/` ディレクトリを読み込むようにする
-  - sed -i -e 's/^#includedir /etc/sudoers.d/includedir /etc/sudoers.d/' /etc/sudoers
+  - sed -i -e 's@^#includedir /etc/sudoers.d@includedir /etc/sudoers.d@' /etc/sudoers
   # SSH サーバの設定を追加する
   - echo 'PermitRootLogin no' > /etc/ssh/sshd_config.d/90-cloud-init-custom.conf
-  - echo 'KbdInteractiveAuthentication' >> /etc/ssh/sshd_config.d/90-cloud-init-custom.conf
+  - echo 'KbdInteractiveAuthentication no' >> /etc/ssh/sshd_config.d/90-cloud-init-custom.conf
   # 以下の設定はすでにほかファイルで設定済み
   # `PasswordAuthentication no`
   # -> 50-cloud-init.conf
