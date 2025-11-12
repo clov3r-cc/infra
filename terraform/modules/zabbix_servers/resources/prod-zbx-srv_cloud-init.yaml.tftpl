@@ -1,18 +1,18 @@
 #cloud-config
 hostname: ${CI_HOSTNAME}
 prefer_fqdn_over_hostname: False
-# Password won't expire
+# パスワードの有効期限をなしに
 chpasswd:
   expire: False
 users:
   - name: root
-    # Disable password login
+    # パスワードでの SSH ログインを無効化
     lock_passwd: True
     sudo: ALL=(ALL) NOPASSWD:ALL
     shell: /bin/bash
     home: /root
   - name: ${CI_MACHINEUSER_NAME}
-    # Disable password login
+    # パスワードでの SSH ログインを無効化
     lock_passwd: True
     sudo: ALL=(ALL) ALL
     shell: /bin/bash
@@ -26,22 +26,27 @@ locale: en_US.UTF-8
 timezone: Asia/Tokyo
 package_update: True
 packages:
-  # To set locale properly
+  # 言語表示を最適化するため導入
   - glibc-all-langpacks
   - langpacks-en
-  # Use vim as a default text editor
+  # vim をデフォルトのエディタとして使用
   - vim-enhanced
 runcmd:
-  # passwd in users field fails to set password
+  # `passwd` がうまく機能しないので、コマンドで各ユーザのパスワードを設定
   - echo 'root:${CI_ROOT_PASSWORD}' | chpasswd
   - echo '${CI_MACHINEUSER_NAME}:${CI_MACHINEUSER_PASSWORD}' | chpasswd
-  # disable sudo warnings b/c we can't pass password in stdin
+  # 標準入力経由でパスワードを送信することはできないので、sudo 初回実行時の警告を無効化
   - echo '' >> /etc/sudoers.d/90-cloud-init-users
   - echo 'Defaults    lecture = "never"' >> /etc/sudoers.d/90-cloud-init-users
-  # change sshd config
-  - sed -i -e 's/^#PermitRootLogin prohibit-password/PermitRootLogin no/' /etc/ssh/sshd_config
-  - sed -i -e 's/^#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
-  - sed -i -e 's/^#KbdInteractiveAuthentication yes/KbdInteractiveAuthentication no/' /etc/ssh/sshd_config
-  - sed -i -e 's/^GSSAPIAuthentication yes/GSSAPIAuthentication no/' /etc/ssh/sshd_config.d/50-redhat.conf
-  - sed -i -e 's/^X11Forwarding yes/X11Forwarding no/' /etc/ssh/sshd_config.d/50-redhat.conf
+  # `/etc/sudoers.d/` ディレクトリを読み込むようにする
+  - sed -i -e 's/^#includedir /etc/sudoers.d/includedir /etc/sudoers.d/' /etc/sudoers
+  # SSH サーバの設定を追加する
+  - echo 'PermitRootLogin no' > /etc/ssh/sshd_config.d/90-cloud-init-custom.conf
+  - echo 'KbdInteractiveAuthentication' >> /etc/ssh/sshd_config.d/90-cloud-init-custom.conf
+  # 以下の設定はすでにほかファイルで設定済み
+  # `PasswordAuthentication no`
+  # -> 50-cloud-init.conf
+  # `GSSAPIAuthentication no `
+  # `X11Forwarding no`
+  # -> 50-redhat.conf
   - systemctl restart sshd
