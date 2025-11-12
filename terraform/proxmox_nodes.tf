@@ -10,7 +10,10 @@ locals {
 
   vm_template__alma  = "alma-10.0"
   vm_os_disk_storage = "local-lvm"
-  vm_ssh_public_key  = "AAAAC3NzaC1lZDI1NTE5AAAAIMHZ+snXDFNVK89sfKAq1ULEI5yRLxqWQHYiVTGUVlb8"
+  vm_ssh_public_key  = <<EOT
+QUFBQUMzTnphQzFsWkRJMU5URTVBQUFBSU1IWitzblhERk5WSzg5c2ZLQXExVUxFSTV5Ukx4cVdR
+SFlpVlRHVVZsYjgK
+EOT
 
   # Public network configuration
   vm_service_nw_bridge      = "vmbr0"
