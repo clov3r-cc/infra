@@ -38,10 +38,15 @@ runcmd:
   # disable sudo warnings b/c we can't pass password in stdin
   - echo '' >> /etc/sudoers.d/90-cloud-init-users
   - echo 'Defaults    lecture = "never"' >> /etc/sudoers.d/90-cloud-init-users
-  # change sshd config
-  - sed -i -e 's/^#PermitRootLogin prohibit-password/PermitRootLogin no/' /etc/ssh/sshd_config
-  - sed -i -e 's/^#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
-  - sed -i -e 's/^#KbdInteractiveAuthentication yes/KbdInteractiveAuthentication no/' /etc/ssh/sshd_config
-  - sed -i -e 's/^GSSAPIAuthentication yes/GSSAPIAuthentication no/' /etc/ssh/sshd_config.d/50-redhat.conf
-  - sed -i -e 's/^X11Forwarding yes/X11Forwarding no/' /etc/ssh/sshd_config.d/50-redhat.conf
+  # include /etc/sudoers.d/ in sudoers
+  - sed -i -e 's/^#includedir /etc/sudoers.d/includedir /etc/sudoers.d/' /etc/sudoers
+  # add sshd config
+  - echo 'PermitRootLogin no' > /etc/ssh/sshd_config.d/90-cloud-init-custom.conf
+  - echo 'KbdInteractiveAuthentication' >> /etc/ssh/sshd_config.d/90-cloud-init-custom.conf
+  # 以下の設定はすでにほかファイルで設定済み
+  # `PasswordAuthentication no`
+  # -> 50-cloud-init.conf
+  # `GSSAPIAuthentication no `
+  # `X11Forwarding no`
+  # -> 50-redhat.conf
   - systemctl restart sshd
