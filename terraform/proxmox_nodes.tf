@@ -54,7 +54,7 @@ module "prod__zabbix_servers" {
   vm_management_nw_bridge      = local.vm_management_nw_bridge
   vm_management_nw_subnet_cidr = local.vm_management_nw_subnet_cidr
   vm_os_disk_storage           = local.vm_os_disk_storage
-  vm_os_disk_size              = 30
+  vm_os_disk_size              = 10
 }
 
 # TODO: Fix me
