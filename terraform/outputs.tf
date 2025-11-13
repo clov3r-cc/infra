@@ -1,3 +1,7 @@
+output "prod__zabbix_servers" {
+  value = module.prod__zabbix_servers.zabbix_servers
+}
+
 # TODO: Fix me
 # output "prod__k8s_gateway_node" {
 #   value = module.prod__k8s_nodes.gateway
