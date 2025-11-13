@@ -7,7 +7,9 @@ output "zabbix_servers" {
     ethernet_adapters = {
       ip0 = merge(
         { bridge = vm.network[0].bridge },
-        regex("ip=(?P<ip_address>[.*]),gw=(?P<default_gateway>[.*])", vm.ipconfig0)
+        # (?P<name>x):	named capture group, named name, for sub-pattern x
+        # https://developer.hashicorp.com/terraform/language/functions/regex
+        regex("ip=(?P<ip_address>.*),gw=(?P<default_gateway>.*)", vm.ipconfig0)
       )
     }
   }]
