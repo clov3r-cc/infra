@@ -1,8 +1,8 @@
 locals {
   pve_hosts = {
     "pve-01" = {
-      host_name      = "pve-01"
-      console_domain = "192.168.120.2:8006"
+      host_name  = "pve-01"
+      ip_address = "192.168.120.2"
     }
   }
 
@@ -28,27 +28,33 @@ module "prod__zabbix_servers" {
 
   env_name = "prod"
 
+  pve_hosts         = local.pve_hosts
   pve_user          = local.machine_user
   pve_user_password = var.pve_user_password
 
-  vm_template        = local.vm_template__alma
-  vm_user            = local.machine_user
-  vm_ssh_public_key  = local.vm_ssh_public_key
-  vm_ssh_private_key = var.vm_ssh_private_key
-  vm_os_disk_storage = local.vm_os_disk_storage
-
-  server_allocated_host = {
-    1 = local.pve_hosts["pve-01"]["host_name"]
-    2 = local.pve_hosts["pve-01"]["host_name"]
+  vm_settings = {
+    "01" = {
+      host_name                = local.pve_hosts["pve-01"]["host_name"]
+      vm_id                    = 102
+      managemt_nw_host-section = 14
+    }
+    "02" = {
+      host_name                = local.pve_hosts["pve-01"]["host_name"]
+      vm_id                    = 103
+      managemt_nw_host-section = 15
+    }
   }
-  server_first_vm_id                      = 102
-  server_memory                           = 1024 * 3
-  server_sockets                          = 1
-  server_cores                            = 3
-  server_management_nw_bridge             = local.vm_management_nw_bridge
-  server_management_nw_subnet_cidr        = local.vm_management_nw_subnet_cidr
-  server_first_management_nw_host-section = 14
-  server_os_disk_size                     = 30
+  vm_user                      = local.machine_user
+  vm_ssh_public_key            = local.vm_ssh_public_key
+  vm_ssh_private_key           = var.vm_ssh_private_key
+  vm_template                  = local.vm_template__alma
+  vm_memory                    = 1024 * 3
+  vm_cpu_sockets               = 1
+  vm_cpu_cores                 = 3
+  vm_management_nw_bridge      = local.vm_management_nw_bridge
+  vm_management_nw_subnet_cidr = local.vm_management_nw_subnet_cidr
+  vm_os_disk_storage           = local.vm_os_disk_storage
+  vm_os_disk_size              = 30
 }
 
 # TODO: Fix me
