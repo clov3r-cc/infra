@@ -14,6 +14,7 @@ variable "env_name" {
 }
 
 variable "pve_hosts" {
+  description = "Proxmox VE hosts list."
   type = map(object({
     host_name  = string
     ip_address = string
@@ -53,6 +54,12 @@ variable "vm_template" {
 }
 
 variable "vm_settings" {
+  description = <<-EOT
+  Settings per VM.
+  - `host_name`: Proxmox host name to be deployed.
+  - `vm_id`: VM ID.
+  - `managemt_nw_host-section`: The IP address host section used by the node in management network.
+  EOT
   type = map(object({
     host_name                = string
     vm_id                    = number
@@ -77,13 +84,13 @@ variable "vm_cpu_cores" {
 
 variable "vm_management_nw_bridge" {
   type        = string
-  description = "Bridge to which the network device should be attached for management network."
+  description = "Bridge to which the network device should be attached in management network."
   default     = "vmbr0"
 }
 
 variable "vm_management_nw_subnet_cidr" {
   type        = string
-  description = "Subnet CIDR block for management network."
+  description = "Subnet CIDR block in management network."
   default     = "192.168.0.0/24"
 }
 
