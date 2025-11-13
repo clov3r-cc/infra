@@ -9,10 +9,6 @@ output "zabbix_servers" {
         bridge = vm.network[0].bridge
         config = vm.ipconfig0
       }
-      ip1 = {
-        bridge = vm.network[1].bridge
-        config = vm.ipconfig1
-      }
     }
   }]
 }
