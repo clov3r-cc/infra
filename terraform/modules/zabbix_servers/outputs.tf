@@ -5,10 +5,10 @@ output "zabbix_servers" {
     name        = vm.name
     description = vm.description
     ethernet_adapters = {
-      ip0 = {
-        bridge = vm.network[0].bridge
-        config = vm.ipconfig0
-      }
+      ip0 = merge(
+        { bridge = vm.network[0].bridge },
+        regex("ip=(?P<ip_address>[.*]),gw=(?P<default_gateway>[.*])", vm.ipconfig0)
+      )
     }
   }]
 }
