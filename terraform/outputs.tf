@@ -1,5 +1,5 @@
-output "prod__zabbix_servers" {
-  value = module.prod__zabbix_servers.zabbix_servers
+output "prd__zabbix_servers" {
+  value = module.prd__zabbix_servers.zabbix_servers
 }
 
 # TODO: Fix me
