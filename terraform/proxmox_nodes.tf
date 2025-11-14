@@ -23,10 +23,10 @@ EOT
   vm_management_nw_subnet_cidr = "192.168.120.0/24"
 }
 
-module "prod__zabbix_servers" {
+module "prd__zabbix_servers" {
   source = "./modules/zabbix_servers"
 
-  env_name = "prod"
+  env_name = "prd"
 
   pve_hosts         = local.pve_hosts
   pve_user          = local.machine_user

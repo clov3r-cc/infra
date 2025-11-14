@@ -8,8 +8,8 @@ variable "env_name" {
   description = "The environment name."
 
   validation {
-    condition     = contains(["prod", "test"], var.env_name)
-    error_message = "Allowed values are 'prod' or 'test'."
+    condition     = contains(["prd", "tst"], var.env_name)
+    error_message = "Allowed values are 'prd' or 'tst'."
   }
 }
 
