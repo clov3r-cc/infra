@@ -8,8 +8,8 @@ variable "env_name" {
   description = "The environment name."
 
   validation {
-    condition     = contains(["prod", "test"], var.env_name)
-    error_message = "Allowed values are 'prod' or 'test'."
+    condition     = contains(["prd", "tst"], var.env_name)
+    error_message = "Allowed values are 'prd' or 'tst'."
   }
 }
 
@@ -134,18 +134,18 @@ resource "null_resource" "cloud-init_config" {
     private_key = base64decode(var.vm_ssh_private_key)
   }
   provisioner "file" {
-    content = templatefile("${path.module}/resources/${var.env_name}-zbx-srv_cloud-init.yaml.tftpl", {
-      CI_HOSTNAME               = "${var.env_name}-zbx-srv-${format("%02d", tonumber(each.key))}",
+    content = templatefile("${path.module}/resources/${var.env_name}-zbx_cloud-init.yaml.tftpl", {
+      CI_HOSTNAME               = "${var.env_name}-zbx-${format("%02d", tonumber(each.key))}",
       CI_ROOT_PASSWORD          = random_password.vm_root_password[each.key].result,
       CI_MACHINEUSER_NAME       = var.vm_user,
       CI_MACHINEUSER_PASSWORD   = random_password.vm_user_password[each.key].result,
       CI_MACHINEUSER_SSH_PUBKEY = base64decode(var.vm_ssh_public_key),
     })
-    destination = "/tmp/${var.env_name}-zbx-srv-${format("%02d", tonumber(each.key))}_cloud-init.yaml"
+    destination = "/tmp/${var.env_name}-zbx-${format("%02d", tonumber(each.key))}_cloud-init.yaml"
   }
   provisioner "remote-exec" {
     inline = [
-      "echo '${var.pve_user_password}' | sudo -S mv /tmp/${var.env_name}-zbx-srv-${format("%02d", tonumber(each.key))}_cloud-init.yaml /var/lib/vz/snippets/",
+      "echo '${var.pve_user_password}' | sudo -S mv /tmp/${var.env_name}-zbx-${format("%02d", tonumber(each.key))}_cloud-init.yaml /var/lib/vz/snippets/",
     ]
   }
 }
@@ -154,7 +154,7 @@ resource "proxmox_vm_qemu" "server" {
   for_each   = var.vm_settings
   depends_on = [null_resource.cloud-init_config]
 
-  name        = "${var.env_name}-zbx-srv-${format("%02d", tonumber(each.key))}"
+  name        = "${var.env_name}-zbx-${format("%02d", tonumber(each.key))}"
   target_node = each.value.host_name
   vmid        = each.value.vm_id
   description = "Zabbix Server. This VM is managed by Terraform."
@@ -182,7 +182,7 @@ resource "proxmox_vm_qemu" "server" {
 
   # cloud-init configuration
   os_type  = "cloud-init"
-  cicustom = "user=local:snippets/${var.env_name}-zbx-srv-${format("%02d", tonumber(each.key))}_cloud-init.yaml"
+  cicustom = "user=local:snippets/${var.env_name}-zbx-${format("%02d", tonumber(each.key))}_cloud-init.yaml"
 
   network {
     id     = 0
