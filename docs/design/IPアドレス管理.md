@@ -1,4 +1,4 @@
-# IPアドレス管理表
+# IPアドレス管理
 
 <!-- @import "[TOC]" {cmd="toc" depthFrom=2 depthTo=6 orderedList=false} -->
 
@@ -15,7 +15,3 @@
 
 - `192.168.20.0/24`
 - `192.168.120.0/24`
-
-詳細なIP割当については、以下図を参照してください。
-
-![ネットワーク構成図](../../../diagrams/network-diagram.drawio.svg)
