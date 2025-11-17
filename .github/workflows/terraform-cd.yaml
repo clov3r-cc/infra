@@ -10,6 +10,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   find_envs:
+    name: Find environments
     runs-on: ubuntu-24.04
     outputs:
       matrix: ${{ steps.output_matrix.outputs.matrix }}
