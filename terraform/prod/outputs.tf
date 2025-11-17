@@ -1,4 +1,4 @@
-output "prd__zabbix_servers" {
+output "zabbix_servers__prd" {
   value = [for vm in proxmox_vm_qemu.zabbix_server : {
     host_name   = vm.current_node
     id          = vm.vmid
