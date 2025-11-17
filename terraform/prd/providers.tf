@@ -5,7 +5,7 @@ terraform {
     organization = "clov3r-cc"
 
     workspaces {
-      name = "infra"
+      name = "infra-prod"
     }
   }
 

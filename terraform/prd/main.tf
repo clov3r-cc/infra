@@ -1,0 +1,39 @@
+# NOTE: account_id、zone_id は非シークレット
+# https://github.com/cloudflare/wrangler-legacy/issues/209#issuecomment-541654484
+
+data "cloudflare_account" "me" {
+  account_id = "fff06038a70892193e0fa1e9e270436a"
+}
+
+data "cloudflare_zone" "clov3r-cc" {
+  zone_id = "b52fd73ec52e35fea1807a173e33e93a"
+}
+
+locals {
+  pve_hosts = {
+    "pve-01" = {
+      host_name  = "pve-01"
+      ip_address = "192.168.120.2"
+    }
+  }
+
+  env = "prd"
+
+  machine_user = "machine-user"
+
+  vm_template__alma  = "alma-10.0"
+  vm_os_disk_storage = "local-lvm"
+  vm_ssh_public_key  = <<EOT
+c3NoLWVkMjU1MTkgQUFBQUMzTnphQzFsWkRJMU5URTVBQUFBSU1IWitzblhERk5WSzg5c2ZLQXEx
+VUxFSTV5Ukx4cVdRSFlpVlRHVVZsYjgK
+EOT
+
+  # Public network configuration
+  vm_service_nw_bridge      = "vmbr0"
+  vm_service_nw_subnet_cidr = "192.168.20.0/24"
+  # Internal network configuration
+  vm_management_nw_bridge      = "vmbr1"
+  vm_management_nw_subnet_cidr = "192.168.120.0/24"
+  vm_management_nw_subnet_mask = split("/", local.vm_management_nw_subnet_cidr)[1]
+  vm_management_nw_default_gw  = cidrhost(local.vm_management_nw_subnet_cidr, 1)
+}

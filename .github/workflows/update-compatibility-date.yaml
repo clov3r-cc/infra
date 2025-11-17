@@ -5,6 +5,9 @@ on:
     # https://crontab.guru/#0_15_*_*_6
     - cron: '0 15 * * 6'
   workflow_dispatch:
+permissions:
+  contents: write
+  pull-requests: write
 jobs:
   update-compatibility-date:
     runs-on: ubuntu-24.04
