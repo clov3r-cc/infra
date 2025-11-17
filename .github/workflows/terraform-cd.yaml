@@ -3,21 +3,32 @@ on:
   push:
     branches:
       - main
-env:
-  # Path from tfcmt working-directory
-  TFCMT_CONFIG: ../.github/tfcmt-config.yaml
 permissions:
   pull-requests: write
-defaults:
-  run:
-    working-directory: ./terraform
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
 jobs:
+  find_envs:
+    runs-on: ubuntu-24.04
+    outputs:
+      matrix: ${{ steps.output_matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v5
+      - id: output_matrix
+        run: |
+          echo "matrix=$(find ./terraform -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | jq -R -s -c 'split("\n") | map(select(length > 0)) | {env: .}')" >> $GITHUB_OUTPUT
   tf_apply:
     name: Apply Terraform
     runs-on: ubuntu-24.04
+    needs: [ find_envs ]
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.find_envs.outputs.matrix) }}
+    defaults:
+      run:
+        # https://docs.github.com/ja/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idstrategyfail-fast
+        working-directory: terraform/${{ matrix.env }}
     steps:
       - uses: actions/checkout@v5
       - uses: hashicorp/setup-terraform@v3
@@ -45,4 +56,4 @@ jobs:
       - name: Terraform Apply
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: tfcmt apply -- terraform apply -input=false -no-color -auto-approve -lock-timeout=10m tfplan_result
+        run: tfcmt apply --config "${{ github.workspace }}/.github/tfcmt-config.yaml" -- terraform apply -input=false -no-color -auto-approve -lock-timeout=10m tfplan_result
