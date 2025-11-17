@@ -29,12 +29,6 @@ jobs:
         run: curl -fsSL https://raw.githubusercontent.com/GiganticMinecraft/seichi_infra/refs/heads/main/.github/workflows/scripts/expose-all-tf-vars-to-github-env.sh | bash
         env:
           SECRETS_CONTEXT: ${{ toJson(secrets) }}
-      - name: Setup Tailscale
-        uses: tailscale/github-action@v4
-        with:
-          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
-          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
-          tags: tag:gha
       - name: Terraform Plan
         run: tfcmt plan -patch -- terraform plan -input=false -no-color -lock-timeout=10m
         env:
