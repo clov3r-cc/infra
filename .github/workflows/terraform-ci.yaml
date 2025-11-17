@@ -8,7 +8,7 @@ permissions:
   pull-requests: write
 defaults:
   run:
-    working-directory: ./terraform
+    working-directory: ./terraform/prod
 jobs:
   tf_plan:
     name: Plan Terraform
