@@ -18,11 +18,11 @@ jobs:
     runs-on: ubuntu-24.04
     needs: [ find_envs ]
     strategy:
+      fail-fast: false
       matrix: ${{ fromJSON(needs.find_envs.outputs.matrix) }}
     defaults:
       run:
         # https://docs.github.com/ja/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idstrategyfail-fast
-        fail-fast: false
         working-directory: terraform/${{ matrix.env }}
     steps:
       - uses: actions/checkout@v5
