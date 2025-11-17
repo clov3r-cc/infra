@@ -1,2 +1,5 @@
+default: true
 MD013:
   line_length: 200
+MD060:
+  enabled: false
