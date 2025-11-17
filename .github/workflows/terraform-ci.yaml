@@ -11,7 +11,8 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - id: output_matrix
-        run: echo "matrix=$(find ./terraform -maxdepth 1 -type d -printf '%f\n' | jq -R -s 'split("\n") | map(select(length > 0)) | {env: .}')" > $GITHUB_OUTPUT
+        run: |
+          echo "matrix=$(find ./terraform -maxdepth 1 -type d -printf '%f\n' | jq -R -s 'split("\n") | map(select(length > 0)) | {env: .}')" >> $GITHUB_OUTPUT
   tf_plan:
     name: Plan Terraform
     runs-on: ubuntu-24.04
