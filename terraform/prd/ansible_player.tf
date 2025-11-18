@@ -65,7 +65,7 @@ resource "proxmox_vm_qemu" "ansible_player" {
   name        = "${local.env}-ans-${format("%02d", tonumber(each.key))}"
   target_node = each.value.host_name
   vmid        = each.value.vm_id
-  description = "Zabbix Server. This VM is managed by Terraform."
+  description = "Run ansible on this server. This VM is managed by Terraform."
   bios        = "seabios"
   onboot      = true
   agent       = 1
