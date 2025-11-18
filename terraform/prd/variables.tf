@@ -1,9 +1,15 @@
+#region Cloudflare
+
 variable "cloudflare_api_token" {
   description = "An API token for Cloudflare."
   type        = string
   sensitive   = true
   ephemeral   = true
 }
+
+#endregion
+
+#region Proxmox VE
 
 variable "pve_api_token_id" {
   type        = string
@@ -46,6 +52,10 @@ variable "vm_ssh_private_key" {
   sensitive   = true
 }
 
+#endregion
+
+#region Oracle Cloud
+
 variable "oracle_cloud_api_fingerprint" {
   description = "Fingerprint of OCI API private key for Tenancy"
   type        = string
@@ -58,14 +68,10 @@ variable "oracle_cloud_api_private_key" {
   sensitive   = true
 }
 
-variable "oracle_cloud_tenancy_id" {
-  description = "Tenancy ID where to create resources for Tenancy"
-  type        = string
-  sensitive   = true
-}
-
 variable "oracle_cloud_user_id" {
   description = "User ID that Terraform will use to create resources for Tenancy"
   type        = string
   sensitive   = true
 }
+
+#endregion

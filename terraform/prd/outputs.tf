@@ -1,3 +1,5 @@
+#region Proxmox VE
+
 output "zabbix_servers__prd" {
   value = [for vm in proxmox_vm_qemu.zabbix_server : {
     host_name   = vm.current_node
@@ -32,15 +34,6 @@ output "ansible_players__prd" {
   }]
 }
 
-# Remove this
-resource "oci_core_vcn" "test_vcn" {
-  #Required
-  compartment_id = var.oracle_cloud_tenancy_id
-
-  cidr_block   = "10.0.0.0/16"
-  display_name = "test-vcn"
-}
-
 # TODO: Fix me
 # output "prod__k8s_gateway_node" {
 #   value = module.prod__k8s_nodes.gateway
@@ -53,3 +46,13 @@ resource "oci_core_vcn" "test_vcn" {
 # output "prod__k8s_control_plane_nodes" {
 #   value = module.prod__k8s_nodes.control_plane_nodes
 # }
+
+#endregion
+
+#region Oracle Cloud
+
+output "list_ads" {
+  value = data.oci_identity_availability_domains.ad.availability_domains
+}
+
+#endregion
