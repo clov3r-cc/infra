@@ -56,9 +56,3 @@ provider "oci" {
   private_key  = base64decode(var.oracle_cloud_api_private_key)
   region       = "ap-osaka-1"
 }
-
-# TODO: Remove this
-data "oci_identity_availability_domains" "ad" {
-  #Required
-  compartment_id = var.oracle_cloud_tenancy_id
-}
