@@ -1,6 +1,7 @@
 name: Terraform CI
 on:
   pull_request:
+  workflow_dispatch:
 permissions:
   pull-requests: write
 jobs:
