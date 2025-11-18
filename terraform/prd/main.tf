@@ -16,14 +16,15 @@ data "cloudflare_zone" "clov3r-cc" {
 #region Oracle Cloud
 
 data "oci_identity_availability_domains" "ad" {
-  compartment_id = var.oracle_cloud_tenancy_id
+  compartment_id = local.oracle_cloud_tenancy_id
 }
 
 #endregion
 
-#region Proxmox VE
 
 locals {
+  #region Proxmox VE
+
   pve_hosts = {
     "pve-01" = {
       host_name  = "pve-01"
@@ -50,6 +51,13 @@ EOT
   vm_management_nw_subnet_cidr = "192.168.120.0/24"
   vm_management_nw_subnet_mask = split("/", local.vm_management_nw_subnet_cidr)[1]
   vm_management_nw_default_gw  = cidrhost(local.vm_management_nw_subnet_cidr, 1)
+
+  #endregion
+
+  #region Oracle Cloud
+
+  oracle_cloud_tenancy_id = "ocid1.tenancy.oc1..aaaaaaaa3vcsovo36fpa7kf42sljmsypxgwrp37lowwl27g5n7pgy765krba"
+
+  #endregion
 }
 
-#endregion

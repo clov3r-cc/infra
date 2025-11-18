@@ -50,7 +50,7 @@ provider "proxmox" {
 }
 
 provider "oci" {
-  tenancy_ocid = var.oracle_cloud_tenancy_id
+  tenancy_ocid = local.oracle_cloud_tenancy_id
   user_ocid    = var.oracle_cloud_user_id
   fingerprint  = var.oracle_cloud_api_fingerprint
   private_key  = base64decode(var.oracle_cloud_api_private_key)

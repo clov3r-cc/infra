@@ -68,12 +68,6 @@ variable "oracle_cloud_api_private_key" {
   sensitive   = true
 }
 
-variable "oracle_cloud_tenancy_id" {
-  description = "Tenancy ID where to create resources for Tenancy"
-  type        = string
-  sensitive   = true
-}
-
 variable "oracle_cloud_user_id" {
   description = "User ID that Terraform will use to create resources for Tenancy"
   type        = string
