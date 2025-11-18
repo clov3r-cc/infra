@@ -32,6 +32,11 @@ output "ansible_players__prd" {
   }]
 }
 
+# TODO: Remove this
+output "list_ads" {
+  value = data.oci_identity_availability_domains.ad.availability_domains
+}
+
 # TODO: Fix me
 # output "prod__k8s_gateway_node" {
 #   value = module.prod__k8s_nodes.gateway

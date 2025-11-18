@@ -45,3 +45,27 @@ variable "vm_ssh_private_key" {
   description = "The private SSH key base64 encoded for the machine user."
   sensitive   = true
 }
+
+variable "oracle_cloud_api_fingerprint" {
+  description = "Fingerprint of OCI API private key for Tenancy"
+  type        = string
+  sensitive   = true
+}
+
+variable "oracle_cloud_api_private_key" {
+  description = "base64 encoded OCI API private key used for Tenancy"
+  type        = string
+  sensitive   = true
+}
+
+variable "oracle_cloud_tenancy_id" {
+  description = "Tenancy ID where to create resources for Tenancy"
+  type        = string
+  sensitive   = true
+}
+
+variable "oracle_cloud_user_id" {
+  description = "User ID that Terraform will use to create resources for Tenancy"
+  type        = string
+  sensitive   = true
+}
