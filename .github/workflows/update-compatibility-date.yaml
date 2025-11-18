@@ -8,7 +8,6 @@ on:
 permissions:
   contents: write
   pull-requests: write
-  actions: write
 jobs:
   update-compatibility-date:
     runs-on: ubuntu-24.04
@@ -93,7 +92,7 @@ jobs:
         uses: peter-evans/create-pull-request@v7
         id: cpr
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.RUN_ACTION_PAT }}
           commit-message: "chore: update Cloudflare Workers compatibility_date to ${{ steps.get_date.outputs.latest_date }}"
           title: "Update Cloudflare Workers compatibility_date to ${{ steps.get_date.outputs.latest_date }}"
           body: |
@@ -121,17 +120,3 @@ jobs:
           gh pr merge -m --auto
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      # GitHub Actions に PR を作成させると、CI が発火しないので明示的に起動
-      # https://docs.github.com/ja/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow#triggering-a-workflow-from-a-workflow
-      # https://toranoana-lab.hatenablog.com/entry/2025/08/20/100000
-      - name: Run CI
-        uses: actions/github-script@v8
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            await github.rest.actions.createWorkflowDispatch({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              workflow_id: 'terraform-ci.yaml',
-              ref: ${{ steps.cpr.outputs.pull-request-branch }}
-            })
