@@ -1,6 +1,8 @@
 # NOTE: account_id、zone_id は非シークレット
 # https://github.com/cloudflare/wrangler-legacy/issues/209#issuecomment-541654484
 
+#region Cloudflare
+
 data "cloudflare_account" "me" {
   account_id = "fff06038a70892193e0fa1e9e270436a"
 }
@@ -9,9 +11,17 @@ data "cloudflare_zone" "clov3r-cc" {
   zone_id = "b52fd73ec52e35fea1807a173e33e93a"
 }
 
+#endregion
+
+#region Oracle Cloud
+
 data "oci_identity_availability_domains" "ad" {
   compartment_id = var.oracle_cloud_tenancy_id
 }
+
+#endregion
+
+#region Proxmox VE
 
 locals {
   pve_hosts = {
@@ -41,3 +51,5 @@ EOT
   vm_management_nw_subnet_mask = split("/", local.vm_management_nw_subnet_cidr)[1]
   vm_management_nw_default_gw  = cidrhost(local.vm_management_nw_subnet_cidr, 1)
 }
+
+#endregion
