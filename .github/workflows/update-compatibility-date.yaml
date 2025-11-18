@@ -113,3 +113,8 @@ jobs:
           delete-branch: true
           labels: |
             dependencies
+      - run: git branch
+      - name: Enable Pull Request Automerge
+        run: gh pr merge --merge --auto "1"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
