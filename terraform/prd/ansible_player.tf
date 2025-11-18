@@ -146,17 +146,17 @@ resource "null_resource" "ssh_private_key__ansible_player" {
   }
   provisioner "remote-exec" {
     inline = [
-      "mkdir ~/.ssh || :",
-      "chmod 700 ~/.ssh",
+      "mkdir /home/${local.machine_user}/.ssh || :",
+      "chmod 700 /home/${local.machine_user}/.ssh",
     ]
   }
   provisioner "file" {
     content     = base64decode(var.vm_ssh_private_key)
-    destination = "~/.ssh/id_ed25519"
+    destination = "/home/${local.machine_user}/.ssh/id_ed25519"
   }
   provisioner "remote-exec" {
     inline = [
-      "chmod 600 ~/.ssh/id_ed25519",
+      "chmod 600 /home/${local.machine_user}/.ssh/id_ed25519",
     ]
   }
 }
