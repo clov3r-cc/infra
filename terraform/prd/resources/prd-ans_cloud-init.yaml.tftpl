@@ -1,0 +1,50 @@
+#cloud-config
+hostname: ${CI_HOSTNAME}
+prefer_fqdn_over_hostname: False
+# パスワードの有効期限をなしに
+chpasswd:
+  expire: False
+users:
+  - name: root
+    # パスワードでの SSH ログインを無効化
+    lock_passwd: True
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    home: /root
+  - name: ${CI_MACHINEUSER_NAME}
+    # パスワードでの SSH ログインを無効化
+    lock_passwd: True
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    home: /home/${CI_MACHINEUSER_NAME}
+    ssh_authorized_keys:
+      - ${CI_MACHINEUSER_SSH_PUBKEY}
+keyboard:
+  layout: us
+  model: pc105
+locale: en_US.UTF-8
+timezone: Asia/Tokyo
+package_update: True
+packages:
+  # 言語表示を最適化するため導入
+  - glibc-all-langpacks
+  - langpacks-en
+  # vim をデフォルトのエディタとして使用
+  - vim-enhanced
+runcmd:
+  # `passwd` がうまく機能しないので、コマンドで各ユーザのパスワードを設定
+  - echo 'root:${CI_ROOT_PASSWORD}' | chpasswd
+  - echo '${CI_MACHINEUSER_NAME}:${CI_MACHINEUSER_PASSWORD}' | chpasswd
+  # 標準入力経由でパスワードを送信することはできないので、sudo 初回実行時の警告を無効化
+  - echo '' >> /etc/sudoers.d/90-cloud-init-users
+  - echo 'Defaults    lecture = "never"' >> /etc/sudoers.d/90-cloud-init-users
+  # SSH サーバの設定を追加する
+  - echo 'PermitRootLogin no' > /etc/ssh/sshd_config.d/90-cloud-init-custom.conf
+  - echo 'KbdInteractiveAuthentication no' >> /etc/ssh/sshd_config.d/90-cloud-init-custom.conf
+  # 以下の設定はすでにほかファイルで設定済み
+  # `PasswordAuthentication no`
+  # -> 50-cloud-init.conf
+  # `GSSAPIAuthentication no `
+  # `X11Forwarding no`
+  # -> 50-redhat.conf
+  - systemctl restart sshd
