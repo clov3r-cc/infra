@@ -35,7 +35,7 @@ output "ansible_players__prd" {
 # Remove this
 resource "oci_core_vcn" "test_vcn" {
   #Required
-  compartment_id = "lucky3028"
+  compartment_id = var.oracle_cloud_tenancy_id
 
   cidr_block   = "10.0.0.0/16"
   display_name = "test-vcn"
