@@ -9,6 +9,10 @@ data "cloudflare_zone" "clov3r-cc" {
   zone_id = "b52fd73ec52e35fea1807a173e33e93a"
 }
 
+data "oci_identity_availability_domains" "ad" {
+  compartment_id = var.oracle_cloud_tenancy_id
+}
+
 locals {
   pve_hosts = {
     "pve-01" = {
