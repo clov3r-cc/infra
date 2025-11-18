@@ -32,9 +32,13 @@ output "ansible_players__prd" {
   }]
 }
 
-# TODO: Remove this
-output "list_ads" {
-  value = data.oci_identity_availability_domains.ad.availability_domains
+# Remove this
+resource "oci_core_vcn" "test_vcn" {
+  #Required
+  compartment_id = "lucky3028"
+
+  cidr_block   = "10.0.0.0/16"
+  display_name = "test-vcn"
 }
 
 # TODO: Fix me
