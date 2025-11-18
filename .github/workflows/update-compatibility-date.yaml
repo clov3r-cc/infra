@@ -117,7 +117,7 @@ jobs:
             dependencies
       - name: Enable Pull Request Automerge
         run: |
-          git switch ${{ steps.cpr.outputs.pull-request-url }}
+          gh pr checkout ${{ steps.cpr.outputs.pull-request-number }}
           gh pr merge -m --auto
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
