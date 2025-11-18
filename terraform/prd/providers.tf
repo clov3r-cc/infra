@@ -26,6 +26,10 @@ terraform {
       source  = "hashicorp/null"
       version = "3.2.4"
     }
+    oci = {
+      source  = "oracle/oci"
+      version = "7.26.1"
+    }
   }
 }
 
@@ -43,4 +47,18 @@ provider "proxmox" {
   pm_http_headers     = "CF-Access-Client-Id,${var.pve_cf_client_id},CF-Access-Client-Secret,${var.pve_cf_client_secret}"
   pm_tls_insecure     = var.pve_tls_insecure
   pm_timeout          = 600
+}
+
+provider "oci" {
+  tenancy_ocid = var.oracle_cloud_tenancy_id
+  user_ocid    = var.oracle_cloud_user_id
+  fingerprint  = var.oracle_cloud_api_fingerprint
+  private_key  = base64decode(var.oracle_cloud_api_private_key)
+  region       = "ap-osaka-1"
+}
+
+# TODO: Remove this
+data "oci_identity_availability_domains" "ad" {
+  #Required
+  compartment_id = var.oracle_cloud_tenancy_id
 }
