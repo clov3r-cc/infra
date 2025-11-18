@@ -10,6 +10,7 @@ permissions:
   pull-requests: write
 jobs:
   update-compatibility-date:
+    name: Update Compatibility Date
     runs-on: ubuntu-24.04
     outputs:
       pull-request-number: ${{ steps.cpr.outputs.pull-request-number }}
@@ -125,6 +126,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.RUN_ACTION_PAT }}
   terraform-fmt:
+    name: Run terraform fmt
     runs-on: ubuntu-24.04
     needs: update-compatibility-date
     if: needs.update-compatibility-date.outputs.pull-request-number != ''
