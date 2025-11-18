@@ -123,7 +123,7 @@ jobs:
           gh pr checkout ${{ steps.cpr.outputs.pull-request-number }}
           gh pr merge -m --auto
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.RUN_ACTION_PAT }}
   terraform-fmt:
     runs-on: ubuntu-24.04
     needs: update-compatibility-date
