@@ -31,6 +31,8 @@ packages:
   - langpacks-en
   # vim をデフォルトのエディタとして使用
   - vim-enhanced
+  # RHEL 10 なので、Python 3.12 となる
+  - python3
 runcmd:
   # `passwd` がうまく機能しないので、コマンドで各ユーザのパスワードを設定
   - echo 'root:${CI_ROOT_PASSWORD}' | chpasswd

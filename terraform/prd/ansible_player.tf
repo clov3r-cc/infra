@@ -134,3 +134,29 @@ resource "proxmox_vm_qemu" "ansible_player" {
     ]
   }
 }
+
+resource "null_resource" "ssh_private_key__ansible_player" {
+  for_each = local.vm_settings__ansible_player
+
+  connection {
+    type        = "ssh"
+    host        = proxmox_vm_qemu.ansible_player[each.key].ssh_host
+    user        = local.machine_user
+    private_key = base64decode(var.vm_ssh_private_key)
+  }
+  provisioner "remote-exec" {
+    inline = [
+      "mkdir ~/.ssh || :",
+      "chmod 700 ~/.ssh",
+    ]
+  }
+  provisioner "file" {
+    content     = base64decode(var.vm_ssh_private_key)
+    destination = "~/.ssh/id_ed25519"
+  }
+  provisioner "remote-exec" {
+    inline = [
+      "chmod 600 ~/.ssh/id_ed25519",
+    ]
+  }
+}
