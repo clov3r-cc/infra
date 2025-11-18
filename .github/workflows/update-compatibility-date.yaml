@@ -133,5 +133,5 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               workflow_id: 'terraform-ci.yaml',
-              ref: ${{ steps.cpr.outputs.pull-request-url }}
+              ref: ${{ steps.cpr.outputs.pull-request-branch }}
             })
