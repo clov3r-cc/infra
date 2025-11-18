@@ -115,6 +115,7 @@ jobs:
           labels: |
             dependencies
       - name: Enable Pull Request Automerge
+        if: steps.find_dates.outputs.found == 'true' && steps.check_update.outputs.needs_update == 'true'
         run: |
           gh pr checkout ${{ steps.cpr.outputs.pull-request-number }}
           gh pr merge -m --auto
