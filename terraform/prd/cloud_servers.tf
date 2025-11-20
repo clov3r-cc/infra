@@ -55,4 +55,11 @@ resource "oci_core_security_list" "my_vcn_security_list" {
       min = "22"
     }
   }
+
+  ingress_security_rules {
+    description = "Allow ICMP"
+    // ICMP
+    protocol = "1"
+    source   = "0.0.0.0/0"
+  }
 }
