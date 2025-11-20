@@ -1,10 +1,9 @@
 resource "oci_core_vcn" "my_vcn" {
-  compartment_id                   = local.oracle_cloud_tenancy_id
-  cidr_blocks                      = ["10.0.21.0/24"]
-  display_name                     = "my_vcn__prod"
-  dns_label                        = "clov3r"
-  is_ipv6enabled                   = false
-  is_oracle_gua_allocation_enabled = false
+  compartment_id = local.oracle_cloud_tenancy_id
+  cidr_blocks    = ["10.0.21.0/24"]
+  display_name   = "my_vcn__prod"
+  dns_label      = "clov3r"
+  is_ipv6enabled = false
 }
 
 resource "oci_core_internet_gateway" "my_vcn_internet_gateway" {
