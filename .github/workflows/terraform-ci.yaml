@@ -47,9 +47,6 @@ jobs:
           oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
           oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
           tags: tag:gha
-      - run: |
-          terraform destroy 'oci_core_vcn.my_vcn'
-          terraform destroy 'oci_core_internet_gateway.my_vcn_internet_gateway'
       - name: Terraform Plan
         run: tfcmt plan -patch --config "${{ github.workspace }}/.github/tfcmt-config.yaml" -- terraform plan -input=false -no-color -lock-timeout=10m
         env:
