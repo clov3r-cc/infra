@@ -39,7 +39,8 @@ resource "oci_core_security_list" "my_vcn_security_list" {
   display_name   = "my_vcn_security_list"
 
   egress_security_rules {
-    protocol    = "6"
+    description = "Allow all traffics"
+    protocol    = "all"
     destination = "0.0.0.0/0"
   }
 
