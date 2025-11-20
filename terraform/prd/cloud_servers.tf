@@ -45,6 +45,8 @@ resource "oci_core_security_list" "my_vcn_security_list" {
   }
 
   ingress_security_rules {
+    description = "Allow SSH (Port 22) from any IP address"
+    // TCP
     protocol = "6"
     source   = "0.0.0.0/0"
 
