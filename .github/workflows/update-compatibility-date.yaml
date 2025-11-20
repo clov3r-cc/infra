@@ -17,7 +17,7 @@ jobs:
       branch: ${{ steps.cpr.outputs.pull-request-branch }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: Get latest compatibility_date
         id: get_date
         run: |
@@ -131,7 +131,7 @@ jobs:
     needs: update-compatibility-date
     if: needs.update-compatibility-date.outputs.pull-request-number != ''
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           ref: ${{ needs.update-compatibility-date.outputs.branch }}
           token: ${{ secrets.RUN_ACTION_PAT }}
