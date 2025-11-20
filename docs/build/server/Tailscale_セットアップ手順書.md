@@ -76,7 +76,7 @@
     # -y 記号を1つ以上
     # -B 曖昧で間違えにくい文字を含まない
     # NOTE: pwgen コマンドはファイルへのリダイレクトなどの場合は、1個しかパスワードを生成しない
-    pwgen -cnsyB 16 | tee "$ROOT_PASSWORD_TXT"
+    pwgen -cnsyB 30 | tee "$ROOT_PASSWORD_TXT"
     ROOT_PASSWORD=$(cat "$ROOT_PASSWORD_TXT")
 
     ### SSH公開鍵をGitHubからとってくる
@@ -88,7 +88,7 @@
     sudo pct create "$VM_ID" "local:vztmpl/${IMAGE_TEMPLATE}" \
       --arch amd64 \
       --ostype debian \
-      --hostname tailscale-01 \
+      --hostname prd-tsc-01 \
       --unprivileged 1 \
       --features nesting=1 \
       --password "$ROOT_PASSWORD" \
@@ -97,11 +97,13 @@
       --cores 1 \
       --memory 256 \
       --swap 0 \
-      --net0 name=eth0,bridge=vmbr3,ip=192.168.120.3/24,gw=192.168.120.1,firewall=1 \
+      --net0 name=eth0,bridge=vmbr1,ip=192.168.21.3/24,gw=192.168.21.1,firewall=1 \
       --onboot 1 \
       --timezone Asia/Tokyo \
       --start 1
     # エラーが表示されなければOK
+    sudo pct status "$VM_ID"
+    # status: running と表示されればOK
 
     # 不要なファイルを削除
     rm "$ROOT_PASSWORD_TXT" "$SSH_PUBLIC_KEY_TXT"
@@ -114,7 +116,7 @@
 1. パッケージの更新と必要なパッケージのインストールを行う
 
     ```shell
-    ssh root@192.168.120.3
+    ssh root@192.168.21.3
 
     apt update && apt upgrade -y && apt dist-upgrade -y && \
       apt install curl sudo vim -y
@@ -134,7 +136,7 @@
     Adding user `lucky' to group `users' ...
     ```
 
-2. 作業用ユーザを`sudoers`グループに追加する
+2. 作業用ユーザを`sudo`グループに追加する
 
     ```shell
     $ gpasswd -a "$USERNAME" sudo
@@ -175,7 +177,6 @@
     ### ref. https://forum.proxmox.com/threads/ssh-doesnt-work-as-expected-in-lxc.54691/page-2
     systemctl disable ssh.socket
     systemctl enable ssh
-    systemctl reboot
     ```
 
 4. 別ターミナルで、以下のことを確認する
@@ -184,15 +185,15 @@
     - `root`ユーザでSSH接続できないこと
 
     ```shell
-    ssh -i ~/.ssh/id_ed25519 lucky@192.168.120.3 # will OK
-    ssh -o PubkeyAuthentication=no lucky@192.168.120.3 # will fail
-    ssh root@192.168.120.3 # will fail
+    ssh -i ~/.ssh/id_ed25519 lucky@192.168.21.3 # will OK
+    ssh -o PubkeyAuthentication=no lucky@192.168.21.3 # will fail
+    ssh root@192.168.21.3 # will fail
     ```
 
 5. コンテナを停止する
 
     ```shell
-    ssh -p 60000 lucky@192.168.120.3
+    ssh -p 60000 lucky@192.168.21.3
 
     sudo systemctl poweroff
     ```
@@ -227,7 +228,7 @@
 1. コンテナにIPフォワーディングを許可する
 
     ```shell
-    ssh tailscale-01
+    ssh prd-tsc-01
 
     echo 'net.ipv4.ip_forward = 1' | sudo tee /etc/sysctl.d/99-tailscale.conf
     echo 'net.ipv6.conf.all.forwarding = 1' | sudo tee -a /etc/sysctl.d/99-tailscale.conf
@@ -240,10 +241,10 @@
 2. `Tailscale`をインストールする
 
     ```shell
-    ssh tailscale-01
+    ssh prd-tsc-01
 
     curl -fsSL https://tailscale.com/install.sh | sh
-    sudo tailscale up --advertise-routes=192.168.120.0/24 --advertise-exit-node --accept-routes
+    sudo tailscale up --advertise-routes=192.168.21.0/24 --advertise-exit-node --accept-routes
 
     exit
     ```
@@ -251,18 +252,22 @@
 ### 4.9. `Tailscale`でExit Nodeの設定をする
 
 1. [Tailscale](https://login.tailscale.com/admin/machines)を開く。
-2. `tailscale-0` > `Edit route settings...`を押下する
-3. `Subnet routes` > `192.168.20.0/24` と `Exit node` > `Use as exit node` にチェックを入れる
+2. `prd-tsc-01` > `Edit route settings...`を押下する
+3. `Subnet routes` > `192.168.21.0/24` と `Exit node` > `Use as exit node` にチェックを入れる
 4. `Save`を押下する
 
 ### 4.10. `Tailscale`の鍵の有効期限を無効化をする
 
 ref. <https://tailscale.com/kb/1028/key-expiry>
 
-1. `tailscale-0` > `Disable key expiry`を押下する
+1. `prd-tsc-01` > `Disable key expiry`を押下する
 
 ## 5. 完了条件
 
 - LXCコンテナに対するSSH接続において、`root`ユーザとしてログインできないこと
 - LXCコンテナに対するSSH接続において、作業用ユーザが作成されていて、そのユーザとしてログインできること
 - `Tailscale`により、インターネットからセキュアにネットワーク内にアクセスできること
+- `Tailscale`において、`prd-tsc-01`に以下の設定をしていること
+  - 鍵の有効期限なし
+  - サブネットをアドバタイズしていること
+  - Exit Nodeであること
