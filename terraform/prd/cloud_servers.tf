@@ -21,5 +21,4 @@ resource "oci_core_subnet" "my_vcn_subnet" {
   cidr_block          = "10.0.21.0/24"
   display_name        = "my_vcn_subnet__prod"
   dns_label           = "prod"
-  ipv4cidr_blocks     = "10.0.21.0/24"
 }
