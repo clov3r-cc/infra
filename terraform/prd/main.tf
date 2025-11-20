@@ -28,7 +28,7 @@ locals {
   pve_hosts = {
     "pve-01" = {
       host_name  = "pve-01"
-      ip_address = "192.168.120.2"
+      ip_address = "192.168.21.2"
     }
   }
 
@@ -48,7 +48,7 @@ EOT
   vm_service_nw_subnet_cidr = "192.168.20.0/24"
   # Internal network configuration
   vm_management_nw_bridge      = "vmbr1"
-  vm_management_nw_subnet_cidr = "192.168.120.0/24"
+  vm_management_nw_subnet_cidr = "192.168.21.0/24"
   vm_management_nw_subnet_mask = split("/", local.vm_management_nw_subnet_cidr)[1]
   vm_management_nw_default_gw  = cidrhost(local.vm_management_nw_subnet_cidr, 1)
 
