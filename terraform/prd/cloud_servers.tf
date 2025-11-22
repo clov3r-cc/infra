@@ -60,7 +60,7 @@ resource "oci_core_network_security_group_security_rule" "my_vcn_nw_sg__ingress_
   description               = "SSH traffics on ingress"
   direction                 = "INGRESS"
   source_type               = "CIDR_BLOCK"
-  source                    = "0.0.0.0/0"
+  source                    = oci_core_subnet.my_vcn_subnet.cidr_block
   protocol                  = "6" // TCP
   tcp_options {
     destination_port_range {
@@ -76,7 +76,7 @@ resource "oci_core_network_security_group_security_rule" "my_vcn_nw_sg__ingress_
   description               = "ICMP traffics on ingress"
   direction                 = "INGRESS"
   source_type               = "CIDR_BLOCK"
-  source                    = "0.0.0.0/0"
+  source                    = oci_core_subnet.my_vcn_subnet.cidr_block
   protocol                  = "1" // ICMP
 }
 
