@@ -55,4 +55,11 @@ output "list_ads" {
   value = data.oci_identity_availability_domains.ad.availability_domains
 }
 
+output "cloud-server__prd" {
+  value = {
+    id   = oci_core_instance.cloud_server.id
+    name = oci_core_instance.cloud_server.display_name
+  }
+}
+
 #endregion
