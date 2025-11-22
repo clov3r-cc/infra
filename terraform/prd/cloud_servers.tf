@@ -57,7 +57,7 @@ resource "oci_core_network_security_group_security_rule" "my_vcn_nw_sg__egress__
 resource "oci_core_network_security_group_security_rule" "my_vcn_nw_sg__ingress__allow_ssh_traffics" {
   network_security_group_id = oci_core_network_security_group.my_vcn_nw_sg.id
   stateless                 = false
-  description               = "SSH traffics on ingress"
+  description               = "Allow SSH traffics from the same subnet on ingress"
   direction                 = "INGRESS"
   source_type               = "CIDR_BLOCK"
   source                    = "0.0.0.0/0"
@@ -73,7 +73,7 @@ resource "oci_core_network_security_group_security_rule" "my_vcn_nw_sg__ingress_
 resource "oci_core_network_security_group_security_rule" "my_vcn_nw_sg__ingress__allow_icmp_traffics" {
   network_security_group_id = oci_core_network_security_group.my_vcn_nw_sg.id
   stateless                 = false
-  description               = "ICMP traffics on ingress"
+  description               = "Allow ICMP traffics from anywhere on ingress"
   direction                 = "INGRESS"
   source_type               = "CIDR_BLOCK"
   source                    = "0.0.0.0/0"
