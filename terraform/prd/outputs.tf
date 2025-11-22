@@ -55,11 +55,11 @@ output "oci_identity_availability_domain" {
   value = data.oci_identity_availability_domain.ad
 }
 
-# output "cloud-server__prd" {
-#   value = {
-#     id   = oci_core_instance.cloud_server.id
-#     name = oci_core_instance.cloud_server.display_name
-#   }
-# }
+output "cloud-server__prd" {
+  value = {
+    id   = oci_core_instance.cloud_server.id
+    name = oci_core_instance.cloud_server.display_name
+  }
+}
 
 #endregion
