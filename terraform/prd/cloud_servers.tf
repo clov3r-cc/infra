@@ -60,7 +60,7 @@ resource "oci_core_network_security_group_security_rule" "my_vcn_nw_sg__ingress_
   description               = "SSH traffics on ingress"
   direction                 = "INGRESS"
   source_type               = "CIDR_BLOCK"
-  source                    = oci_core_subnet.my_vcn_subnet.cidr_block
+  source                    = "0.0.0.0/0"
   protocol                  = "6" // TCP
   tcp_options {
     destination_port_range {
@@ -76,7 +76,7 @@ resource "oci_core_network_security_group_security_rule" "my_vcn_nw_sg__ingress_
   description               = "ICMP traffics on ingress"
   direction                 = "INGRESS"
   source_type               = "CIDR_BLOCK"
-  source                    = oci_core_subnet.my_vcn_subnet.cidr_block
+  source                    = "0.0.0.0/0"
   protocol                  = "1" // ICMP
 }
 
@@ -103,7 +103,7 @@ resource "oci_core_instance" "cloud_server" {
 
   create_vnic_details {
     subnet_id                 = oci_core_subnet.my_vcn_subnet.id
-    assign_public_ip          = false
+    assign_public_ip          = true
     assign_private_dns_record = false
     nsg_ids                   = [oci_core_network_security_group.my_vcn_nw_sg.id]
   }
