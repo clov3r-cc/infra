@@ -38,7 +38,7 @@ systemctl restart sshd
 
 USERNAME=${CI_MACHINEUSER_NAME}
 USER_PASSWORD=${CI_MACHINEUSER_PASSWORD}
-USER_SSH_PUBKEY=${CI_MACHINEUSER_SSH_PUBKEY}
+USER_SSH_PUBKEY="${CI_MACHINEUSER_SSH_PUBKEY}"
 
 useradd -m -s /bin/bash -d /home/$USERNAME $USERNAME
 echo "$USERNAME:$USER_PASSWORD" | chpasswd
@@ -54,7 +54,7 @@ chmod 440 /etc/sudoers.d/99-$USERNAME
 mkdir -p /home/$USERNAME/.ssh
 chmod 700 /home/$USERNAME/.ssh
 
-echo "$USER_SSH_PUBKEY" > /home/$USERNAME/.ssh/authorized_keys
+echo -n "$USER_SSH_PUBKEY" > /home/$USERNAME/.ssh/authorized_keys
 chmod 600 /home/$USERNAME/.ssh/authorized_keys
 
 chown -R $USERNAME:$USERNAME /home/$USERNAME/.ssh
