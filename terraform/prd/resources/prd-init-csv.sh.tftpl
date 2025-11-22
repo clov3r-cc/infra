@@ -1,0 +1,70 @@
+#!/bin/bash
+
+set -euxo pipefail
+
+### Set datetime and locale
+
+timedatectl set-timezone Asia/Tokyo
+localectl set-locale en_US.UTF-8
+localectl set-keymap us
+
+### Install packages
+
+dnf clean all
+dnf makecache
+dnf install -y glibc-all-langpacks \
+  langpacks-en \
+  vim-enhanced \
+  python3
+
+### Disable firewalld
+
+systemctl stop firewalld
+systemctl disable firewalld
+
+### Disable sudo warning
+
+echo '' >> /etc/sudoers.d/90-cloud-init-users
+echo 'Defaults    lecture = "never"' >> /etc/sudoers.d/90-cloud-init-users
+
+### Add more strict SSH config
+
+echo 'PermitRootLogin no' > /etc/ssh/sshd_config.d/90-cloud-init-custom.conf
+echo 'KbdInteractiveAuthentication no' >> /etc/ssh/sshd_config.d/90-cloud-init-custom.conf
+
+systemctl restart sshd
+
+### Add user
+
+USERNAME=${CI_MACHINEUSER_NAME}
+USER_PASSWORD=${CI_MACHINEUSER_PASSWORD}
+USER_SSH_PUBKEY=${CI_MACHINEUSER_SSH_PUBKEY}
+
+useradd -m -s /bin/bash -d /home/$USERNAME $USERNAME
+echo "$USERNAME:$USER_PASSWORD" | chpasswd
+# Make password not expired
+chage -I -1 -m 0 -M 99999 -E -1 $USERNAME
+
+# Allow sudo without password
+echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/99-$USERNAME
+chmod 440 /etc/sudoers.d/99-$USERNAME
+
+### Set ssh key
+
+mkdir -p /home/$USERNAME/.ssh
+chmod 700 /home/$USERNAME/.ssh
+
+echo "$USER_SSH_PUBKEY" > /home/$USERNAME/.ssh/authorized_keys
+chmod 600 /home/$USERNAME/.ssh/authorized_keys
+
+chown -R $USERNAME:$USERNAME /home/$USERNAME/.ssh
+
+### Remove default user
+
+userdel -r opc
+
+### Install tailscale
+
+dnf config-manager --add-repo https://pkgs.tailscale.com/stable/rhel/10/tailscale.repo
+dnf install tailscale -y
+systemctl enable --now tailscaled

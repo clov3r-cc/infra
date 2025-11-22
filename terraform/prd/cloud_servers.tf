@@ -90,6 +90,14 @@ data "oci_core_images" "images" {
   sort_order               = "DESC"
 }
 
+resource "random_password" "vm_user_password__cloud_server" {
+  length      = 30
+  min_lower   = 3
+  min_upper   = 3
+  min_numeric = 3
+  special     = false
+}
+
 resource "oci_core_instance" "cloud_server" {
   availability_domain = data.oci_identity_availability_domain.ad.name
   compartment_id      = local.oracle_cloud_tenancy_id
@@ -115,8 +123,10 @@ resource "oci_core_instance" "cloud_server" {
 
   metadata = {
     ssh_authorized_keys = base64decode(local.vm_ssh_public_key)
-    locale              = "en_US.UTF-8"
-    timezone            = "Asia/Tokyo"
-    packages            = "[\"glibc-all-langpacks\", \"langpacks-en\", \"vim-enhanced\"]"
+    userdata = base64encode(templatefile("resources/${local.env}-init-csv.sh.tftpl", {
+      CI_MACHINEUSER_NAME       = local.machine_user,
+      CI_MACHINEUSER_PASSWORD   = random_password.vm_user_password__cloud_server.result,
+      CI_MACHINEUSER_SSH_PUBKEY = base64decode(local.vm_ssh_public_key),
+    }))
   }
 }
