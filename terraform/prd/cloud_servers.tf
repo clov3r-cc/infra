@@ -19,6 +19,7 @@ resource "oci_core_internet_gateway" "my_vcn_internet_gateway" {
 resource "oci_core_subnet" "my_vcn_subnet" {
   compartment_id = local.oracle_cloud_tenancy_id
   vcn_id         = oci_core_vcn.my_vcn.id
+  route_table_id = oci_core_route_table.my_vcn_route_table.id
   cidr_block     = "10.0.21.0/24"
   display_name   = "prd-sbn-01"
 }
@@ -59,7 +60,7 @@ resource "oci_core_network_security_group_security_rule" "my_vcn_nw_sg__ingress_
   description               = "SSH traffics on ingress"
   direction                 = "INGRESS"
   source_type               = "CIDR_BLOCK"
-  source                    = "0.0.0.0/0"
+  source                    = oci_core_subnet.my_vcn_subnet.cidr_block
   protocol                  = "6" // TCP
   tcp_options {
     destination_port_range {
@@ -75,11 +76,11 @@ resource "oci_core_network_security_group_security_rule" "my_vcn_nw_sg__ingress_
   description               = "ICMP traffics on ingress"
   direction                 = "INGRESS"
   source_type               = "CIDR_BLOCK"
-  source                    = "0.0.0.0/0"
+  source                    = oci_core_subnet.my_vcn_subnet.cidr_block
   protocol                  = "1" // ICMP
 }
 
-# NOTE: https://docs.oracle.com/i
+# NOTE: https://docs.oracle.com/en-us/iaas/images/
 data "oci_core_images" "images" {
   compartment_id           = local.oracle_cloud_tenancy_id
   operating_system         = "Oracle Linux"
@@ -102,7 +103,7 @@ resource "oci_core_instance" "cloud_server" {
 
   create_vnic_details {
     subnet_id                 = oci_core_subnet.my_vcn_subnet.id
-    assign_public_ip          = true
+    assign_public_ip          = false
     assign_private_dns_record = false
     nsg_ids                   = [oci_core_network_security_group.my_vcn_nw_sg.id]
   }
@@ -112,7 +113,10 @@ resource "oci_core_instance" "cloud_server" {
     source_id   = lookup(data.oci_core_images.images.images[0], "id")
   }
 
-  # metadata = {
-  #   ssh_authorized_keys = base64decode(local.vm_ssh_public_key)
-  # }
+  metadata = {
+    ssh_authorized_keys = base64decode(local.vm_ssh_public_key)
+    locale              = "en_US.UTF-8"
+    timezone            = "Asia/Tokyo"
+    packages            = "[\"glibc-all-langpacks\", \"langpacks-en\", \"vim-enhanced\"]"
+  }
 }
