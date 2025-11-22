@@ -117,6 +117,6 @@ resource "oci_core_instance" "cloud_server" {
     ssh_authorized_keys = base64decode(local.vm_ssh_public_key)
     locale              = "en_US.UTF-8"
     timezone            = "Asia/Tokyo"
-    packages            = ["glibc-all-langpacks", "langpacks-en", "vim-enhanced"]
+    packages            = "[\"glibc-all-langpacks\", \"langpacks-en\", \"vim-enhanced\"]"
   }
 }
