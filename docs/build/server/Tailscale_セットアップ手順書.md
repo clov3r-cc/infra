@@ -18,7 +18,7 @@
   - [4.6. コンテナ）SSHサーバの設定をする](#46-コンテナsshサーバの設定をする)
   - [4.7. ホスト）コンテナを特権モードで動作させる](#47-ホストコンテナを特権モードで動作させる)
   - [4.8. コンテナ）`Tailscale`をセットアップする](#48-コンテナtailscaleをセットアップする)
-  - [4.9. `Tailscale`でExit Nodeの設定をする](#49-tailscaleでexit-nodeの設定をする)
+  - [4.9. `Tailscale`で経路の広告（アドバタイズ）を設定する](#49-tailscaleで経路の広告アドバタイズを設定する)
   - [4.10. `Tailscale`の鍵の有効期限を無効化をする](#410-tailscaleの鍵の有効期限を無効化をする)
 - [5. 完了条件](#5-完了条件)
 
@@ -244,16 +244,16 @@
     ssh prd-tsc-01
 
     curl -fsSL https://tailscale.com/install.sh | sh
-    sudo tailscale up --advertise-routes=192.168.21.0/24 --advertise-exit-node --accept-routes
+    sudo tailscale up --advertise-routes=192.168.21.0/24 --accept-routes
 
     exit
     ```
 
-### 4.9. `Tailscale`でExit Nodeの設定をする
+### 4.9. `Tailscale`で経路の広告（アドバタイズ）を設定する
 
 1. [Tailscale](https://login.tailscale.com/admin/machines)を開く。
 2. `prd-tsc-01` > `Edit route settings...`を押下する
-3. `Subnet routes` > `192.168.21.0/24` と `Exit node` > `Use as exit node` にチェックを入れる
+3. `Subnet routes` > `192.168.21.0/24` にチェックを入れる
 4. `Save`を押下する
 
 ### 4.10. `Tailscale`の鍵の有効期限を無効化をする
@@ -269,5 +269,4 @@ ref. <https://tailscale.com/kb/1028/key-expiry>
 - `Tailscale`により、インターネットからセキュアにネットワーク内にアクセスできること
 - `Tailscale`において、`prd-tsc-01`に以下の設定をしていること
   - 鍵の有効期限なし
-  - サブネットをアドバタイズしていること
-  - Exit Nodeであること
+  - サブネットを広告している
