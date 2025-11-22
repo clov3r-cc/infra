@@ -80,7 +80,7 @@ resource "oci_core_network_security_group_security_rule" "my_vcn_nw_sg__ingress_
   protocol                  = "1" // ICMP
 }
 
-# NOTE: https://docs.oracle.com/i
+# NOTE: https://docs.oracle.com/en-us/iaas/images/
 data "oci_core_images" "images" {
   compartment_id           = local.oracle_cloud_tenancy_id
   operating_system         = "Oracle Linux"
