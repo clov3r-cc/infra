@@ -90,33 +90,33 @@ data "oci_core_images" "images" {
   sort_order               = "DESC"
 }
 
-resource "oci_core_instance" "cloud_server" {
-  availability_domain = data.oci_identity_availability_domain.ad.name
-  compartment_id      = local.oracle_cloud_tenancy_id
-  display_name        = "prd-csv-01"
-  shape               = local.oracle_cloud_vm_instance_shape
+# resource "oci_core_instance" "cloud_server" {
+#   availability_domain = data.oci_identity_availability_domain.ad.name
+#   compartment_id      = local.oracle_cloud_tenancy_id
+#   display_name        = "prd-csv-01"
+#   shape               = local.oracle_cloud_vm_instance_shape
 
-  shape_config {
-    ocpus         = 2
-    memory_in_gbs = 4
-  }
+#   shape_config {
+#     ocpus         = 2
+#     memory_in_gbs = 4
+#   }
 
-  create_vnic_details {
-    subnet_id                 = oci_core_subnet.my_vcn_subnet.id
-    assign_public_ip          = true
-    assign_private_dns_record = false
-    nsg_ids                   = [oci_core_network_security_group.my_vcn_nw_sg.id]
-  }
+#   create_vnic_details {
+#     subnet_id                 = oci_core_subnet.my_vcn_subnet.id
+#     assign_public_ip          = true
+#     assign_private_dns_record = false
+#     nsg_ids                   = [oci_core_network_security_group.my_vcn_nw_sg.id]
+#   }
 
-  source_details {
-    source_type = "image"
-    source_id   = lookup(data.oci_core_images.images.images[0], "id")
-  }
+#   source_details {
+#     source_type = "image"
+#     source_id   = lookup(data.oci_core_images.images.images[0], "id")
+#   }
 
-  metadata = {
-    ssh_authorized_keys = base64decode(local.vm_ssh_public_key)
-    locale              = "en_US.UTF-8"
-    timezone            = "Asia/Tokyo"
-    packages            = "[\"glibc-all-langpacks\", \"langpacks-en\", \"vim-enhanced\"]"
-  }
-}
+#   metadata = {
+#     ssh_authorized_keys = base64decode(local.vm_ssh_public_key)
+#     locale              = "en_US.UTF-8"
+#     timezone            = "Asia/Tokyo"
+#     packages            = "[\"glibc-all-langpacks\", \"langpacks-en\", \"vim-enhanced\"]"
+#   }
+# }
