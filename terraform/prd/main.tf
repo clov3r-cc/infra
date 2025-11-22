@@ -15,8 +15,10 @@ data "cloudflare_zone" "clov3r-cc" {
 
 #region Oracle Cloud
 
-data "oci_identity_availability_domains" "ad" {
+// ap-osaka-1 has only one availability domain
+data "oci_identity_availability_domain" "ad" {
   compartment_id = local.oracle_cloud_tenancy_id
+  ad_number      = 1
 }
 
 #endregion

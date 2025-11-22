@@ -90,7 +90,7 @@ data "oci_core_images" "images" {
 }
 
 resource "oci_core_instance" "cloud_server" {
-  availability_domain = data.oci_identity_availability_domains.ad.id
+  availability_domain = data.oci_identity_availability_domain.ad.name
   compartment_id      = local.oracle_cloud_tenancy_id
   display_name        = "prd-csv-01"
   shape               = local.oracle_cloud_vm_instance_shape
@@ -112,7 +112,7 @@ resource "oci_core_instance" "cloud_server" {
     source_id   = lookup(data.oci_core_images.images.images[0], "id")
   }
 
-  metadata = {
-    ssh_authorized_keys = base64decode(local.vm_ssh_public_key)
-  }
+  # metadata = {
+  #   ssh_authorized_keys = base64decode(local.vm_ssh_public_key)
+  # }
 }
