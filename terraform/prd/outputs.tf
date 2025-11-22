@@ -51,7 +51,7 @@ output "ansible_players__prd" {
 
 #region Oracle Cloud
 
-output "list_ads" {
+output "oci_identity_availability_domain" {
   value = data.oci_identity_availability_domain.ad
 }
 
