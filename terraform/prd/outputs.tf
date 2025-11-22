@@ -57,8 +57,8 @@ output "oci_identity_availability_domain" {
 
 output "cloud-server__prd" {
   value = {
-    id   = oci_core_instance.cloud_server.id
-    name = oci_core_instance.cloud_server.display_name
+    id        = oci_core_instance.cloud_server.id
+    host_name = oci_core_instance.cloud_server.display_name
     ethernet_adapters = {
       ip0 = oci_core_instance.cloud_server.private_ip
     }
