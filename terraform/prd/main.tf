@@ -15,7 +15,7 @@ data "cloudflare_zone" "clov3r-cc" {
 
 #region Oracle Cloud
 
-data "oci_identity_availability_domains" "ad" {
+data "oci_identity_availability_domain" "ad" {
   compartment_id = local.oracle_cloud_tenancy_id
 }
 
