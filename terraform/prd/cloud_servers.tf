@@ -103,7 +103,7 @@ resource "oci_core_instance" "cloud_server" {
 
   create_vnic_details {
     subnet_id                 = oci_core_subnet.my_vcn_subnet.id
-    assign_public_ip          = false
+    assign_public_ip          = true
     assign_private_dns_record = false
     nsg_ids                   = [oci_core_network_security_group.my_vcn_nw_sg.id]
   }
