@@ -113,7 +113,7 @@ resource "oci_core_instance" "cloud_server" {
     source_id   = lookup(data.oci_core_images.images.images[0], "id")
   }
 
-  # metadata = {
-  #   ssh_authorized_keys = base64decode(local.vm_ssh_public_key)
-  # }
+  metadata = {
+    ssh_authorized_keys = base64decode(local.vm_ssh_public_key)
+  }
 }
