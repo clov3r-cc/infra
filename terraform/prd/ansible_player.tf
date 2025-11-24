@@ -177,7 +177,7 @@ resource "ansible_group" "ansible_player" {
 resource "ansible_host" "ansible_player" {
   for_each = { for vm in proxmox_vm_qemu.ansible_player : vm.name => vm }
 
-  name   = each.value.name
+  name   = each.key
   groups = [ansible_group.ansible_player.name]
   variables = {
     ansible_host = each.value.ssh_host
