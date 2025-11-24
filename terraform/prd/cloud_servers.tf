@@ -130,3 +130,19 @@ resource "oci_core_instance" "cloud_server" {
     }))
   }
 }
+
+resource "ansible_group" "cloud_server" {
+  name = "cloud_server"
+  variables = {
+    ansible_user                 = local.machine_user
+    ansible_ssh_private_key_file = local.ansible_ssh_private_key_path
+  }
+}
+
+resource "ansible_host" "cloud_server" {
+  name   = oci_core_instance.cloud_server.display_name
+  groups = [ansible_group.cloud_server.name]
+  variables = {
+    ansible_host = oci_core_instance.cloud_server.private_ip
+  }
+}

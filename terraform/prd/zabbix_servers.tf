@@ -148,3 +148,21 @@ resource "proxmox_vm_qemu" "zabbix_server" {
     ]
   }
 }
+
+resource "ansible_group" "zabbix_server" {
+  name = "zabbix_server"
+  variables = {
+    ansible_user                 = local.machine_user
+    ansible_ssh_private_key_file = local.ansible_ssh_private_key_path
+  }
+}
+
+resource "ansible_host" "zabbix_server" {
+  for_each = { for vm in proxmox_vm_qemu.zabbix_server : vm.name => vm }
+
+  name   = each.key
+  groups = [ansible_group.zabbix_server.name]
+  variables = {
+    ansible_host = each.value.ssh_host
+  }
+}

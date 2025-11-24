@@ -141,11 +141,11 @@ resource "proxmox_vm_qemu" "ansible_player" {
 }
 
 resource "terraform_data" "ssh_private_key__ansible_player" {
-  for_each = local.vm_settings__ansible_player
+  for_each = { for vm in proxmox_vm_qemu.ansible_player : vm.name => vm }
 
   connection {
     type        = "ssh"
-    host        = proxmox_vm_qemu.ansible_player[each.key].ssh_host
+    host        = each.value.ssh_host
     user        = local.machine_user
     private_key = base64decode(var.vm_ssh_private_key)
   }
@@ -177,9 +177,46 @@ resource "ansible_group" "ansible_player" {
 resource "ansible_host" "ansible_player" {
   for_each = { for vm in proxmox_vm_qemu.ansible_player : vm.name => vm }
 
-  name   = each.value.name
+  name   = each.key
   groups = [ansible_group.ansible_player.name]
   variables = {
     ansible_host = each.value.ssh_host
+  }
+}
+
+resource "terraform_data" "make_ansible_inventory" {
+  # TODO: Whenever the number of VM types changes, rewrite this section.
+  depends_on = [
+    ansible_host.ansible_player, ansible_host.cloud_server, ansible_host.zabbix_server
+  ]
+
+  provisioner "local-exec" {
+    command = <<EOF
+    ansible-galaxy collection install cloud.terraform
+    ansible-inventory --inventory ${path.root}/ansible/inventory.yaml --list --yaml --output ${path.root}/ansible/inventory.yaml
+    EOF
+  }
+}
+
+resource "terraform_data" "send_ansible_files" {
+  for_each   = { for vm in proxmox_vm_qemu.ansible_player : vm.name => vm }
+  depends_on = [terraform_data.make_ansible_inventory]
+
+  connection {
+    type        = "ssh"
+    host        = each.value.ssh_host
+    user        = local.machine_user
+    private_key = base64decode(var.vm_ssh_private_key)
+  }
+  provisioner "remote-exec" {
+    inline = ["mkdir ~/ansible || :"]
+  }
+  provisioner "file" {
+    # NOTE: Trailing slash is intended
+    # See: https://developer.hashicorp.com/packer/docs/provisioners/file
+    # > If the source, however, is `/foo/` (a trailing slash is present), and the destination is `/tmp`,
+    # > then the contents of `/foo` will be uploaded into `/tmp` directly.
+    source      = "${path.root}/ansible/"
+    destination = "/home/${local.machine_user}/ansible"
   }
 }
