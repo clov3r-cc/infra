@@ -195,14 +195,17 @@ resource "terraform_data" "make_ansible_inventory" {
     command = <<EOF
     ansible-galaxy collection install cloud.terraform
     ansible-inventory --inventory ${path.root}/ansible/inventory_src.yaml --list --yaml --output ${path.root}/ansible/inventory.yaml
+    cat ${path.root}/ansible/inventory.yaml
+
     rm ${path.root}/ansible/inventory_src.yaml
     EOF
   }
 }
 
 resource "terraform_data" "send_ansible_files" {
-  for_each   = { for vm in proxmox_vm_qemu.ansible_player : vm.name => vm }
-  depends_on = [terraform_data.make_ansible_inventory]
+  for_each         = { for vm in proxmox_vm_qemu.ansible_player : vm.name => vm }
+  depends_on       = [terraform_data.make_ansible_inventory]
+  triggers_replace = timestamp()
 
   connection {
     type        = "ssh"
@@ -211,7 +214,7 @@ resource "terraform_data" "send_ansible_files" {
     private_key = base64decode(var.vm_ssh_private_key)
   }
   provisioner "remote-exec" {
-    inline = ["mkdir ~/ansible || :"]
+    inline = ["rm -rf ~/ansible", "mkdir ~/ansible"]
   }
   provisioner "file" {
     # NOTE: Trailing slash is intended
