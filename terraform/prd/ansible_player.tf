@@ -189,6 +189,7 @@ resource "terraform_data" "make_ansible_inventory" {
   depends_on = [
     ansible_host.ansible_player, ansible_host.cloud_server, ansible_host.zabbix_server
   ]
+  triggers_replace = timestamp()
 
   provisioner "local-exec" {
     command = <<EOF
