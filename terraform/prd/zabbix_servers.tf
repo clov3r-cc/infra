@@ -51,7 +51,7 @@ resource "terraform_data" "cloud_init_config__zabbix_server" {
     private_key = base64decode(var.vm_ssh_private_key)
   }
   provisioner "file" {
-    content = templatefile("resources/${local.env}-zbx_cloud-init.yaml.tftpl", {
+    content = templatefile("cloud-init/${local.env}-zbx_cloud-init.yaml.tftpl", {
       CI_HOSTNAME               = "${local.env}-zbx-${format("%02d", tonumber(each.key))}",
       CI_ROOT_PASSWORD          = random_password.vm_root_password__zabbix_server[each.key].result,
       CI_MACHINEUSER_NAME       = local.machine_user,
