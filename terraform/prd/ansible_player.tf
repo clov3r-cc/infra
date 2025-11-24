@@ -195,6 +195,8 @@ resource "terraform_data" "make_ansible_inventory" {
     command = <<EOF
     ansible-galaxy collection install cloud.terraform
     ansible-inventory --inventory ${path.root}/ansible/inventory_src.yaml --list --yaml --output ${path.root}/ansible/inventory.yaml
+    cat ${path.root}/ansible/inventory.yaml
+
     rm ${path.root}/ansible/inventory_src.yaml
     EOF
   }
