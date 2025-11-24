@@ -157,11 +157,11 @@ resource "terraform_data" "ssh_private_key__ansible_player" {
   }
   provisioner "file" {
     content     = base64decode(var.vm_ssh_private_key)
-    destination = "/home/${local.machine_user}/.ssh/id_ed25519"
+    destination = local.ansible_ssh_private_key_path
   }
   provisioner "remote-exec" {
     inline = [
-      "chmod 600 /home/${local.machine_user}/.ssh/id_ed25519",
+      "chmod 600 ${local.ansible_ssh_private_key_path}",
     ]
   }
 }
