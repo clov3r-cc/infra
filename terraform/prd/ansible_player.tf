@@ -32,7 +32,7 @@ resource "random_password" "vm_user_password__ansible_player" {
   special     = false
 }
 
-resource "null_resource" "cloud_init_config__ansible_player" {
+resource "terraform_data" "cloud_init_config__ansible_player" {
   for_each = local.vm_settings__ansible_player
 
   connection {
@@ -58,9 +58,14 @@ resource "null_resource" "cloud_init_config__ansible_player" {
   }
 }
 
+moved {
+  from = null_resource.cloud_init_config__ansible_player
+  to   = terraform_data.cloud_init_config__ansible_player
+}
+
 resource "proxmox_vm_qemu" "ansible_player" {
   for_each   = local.vm_settings__ansible_player
-  depends_on = [null_resource.cloud_init_config__ansible_player]
+  depends_on = [terraform_data.cloud_init_config__ansible_player]
 
   name        = "${local.env}-ans-${format("%02d", tonumber(each.key))}"
   target_node = each.value.host_name
@@ -135,7 +140,7 @@ resource "proxmox_vm_qemu" "ansible_player" {
   }
 }
 
-resource "null_resource" "ssh_private_key__ansible_player" {
+resource "terraform_data" "ssh_private_key__ansible_player" {
   for_each = local.vm_settings__ansible_player
 
   connection {
