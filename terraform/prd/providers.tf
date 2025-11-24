@@ -22,10 +22,6 @@ terraform {
       source  = "telmate/proxmox"
       version = "3.0.2-rc05"
     }
-    null = {
-      source  = "hashicorp/null"
-      version = "3.2.4"
-    }
     oci = {
       source  = "oracle/oci"
       version = "7.27.0"
