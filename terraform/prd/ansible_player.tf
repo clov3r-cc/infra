@@ -157,17 +157,29 @@ resource "terraform_data" "ssh_private_key__ansible_player" {
   }
   provisioner "file" {
     content     = base64decode(var.vm_ssh_private_key)
-    destination = "/home/${local.machine_user}/.ssh/id_ed25519"
+    destination = local.ansible_ssh_private_key_path
   }
   provisioner "remote-exec" {
     inline = [
-      "chmod 600 /home/${local.machine_user}/.ssh/id_ed25519",
+      "chmod 600 ${local.ansible_ssh_private_key_path}",
     ]
+  }
+}
+
+resource "ansible_group" "ansible_player" {
+  name = "ansible_player"
+  variables = {
+    ansible_user                 = local.machine_user
+    ansible_ssh_private_key_file = local.ansible_ssh_private_key_path
   }
 }
 
 resource "ansible_host" "ansible_player" {
   for_each = { for vm in proxmox_vm_qemu.ansible_player : vm.name => vm }
 
-  name = each.value.ssh_host
+  name   = each.value.name
+  groups = [ansible_group.ansible_player.name]
+  variables = {
+    ansible_host = each.value.ssh_host
+  }
 }

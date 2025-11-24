@@ -54,6 +54,8 @@ EOT
   vm_management_nw_subnet_mask = split("/", local.vm_management_nw_subnet_cidr)[1]
   vm_management_nw_default_gw  = cidrhost(local.vm_management_nw_subnet_cidr, 1)
 
+  ansible_ssh_private_key_path = "/home/${local.machine_user}/.ssh/id_ed25519"
+
   #endregion
 
   #region Oracle Cloud
