@@ -192,9 +192,8 @@ resource "terraform_data" "make_ansible_inventory" {
 
   provisioner "local-exec" {
     command = <<EOF
-    cd $(git rev-parse --show-toplevel)/terraform/${local.env}
     ansible-galaxy collection install cloud.terraform
-    ansible-inventory --inventory ansible/inventory.yaml --list --yaml --output ansible/inventory.yaml
+    ansible-inventory --inventory ${path.root}/ansible/inventory.yaml --list --yaml --output ${path.root}/ansible/inventory.yaml
     EOF
   }
 }
@@ -217,7 +216,7 @@ resource "terraform_data" "send_ansible_files" {
     # See: https://developer.hashicorp.com/packer/docs/provisioners/file
     # > If the source, however, is `/foo/` (a trailing slash is present), and the destination is `/tmp`,
     # > then the contents of `/foo` will be uploaded into `/tmp` directly.
-    source      = "./ansible/"
+    source      = "${path.root}/ansible/"
     destination = "/home/${local.machine_user}/ansible"
   }
 }
