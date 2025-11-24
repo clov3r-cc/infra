@@ -140,11 +140,9 @@ resource "ansible_group" "cloud_server" {
 }
 
 resource "ansible_host" "cloud_server" {
-  for_each = { for vm in oci_core_instance.cloud_server : vm.display_name => vm }
-
-  name   = each.key
+  name   = oci_core_instance.cloud_server.display_name
   groups = [ansible_group.cloud_server.name]
   variables = {
-    ansible_host = each.value.private_ip
+    ansible_host = oci_core_instance.cloud_server.private_ip
   }
 }
