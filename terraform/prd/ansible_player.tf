@@ -201,8 +201,9 @@ resource "terraform_data" "make_ansible_inventory" {
 }
 
 resource "terraform_data" "send_ansible_files" {
-  for_each   = { for vm in proxmox_vm_qemu.ansible_player : vm.name => vm }
-  depends_on = [terraform_data.make_ansible_inventory]
+  for_each         = { for vm in proxmox_vm_qemu.ansible_player : vm.name => vm }
+  depends_on       = [terraform_data.make_ansible_inventory]
+  triggers_replace = timestamp()
 
   connection {
     type        = "ssh"
