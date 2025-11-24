@@ -41,7 +41,7 @@ resource "random_password" "vm_user_password__zabbix_server" {
   special     = false
 }
 
-resource "null_resource" "cloud_init_config__zabbix_server" {
+resource "terraform_data" "cloud_init_config__zabbix_server" {
   for_each = local.vm_settings__zabbix_server
 
   connection {
@@ -67,9 +67,14 @@ resource "null_resource" "cloud_init_config__zabbix_server" {
   }
 }
 
+moved {
+  from = null_resource.cloud_init_config__zabbix_server
+  to   = terraform_data.cloud_init_config__zabbix_server
+}
+
 resource "proxmox_vm_qemu" "zabbix_server" {
   for_each   = local.vm_settings__zabbix_server
-  depends_on = [null_resource.cloud_init_config__zabbix_server]
+  depends_on = [terraform_data.cloud_init_config__zabbix_server]
 
   name        = "${local.env}-zbx-${format("%02d", tonumber(each.key))}"
   target_node = each.value.host_name
