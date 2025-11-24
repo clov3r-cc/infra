@@ -183,3 +183,30 @@ resource "ansible_host" "ansible_player" {
     ansible_host = each.value.ssh_host
   }
 }
+
+resource "terraform_data" "send_ansible_files" {
+  connection {
+    type        = "ssh"
+    host        = proxmox_vm_qemu.ansible_player[each.key].ssh_host
+    user        = local.machine_user
+    private_key = base64decode(var.vm_ssh_private_key)
+  }
+  provisioner "local-exec" {
+    command = <<EOF
+    cd $(git rev-parse --show-toplevel)/terraform/${local.env}
+    ansible-galaxy collection install cloud.terraform
+    ansible-inventory --inventory ansible/inventory.yaml --list --yaml --output ansible/inventory.yaml
+    EOF
+  }
+  provisioner "remote-exec" {
+    inline = ["mkdir ~/ansible || :"]
+  }
+  provisioner "file" {
+    # NOTE: Trailing slash is intended
+    # See: https://developer.hashicorp.com/packer/docs/provisioners/file
+    # > If the source, however, is `/foo/` (a trailing slash is present), and the destination is `/tmp`,
+    # > then the contents of `/foo` will be uploaded into `/tmp` directly.
+    source      = "./ansible/"
+    destination = "/home/${local.machine_user}/ansible"
+  }
+}
