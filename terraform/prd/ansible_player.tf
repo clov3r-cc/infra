@@ -212,7 +212,7 @@ resource "terraform_data" "send_ansible_files" {
     private_key = base64decode(var.vm_ssh_private_key)
   }
   provisioner "remote-exec" {
-    inline = ["mkdir ~/ansible || :"]
+    inline = ["rm -rf ~/ansible", "mkdir ~/ansible"]
   }
   provisioner "file" {
     # NOTE: Trailing slash is intended
