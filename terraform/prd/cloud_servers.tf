@@ -136,7 +136,6 @@ resource "ansible_group" "cloud_server" {
   variables = {
     ansible_user                 = local.machine_user
     ansible_ssh_private_key_file = local.ansible_ssh_private_key_path
-    ansible_python_interpreter   = "/usr/bin/python3"
   }
 }
 
