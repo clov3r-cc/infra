@@ -165,3 +165,9 @@ resource "terraform_data" "ssh_private_key__ansible_player" {
     ]
   }
 }
+
+resource "ansible_host" "ansible_player" {
+  for_each = { for vm in proxmox_vm_qemu.ansible_player : vm.name => vm }
+
+  name = each.value.ssh_host
+}
