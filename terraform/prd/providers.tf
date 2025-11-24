@@ -26,6 +26,10 @@ terraform {
       source  = "oracle/oci"
       version = "7.27.0"
     }
+    ansible = {
+      source  = "ansible/ansible"
+      version = "1.3.0"
+    }
   }
 }
 
