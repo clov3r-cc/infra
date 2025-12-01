@@ -246,6 +246,7 @@
     | Datastore.AllocateTemplate | ディスク等のデータを格納するボリュームに ISO などをアップロード |
     | Datastore.Audit            | ディスク等のデータを格納するボリュームの参照                    |
     | Pool.Allocate              | プールの作成・編集・削除                                        |
+    | Pool.Audit                 | プールの参照                                                    |
     | SDN.Audit                  | ホスト NW の参照                                                |
     | SDN.Use                    | ホスト NW の利用                                                |
     | Sys.Audit                  | ホスト NW の参照                                                |

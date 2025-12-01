@@ -33,6 +33,8 @@ packages:
   - vim-enhanced
   # RHEL 10 なので、Python 3.12 となる
   - python3
+  # ファイアウォールを構成するため
+  - nftables
 runcmd:
   # `passwd` がうまく機能しないので、コマンドで各ユーザのパスワードを設定
   - echo 'root:${CI_ROOT_PASSWORD}' | chpasswd
