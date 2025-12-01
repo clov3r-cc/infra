@@ -129,6 +129,10 @@ resource "oci_core_instance" "cloud_server" {
       CI_MACHINEUSER_SSH_PUBKEY = base64decode(local.vm_ssh_public_key),
     }))
   }
+
+  lifecycle {
+    ignore_changes = [metadata.user_data]
+  }
 }
 
 resource "ansible_group" "cloud_server" {
