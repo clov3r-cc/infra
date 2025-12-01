@@ -131,7 +131,7 @@ resource "oci_core_instance" "cloud_server" {
   }
 
   lifecycle {
-    ignore_changes = [metadata.user_data]
+    ignore_changes = [metadata]
   }
 }
 
