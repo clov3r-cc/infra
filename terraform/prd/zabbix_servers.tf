@@ -77,17 +77,17 @@ resource "proxmox_vm_qemu" "zabbix_server" {
   for_each   = local.vm_settings__zabbix_server
   depends_on = [terraform_data.cloud_init_config__zabbix_server]
 
-  name        = "${local.env}-zbx-${format("%02d", tonumber(each.key))}"
-  target_node = each.value.host_name
-  vmid        = each.value.vm_id
-  description = "Zabbix Server. This VM is managed by Terraform."
-  bios        = "seabios"
-  onboot      = true
-  agent       = 1
-  clone       = local.vm_template__alma
-  full_clone  = true
-  tags        = "${local.env};terraform;zabbix;zabbix-server"
-  qemu_os     = "l26"
+  name               = "${local.env}-zbx-${format("%02d", tonumber(each.key))}"
+  target_node        = each.value.host_name
+  vmid               = each.value.vm_id
+  description        = "Zabbix Server. This VM is managed by Terraform."
+  bios               = "seabios"
+  start_at_node_boot = true
+  agent              = 1
+  clone              = local.vm_template__alma
+  full_clone         = true
+  tags               = "${local.env};terraform;zabbix;zabbix-server"
+  qemu_os            = "l26"
 
   cpu {
     sockets = each.value.cpu_socket

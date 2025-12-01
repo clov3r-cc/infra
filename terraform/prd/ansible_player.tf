@@ -67,17 +67,17 @@ resource "proxmox_vm_qemu" "ansible_player" {
   for_each   = local.vm_settings__ansible_player
   depends_on = [terraform_data.cloud_init_config__ansible_player]
 
-  name        = "${local.env}-ans-${format("%02d", tonumber(each.key))}"
-  target_node = each.value.host_name
-  vmid        = each.value.vm_id
-  description = "Run ansible on this server. This VM is managed by Terraform."
-  bios        = "seabios"
-  onboot      = true
-  agent       = 1
-  clone       = local.vm_template__alma
-  full_clone  = true
-  tags        = "${local.env};terraform;ansible;ansible-player"
-  qemu_os     = "l26"
+  name               = "${local.env}-ans-${format("%02d", tonumber(each.key))}"
+  target_node        = each.value.host_name
+  vmid               = each.value.vm_id
+  description        = "Run ansible on this server. This VM is managed by Terraform."
+  bios               = "seabios"
+  start_at_node_boot = true
+  agent              = 1
+  clone              = local.vm_template__alma
+  full_clone         = true
+  tags               = "${local.env};terraform;ansible;ansible-player"
+  qemu_os            = "l26"
 
   cpu {
     sockets = each.value.cpu_socket
