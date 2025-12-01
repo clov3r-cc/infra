@@ -35,6 +35,8 @@ packages:
   - python3
   # Ansible を実行するため
   - ansible-core
+  # ファイアウォールを構成するため
+  - nftables
 runcmd:
   # `passwd` がうまく機能しないので、コマンドで各ユーザのパスワードを設定
   - echo 'root:${CI_ROOT_PASSWORD}' | chpasswd
