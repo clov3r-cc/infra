@@ -19,6 +19,7 @@ locals {
       os_disk_size             = 15
     }
   }
+  vm_data_disk_size__zabbix_server = 20
 }
 
 resource "random_password" "vm_root_password__zabbix_server" {
@@ -119,6 +120,13 @@ resource "proxmox_vm_qemu" "zabbix_server" {
       virtio0 {
         disk {
           size     = "${each.value.os_disk_size}G"
+          storage  = local.vm_os_disk_storage
+          iothread = true
+        }
+      }
+      virtio1 {
+        disk {
+          size     = "${local.vm_data_disk_size__zabbix_server}G"
           storage  = local.vm_os_disk_storage
           iothread = true
         }
