@@ -120,14 +120,14 @@ resource "proxmox_vm_qemu" "zabbix_server" {
       virtio0 {
         disk {
           size     = "${each.value.os_disk_size}G"
-          storage  = local.vm_os_disk_storage
+          storage  = local.vm_disk_storage
           iothread = true
         }
       }
       virtio1 {
         disk {
           size     = "${local.vm_data_disk_size__zabbix_server}G"
-          storage  = local.vm_os_disk_storage
+          storage  = local.vm_disk_storage
           iothread = true
         }
       }
@@ -135,7 +135,7 @@ resource "proxmox_vm_qemu" "zabbix_server" {
     ide {
       ide0 {
         cloudinit {
-          storage = local.vm_os_disk_storage
+          storage = local.vm_disk_storage
         }
       }
     }

@@ -38,9 +38,9 @@ locals {
 
   machine_user = "machine-user"
 
-  vm_template__alma  = "alma-10.0"
-  vm_os_disk_storage = "local-lvm"
-  vm_ssh_public_key  = <<EOT
+  vm_template__alma = "alma-10.0"
+  vm_disk_storage   = "local-lvm"
+  vm_ssh_public_key = <<EOT
 c3NoLWVkMjU1MTkgQUFBQUMzTnphQzFsWkRJMU5URTVBQUFBSU1IWitzblhERk5WSzg5c2ZLQXEx
 VUxFSTV5Ukx4cVdRSFlpVlRHVVZsYjgK
 EOT
