@@ -110,7 +110,7 @@ resource "proxmox_vm_qemu" "ansible_player" {
       virtio0 {
         disk {
           size     = "${each.value.os_disk_size}G"
-          storage  = local.vm_os_disk_storage
+          storage  = local.vm_disk_storage
           iothread = true
         }
       }
@@ -118,7 +118,7 @@ resource "proxmox_vm_qemu" "ansible_player" {
     ide {
       ide0 {
         cloudinit {
-          storage = local.vm_os_disk_storage
+          storage = local.vm_disk_storage
         }
       }
     }

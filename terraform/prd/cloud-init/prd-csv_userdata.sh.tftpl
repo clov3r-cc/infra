@@ -17,11 +17,6 @@ dnf install -y glibc-all-langpacks \
   vim-enhanced \
   python3
 
-### Disable firewalld
-
-systemctl stop firewalld
-systemctl disable firewalld
-
 ### Disable sudo warning
 
 echo '' >> /etc/sudoers.d/90-cloud-init-users
