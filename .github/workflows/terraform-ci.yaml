@@ -52,4 +52,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Show Inventory
-        run: ansible-inventory -i ansible/inventory_src.yaml --list --yaml
+        run: |
+          ansible-galaxy collection install cloud.terraform
+          ansible-inventory -i ansible/inventory_src.yaml --list --yaml
