@@ -61,7 +61,7 @@ resource "oci_core_network_security_group_security_rule" "my_vcn_nw_sg__ingress_
   direction                 = "INGRESS"
   source_type               = "CIDR_BLOCK"
   source                    = oci_core_subnet.my_vcn_subnet.cidr_block
-  protocol                  = "6" // TCP
+  protocol                  = "6" # TCP
   tcp_options {
     destination_port_range {
       min = 22
@@ -77,7 +77,7 @@ resource "oci_core_network_security_group_security_rule" "my_vcn_nw_sg__ingress_
   direction                 = "INGRESS"
   source_type               = "CIDR_BLOCK"
   source                    = "0.0.0.0/0"
-  protocol                  = "1" // ICMP
+  protocol                  = "1" # ICMP
 }
 
 # NOTE: https://docs.oracle.com/en-us/iaas/images/
