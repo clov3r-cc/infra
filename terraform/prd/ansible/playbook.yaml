@@ -1,4 +1,0 @@
----
-- import_playbook: ansible-player.yaml
-- import_playbook: cloud-server.yaml
-- import_playbook: zabbix-server.yaml
