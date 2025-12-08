@@ -82,12 +82,11 @@ resource "oci_core_network_security_group_security_rule" "my_vcn_nw_sg__ingress_
 
 # NOTE: https://docs.oracle.com/en-us/iaas/images/
 data "oci_core_images" "images" {
-  compartment_id           = local.oracle_cloud_tenancy_id
-  operating_system         = "Oracle Linux"
-  operating_system_version = "10"
-  shape                    = local.oracle_cloud_vm_instance_shape
-  sort_by                  = "TIMECREATED"
-  sort_order               = "DESC"
+  compartment_id = local.oracle_cloud_tenancy_id
+  display_name   = "Oracle-Linux-10.0-aarch64-2025.10.23-0"
+  shape          = local.oracle_cloud_vm_instance_shape
+  sort_by        = "DISPLAYNAME"
+  sort_order     = "DESC"
 }
 
 resource "random_password" "vm_user_password__cloud_server" {
