@@ -91,6 +91,13 @@ resource "proxmox_vm_qemu" "zabbix_server" {
   tags               = "${local.env};terraform;zabbix;zabbix-server"
   qemu_os            = "l26"
 
+  startup_shutdown {
+    # 待機系を先に落とす（例: 2台あるときは、#1 -> 2 + 1 - 1 = 優先度 2、#2 -> 2 + 1 - 2 = 優先度 1）
+    order            = length(local.vm_settings__zabbix_server) + 1 - tonumber(each.key)
+    startup_delay    = -1 # No delay
+    shutdown_timeout = -1 # No delay
+  }
+
   cpu {
     sockets = each.value.cpu_socket
     cores   = each.value.cpu_core

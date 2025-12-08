@@ -79,6 +79,12 @@ resource "proxmox_vm_qemu" "ansible_player" {
   tags               = "${local.env};terraform;ansible;ansible-player"
   qemu_os            = "l26"
 
+  startup_shutdown {
+    order            = -1 # Auto
+    startup_delay    = -1 # No delay
+    shutdown_timeout = -1 # No delay
+  }
+
   cpu {
     sockets = each.value.cpu_socket
     cores   = each.value.cpu_core
