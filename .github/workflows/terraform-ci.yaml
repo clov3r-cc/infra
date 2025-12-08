@@ -51,3 +51,7 @@ jobs:
         run: tfcmt plan -patch --config "${{ github.workspace }}/.github/tfcmt-config.yaml" -- terraform plan -input=false -no-color -lock-timeout=10m
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Show Inventory
+        run: |
+          ansible-galaxy collection install cloud.terraform
+          ansible-inventory -i ansible/inventory_src.yaml --list --yaml

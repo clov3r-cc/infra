@@ -1,0 +1,6 @@
+---
+- name: Set SELinux state to permissive
+  become: true
+  ansible.posix.selinux:
+    policy: targeted
+    state: permissive
