@@ -13,6 +13,12 @@ output "zabbix_servers__prd" {
         # https://developer.hashicorp.com/terraform/language/functions/regex
         regex("ip=(?P<ip_address>.*),gw=(?P<default_gateway>.*)", vm.ipconfig0)
       )
+      ip1 = merge(
+        { bridge = vm.network[1].bridge },
+        # (?P<name>x):	named capture group, named name, for sub-pattern x
+        # https://developer.hashicorp.com/terraform/language/functions/regex
+        regex("ip=(?P<ip_address>.*),gw=(?P<default_gateway>.*)", vm.ipconfig1)
+      )
     }
   }]
 }
