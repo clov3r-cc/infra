@@ -1,5 +1,0 @@
----
-- hosts: zabbix_server
-  roles:
-    - common
-    - zabbix-server

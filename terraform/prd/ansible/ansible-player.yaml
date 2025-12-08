@@ -1,4 +1,0 @@
----
-- hosts: ansible_player
-  roles:
-    - common

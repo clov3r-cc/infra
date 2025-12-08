@@ -1,4 +1,0 @@
----
-- hosts: cloud_server
-  roles:
-    - common
