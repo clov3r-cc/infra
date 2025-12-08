@@ -1,0 +1,11 @@
+resource drbd1 {
+  device minor 1;
+  disk /dev/vdb1;
+  meta-disk internal;
+
+{% for host in groups['zabbix_server'] %}
+  on {{ host }} {
+    address {{ hostvars[host]['heartbeat_nw_ip'] }}:7789;
+  }
+{% endfor %}
+}
