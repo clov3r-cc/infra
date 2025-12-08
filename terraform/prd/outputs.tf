@@ -7,18 +7,16 @@ output "zabbix_servers__prd" {
     name        = vm.name
     description = vm.description
     ethernet_adapters = {
-      ip0 = merge(
-        { bridge = vm.network[0].bridge },
-        # (?P<name>x):	named capture group, named name, for sub-pattern x
-        # https://developer.hashicorp.com/terraform/language/functions/regex
-        regex("ip=(?P<ip_address>.*),gw=(?P<default_gateway>.*)", vm.ipconfig0)
-      )
-      ip1 = merge(
-        { bridge = vm.network[1].bridge },
-        # (?P<name>x):	named capture group, named name, for sub-pattern x
-        # https://developer.hashicorp.com/terraform/language/functions/regex
-        regex("ip=(?P<ip_address>.*),gw=(?P<default_gateway>.*)", vm.ipconfig1)
-      )
+      ip0 = {
+        bridge          = vm.network[0].bridge
+        ip_address      = trimprefix(split(",", vm.ipconfig0)[0], "ip=")
+        default_gateway = trimprefix(split(",", vm.ipconfig0)[1], "gw=")
+      }
+      ip1 = {
+        bridge          = vm.network[1].bridge
+        ip_address      = trimprefix(split(",", vm.ipconfig1)[0], "ip=")
+        default_gateway = trimprefix(split(",", vm.ipconfig1)[1], "gw=")
+      }
     }
   }]
 }
@@ -30,12 +28,11 @@ output "ansible_players__prd" {
     name        = vm.name
     description = vm.description
     ethernet_adapters = {
-      ip0 = merge(
-        { bridge = vm.network[0].bridge },
-        # (?P<name>x):	named capture group, named name, for sub-pattern x
-        # https://developer.hashicorp.com/terraform/language/functions/regex
-        regex("ip=(?P<ip_address>.*),gw=(?P<default_gateway>.*)", vm.ipconfig0)
-      )
+      ip0 = {
+        bridge          = vm.network[0].bridge
+        ip_address      = trimprefix(split(",", vm.ipconfig0)[0], "ip=")
+        default_gateway = trimprefix(split(",", vm.ipconfig0)[1], "gw=")
+      }
     }
   }]
 }

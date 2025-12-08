@@ -187,6 +187,7 @@ resource "ansible_host" "zabbix_server" {
   name   = each.key
   groups = [ansible_group.zabbix_server.name]
   variables = {
-    ansible_host = each.value.ssh_host
+    ansible_host    = each.value.ssh_host
+    heartbeat_nw_ip = split("/", split("ip=", each.value.ipconfig1)[1])[0]
   }
 }
