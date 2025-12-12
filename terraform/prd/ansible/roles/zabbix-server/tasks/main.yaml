@@ -29,7 +29,14 @@
       - drbd9x-utils
     state: present
 - name: Deploy DRBD configuration
+  become: true
   ansible.builtin.template:
     src: drbd1.res.j2
-    dest: ~/sample.res
+    dest: /etc/drbd.d/drbd1.res
     mode: '0644'
+- name: Create /mnt/drbd0 directory
+  become: true
+  ansible.builtin.file:
+    path: /mnt/drbd0
+    state: directory
+    mode: '0755'
