@@ -11,16 +11,19 @@
     part_start: 0%
     part_end: 100%
     resize: false
+
 - name: Import ELRepo repo key
   become: true
   ansible.builtin.rpm_key:
     key: https://www.elrepo.org/RPM-GPG-KEY-v2-elrepo.org
     state: present
+
 - name: Install ELRepo
   become: true
   ansible.builtin.dnf:
     name: https://www.elrepo.org/elrepo-release-10.el10.elrepo.noarch.rpm
     state: present
+
 - name: Install DRBD
   become: true
   ansible.builtin.dnf:
@@ -28,12 +31,14 @@
       - kmod-drbd9x
       - drbd9x-utils
     state: present
+
 - name: Deploy DRBD configuration
   become: true
   ansible.builtin.template:
     src: drbd1.res.j2
     dest: /etc/drbd.d/drbd1.res
     mode: '0644'
+
 - name: Create /mnt/drbd0 directory
   become: true
   ansible.builtin.file:
