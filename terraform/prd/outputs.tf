@@ -8,14 +8,12 @@ output "zabbix_servers__prd" {
     description = vm.description
     ethernet_adapters = {
       ip0 = {
-        bridge          = vm.network[0].bridge
-        ip_address      = trimprefix(split(",", vm.ipconfig0)[0], "ip=")
-        default_gateway = trimprefix(split(",", vm.ipconfig0)[1], "gw=")
+        bridge     = vm.network[0].bridge
+        ip_address = trimprefix(split(",", vm.ipconfig0)[0], "ip=")
       }
       ip1 = {
-        bridge          = vm.network[1].bridge
-        ip_address      = trimprefix(split(",", vm.ipconfig1)[0], "ip=")
-        default_gateway = trimprefix(split(",", vm.ipconfig1)[1], "gw=")
+        bridge     = vm.network[1].bridge
+        ip_address = trimprefix(split(",", vm.ipconfig1)[0], "ip=")
       }
     }
   }]
@@ -32,6 +30,10 @@ output "ansible_players__prd" {
         bridge          = vm.network[0].bridge
         ip_address      = trimprefix(split(",", vm.ipconfig0)[0], "ip=")
         default_gateway = trimprefix(split(",", vm.ipconfig0)[1], "gw=")
+      }
+      ip1 = {
+        bridge     = vm.network[1].bridge
+        ip_address = trimprefix(split(",", vm.ipconfig1)[0], "ip=")
       }
     }
   }]

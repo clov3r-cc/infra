@@ -4,7 +4,7 @@ locals {
       host_name                 = local.pve_hosts["pve-01"]["host_name"]
       vm_id                     = 102
       managemt_nw_host_section  = 14
-      heartbeat_nw_host_section = 2
+      heartbeat_nw_host_section = 1
       cpu_socket                = 1
       cpu_core                  = 2
       memory                    = 1024 * 3
@@ -14,7 +14,7 @@ locals {
       host_name                 = local.pve_hosts["pve-01"]["host_name"]
       vm_id                     = 103
       managemt_nw_host_section  = 15
-      heartbeat_nw_host_section = 3
+      heartbeat_nw_host_section = 2
       cpu_socket                = 1
       cpu_core                  = 2
       memory                    = 1024 * 3
@@ -125,11 +125,11 @@ resource "proxmox_vm_qemu" "zabbix_server" {
   network {
     id     = 1
     model  = "virtio"
-    bridge = "vmbr2"
+    bridge = local.zabbix_server_heartbeat_nw_bridge
   }
 
   ipconfig0 = "ip=${cidrhost(local.vm_management_nw_subnet_cidr, each.value.managemt_nw_host_section)}${"/${local.vm_management_nw_subnet_mask}"},gw=${local.vm_management_nw_default_gw}"
-  ipconfig1 = "ip=192.168.91.${each.value.heartbeat_nw_host_section}/28,gw=192.168.91.1"
+  ipconfig1 = "ip=${cidrhost(local.zabbix_server_heartbeat_nw_subnet_cidr, each.value.heartbeat_nw_host_section)}${"/${local.zabbix_server_heartbeat_nw_subnet_mask}"}"
 
   disks {
     virtio {
