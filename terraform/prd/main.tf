@@ -53,6 +53,10 @@ EOT
   vm_management_nw_subnet_cidr = "192.168.21.0/24"
   vm_management_nw_subnet_mask = split("/", local.vm_management_nw_subnet_cidr)[1]
   vm_management_nw_default_gw  = cidrhost(local.vm_management_nw_subnet_cidr, 1)
+  # Zabbix Server Heartbeat network configuration
+  zabbix_server_management_nw_bridge      = "vmbr2"
+  zabbix_server_management_nw_subnet_cidr = "192.168.91.0/29"
+  zabbix_server_management_nw_subnet_mask = split("/", local.vm_management_nw_subnet_cidr)[1]
 
   ansible_ssh_private_key_path = "/home/${local.machine_user}/.ssh/id_ed25519"
 
@@ -64,4 +68,3 @@ EOT
 
   #endregion
 }
-

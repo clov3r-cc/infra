@@ -1,13 +1,14 @@
 locals {
   vm_settings__ansible_player = {
     "01" = {
-      host_name                = local.pve_hosts["pve-01"]["host_name"]
-      vm_id                    = 104
-      managemt_nw_host_section = 19
-      cpu_socket               = 1
-      cpu_core                 = 2
-      memory                   = 1024 * 2
-      os_disk_size             = 10
+      host_name                 = local.pve_hosts["pve-01"]["host_name"]
+      vm_id                     = 104
+      managemt_nw_host_section  = 19
+      heartbeat_nw_host_section = 3
+      cpu_socket                = 1
+      cpu_core                  = 2
+      memory                    = 1024 * 2
+      os_disk_size              = 10
     }
   }
 }
@@ -109,7 +110,14 @@ resource "proxmox_vm_qemu" "ansible_player" {
     bridge = local.vm_management_nw_bridge
   }
 
+  network {
+    id     = 1
+    model  = "virtio"
+    bridge = local.zabbix_server_management_nw_bridge
+  }
+
   ipconfig0 = "ip=${cidrhost(local.vm_management_nw_subnet_cidr, each.value.managemt_nw_host_section)}${"/${local.vm_management_nw_subnet_mask}"},gw=${local.vm_management_nw_default_gw}"
+  ipconfig1 = "ip=${cidrhost(local.zabbix_server_management_nw_subnet_cidr, each.value.zabbix_server_nw_host_section)}${"/${local.zabbix_server_management_nw_subnet_mask}"}"
 
   disks {
     virtio {
@@ -229,5 +237,25 @@ resource "terraform_data" "send_ansible_files" {
     # > then the contents of `/foo` will be uploaded into `/tmp` directly.
     source      = "${path.root}/ansible/"
     destination = "/home/${local.machine_user}/ansible"
+  }
+}
+
+resource "ansible_group" "ansible_player" {
+  name = "ansible_player"
+  variables = {
+    ansible_user                 = local.machine_user
+    ansible_ssh_private_key_file = local.ansible_ssh_private_key_path
+  }
+}
+
+resource "ansible_host" "ansible_player" {
+  for_each = proxmox_vm_qemu.ansible_player
+
+  name   = each.value.name
+  groups = [ansible_group.ansible_player.name]
+  variables = {
+    ansible_host    = each.value.ssh_host
+    heartbeat_nw_ip = split("/", split("ip=", each.value.ipconfig1)[1])[0]
+    host_index      = tonumber(each.key)
   }
 }
