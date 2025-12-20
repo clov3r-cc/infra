@@ -31,6 +31,10 @@ output "ansible_players__prd" {
         ip_address      = trimprefix(split(",", vm.ipconfig0)[0], "ip=")
         default_gateway = trimprefix(split(",", vm.ipconfig0)[1], "gw=")
       }
+      ip1 = {
+        bridge     = vm.network[1].bridge
+        ip_address = trimprefix(split(",", vm.ipconfig1)[0], "ip=")
+      }
     }
   }]
 }
