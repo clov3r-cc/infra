@@ -189,5 +189,6 @@ resource "ansible_host" "zabbix_server" {
   variables = {
     ansible_host    = each.value.ssh_host
     heartbeat_nw_ip = split("/", split("ip=", each.value.ipconfig1)[1])[0]
+    host_index      = index(proxmox_vm_qemu.zabbix_server, vm)
   }
 }
