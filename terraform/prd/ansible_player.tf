@@ -113,11 +113,11 @@ resource "proxmox_vm_qemu" "ansible_player" {
   network {
     id     = 1
     model  = "virtio"
-    bridge = local.zabbix_server_management_nw_bridge
+    bridge = local.zabbix_server_heartbeat_nw_bridge
   }
 
   ipconfig0 = "ip=${cidrhost(local.vm_management_nw_subnet_cidr, each.value.managemt_nw_host_section)}${"/${local.vm_management_nw_subnet_mask}"},gw=${local.vm_management_nw_default_gw}"
-  ipconfig1 = "ip=${cidrhost(local.zabbix_server_management_nw_subnet_cidr, each.value.zabbix_server_nw_host_section)}${"/${local.zabbix_server_management_nw_subnet_mask}"}"
+  ipconfig1 = "ip=${cidrhost(local.zabbix_server_heartbeat_nw_subnet_cidr, each.value.zabbix_server_nw_host_section)}${"/${local.zabbix_server_heartbeat_nw_subnet_mask}"}"
 
   disks {
     virtio {
