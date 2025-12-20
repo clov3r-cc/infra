@@ -1,0 +1,159 @@
+---
+- name: Create a new ext4 primary partition
+  become: true
+  community.general.parted:
+    device: /dev/vdb
+    number: 1
+    state: present
+    label: gpt
+    fs_type: ext4
+    part_type: primary
+    part_start: 0%
+    part_end: 100%
+    resize: false
+
+- name: Import ELRepo repo key
+  become: true
+  ansible.builtin.rpm_key:
+    key: https://www.elrepo.org/RPM-GPG-KEY-v2-elrepo.org
+    state: present
+
+- name: Install ELRepo
+  become: true
+  ansible.builtin.dnf:
+    name: https://www.elrepo.org/elrepo-release-10.el10.elrepo.noarch.rpm
+    state: present
+
+- name: Install DRBD
+  become: true
+  ansible.builtin.dnf:
+    name:
+      - kmod-drbd9x
+      - drbd9x-utils
+    state: present
+
+# systemd に DRBD を操作させない
+- name: Stop, disable and mask drbd
+  become: true
+  ansible.builtin.systemd_service:
+    name: drbd
+    state: stopped
+    enabled: false
+    masked: true
+
+- name: Deploy DRBD configuration
+  become: true
+  ansible.builtin.template:
+    src: drbd1.res.j2
+    dest: /etc/drbd.d/drbd1.res
+    mode: '0644'
+
+- name: Check if DRBD connection is configured
+  become: true
+  ansible.builtin.shell: drbdadm cstate drbd1
+  register: drbd_cstate
+  check_mode: false
+  failed_when: false
+  changed_when: false
+
+- name: Initialize DRBD device metadata
+  when: drbd_cstate.rc != 0
+  become: true
+  ansible.builtin.shell: test {{ ansible_check_mode | lower }} = false && drbdadm create-md drbd1 --force
+  check_mode: false
+  register: init_drbd_dev_metadata
+  failed_when: ansible_check_mode == false and init_drbd_dev_metadata.rc != 0
+
+- name: Start DRBD device
+  when: drbd_cstate.rc != 0
+  become: true
+  ansible.builtin.shell: test {{ ansible_check_mode | lower }} = false && drbdadm up drbd1
+  check_mode: false
+  register: start_drbd_dev
+  failed_when: ansible_check_mode == false and start_drbd_dev.rc != 0
+
+- name: Check if DRBD connection is configured again
+  become: true
+  ansible.builtin.shell: drbdadm cstate drbd1
+  register: drbd_cstate
+  check_mode: false
+  changed_when: false
+  until: drbd_cstate.stdout == 'Connected'
+  retries: 5
+  delay: 10
+
+- name: Check if DRBD disk is synced
+  become: true
+  ansible.builtin.shell: drbdadm dstate drbd1
+  register: drbd_dstate
+  check_mode: false
+  failed_when: false
+  changed_when: false
+
+- name: Make all nodes secondary
+  when: drbd_dstate.stdout != 'UpToDate/UpToDate'
+  become: true
+  ansible.builtin.shell: test {{ ansible_check_mode | lower }} = false && drbdadm secondary drbd1
+  check_mode: false
+  register: make_nodes_secondary
+  failed_when: ansible_check_mode == false and make_nodes_secondary.rc != 0
+
+- name: Sync disk at first node
+  when: drbd_dstate.stdout != 'UpToDate/UpToDate' and inventory_hostname == groups['zabbix_server'][0]
+  become: true
+  ansible.builtin.shell: drbdadm primary drbd1 --force
+  check_mode: false
+  register: sync_disk
+  failed_when: ansible_check_mode == false and sync_disk.rc != 0
+
+- name: Check if DRBD disk is synced again
+  become: true
+  ansible.builtin.shell: drbdadm dstate drbd1
+  register: drbd_dstate_synced
+  check_mode: false
+  changed_when: false
+  until: drbd_dstate_synced.stdout == 'UpToDate/UpToDate'
+  retries: 3
+  delay: 100
+
+- name: Check if 1st node is primary
+  when: inventory_hostname == groups['zabbix_server'][0]
+  become: true
+  ansible.builtin.shell: drbdadm role drbd1
+  register: drbd_role__1st
+  check_mode: false
+  failed_when: drbd_role__1st.stdout == 'Primary'
+  changed_when: false
+
+- name: Check if other nodes is secondary
+  when: inventory_hostname != groups['zabbix_server'][0]
+  become: true
+  ansible.builtin.shell: drbdadm role drbd1
+  register: drbd_role__others
+  check_mode: false
+  failed_when: drbd_role__others.stdout == 'Secondary'
+  changed_when: false
+
+- name: Create a new ext4 primary partition
+  when: drbd_dstate.stdout != 'UpToDate/UpToDate' and inventory_hostname == groups['zabbix_server'][0]
+  become: true
+  community.general.filesystem:
+    dev: /dev/drbd1
+    state: present
+    fstype: ext4
+    resizefs: false
+
+- name: Make all nodes secondary
+  when: drbd_dstate.stdout != 'UpToDate/UpToDate'
+  become: true
+  ansible.builtin.shell: test {{ ansible_check_mode | lower }} = false && drbdadm secondary drbd1
+  check_mode: false
+  register: make_nodes_secondary
+  failed_when: ansible_check_mode == false and make_nodes_secondary.rc != 0
+
+- name: Create /mnt/drbd1 directory to use mount point
+  become: true
+  ansible.builtin.file:
+    path: /mnt/drbd1
+    state: directory
+    mode: '0755'
