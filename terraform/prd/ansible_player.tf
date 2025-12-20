@@ -180,24 +180,6 @@ resource "terraform_data" "ssh_private_key__ansible_player" {
   }
 }
 
-resource "ansible_group" "ansible_player" {
-  name = "ansible_player"
-  variables = {
-    ansible_user                 = local.machine_user
-    ansible_ssh_private_key_file = local.ansible_ssh_private_key_path
-  }
-}
-
-resource "ansible_host" "ansible_player" {
-  for_each = { for vm in proxmox_vm_qemu.ansible_player : vm.name => vm }
-
-  name   = each.key
-  groups = [ansible_group.ansible_player.name]
-  variables = {
-    ansible_host = each.value.ssh_host
-  }
-}
-
 resource "terraform_data" "make_ansible_inventory" {
   # TODO: Whenever the number of VM types changes, rewrite this section.
   depends_on = [
