@@ -142,9 +142,13 @@ resource "ansible_group" "cloud_server" {
   }
 }
 
+resource "ansible_group" "zabbix_server__single" {
+  name = "zabbix_server__single"
+}
+
 resource "ansible_host" "cloud_server" {
   name   = oci_core_instance.cloud_server.display_name
-  groups = [ansible_group.cloud_server.name]
+  groups = [ansible_group.cloud_server.name, ansible_group.zabbix_server__single.name]
   variables = {
     ansible_host = oci_core_instance.cloud_server.private_ip
   }
