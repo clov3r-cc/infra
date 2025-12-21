@@ -230,11 +230,15 @@ resource "ansible_group" "ansible_player" {
   }
 }
 
+resource "ansible_group" "pacemaker_qdevice" {
+  name = "pacemaker_qdevice"
+}
+
 resource "ansible_host" "ansible_player" {
   for_each = proxmox_vm_qemu.ansible_player
 
   name   = each.value.name
-  groups = [ansible_group.ansible_player.name]
+  groups = [ansible_group.ansible_player.name, ansible_group.pacemaker_qdevice.name]
   variables = {
     ansible_host    = each.value.ssh_host
     heartbeat_nw_ip = split("/", split("ip=", each.value.ipconfig1)[1])[0]
