@@ -21,7 +21,7 @@ locals {
       os_disk_size              = 15
     }
   }
-  vm_data_disk_size__zabbix_server = 20
+  vm_data_disk_size__zabbix_server = 40
 }
 
 resource "random_password" "vm_root_password__zabbix_server" {
