@@ -23,7 +23,7 @@ resource "proxmox_vm_qemu" "desktop" {
   start_at_node_boot = true
   agent              = 1
   tags               = "${local.env};terraform;windows;desktop"
-  qemu_os            = "l26"
+  qemu_os            = "win11"
 
   startup_shutdown {
     order            = -1 # Auto
