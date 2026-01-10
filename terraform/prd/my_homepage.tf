@@ -9,7 +9,7 @@ resource "cloudflare_pages_project" "homepage" {
     }
     production = {
       always_use_latest_compatibility_date = false # The `always_use_latest_compatibility_date` property cannot be true for Production deployments
-      compatibility_date                   = "2025-11-17"
+      compatibility_date = "2026-01-20"
       fail_open                            = true # Bypass Cloudflare Pages Functions when requests to Functions count towards your quota (default value in GUI)
     }
   }
