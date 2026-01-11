@@ -1,5 +1,6 @@
 ---
 - hosts: zabbix_server
+  gather_facts: false
   roles:
     - common
     - zabbix-server
