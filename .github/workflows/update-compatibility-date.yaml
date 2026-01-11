@@ -33,10 +33,21 @@ jobs:
             exit 1
           fi
           LATEST_DATE=$(echo "$DATES" | sort | tail -1)
+          CURRENT_DATE=$(date +%Y-%m-%d)
+
           echo "latest_date=$LATEST_DATE" >> $GITHUB_OUTPUT
           echo "Latest compatibility_date: $LATEST_DATE"
+          echo "Current date: $CURRENT_DATE"
+
+          if [[ "$LATEST_DATE" > "$CURRENT_DATE" ]]; then
+            echo "is_future=true" >> $GITHUB_OUTPUT
+            echo "⚠ Latest date $LATEST_DATE is in the future. Skipping update."
+          else
+            echo "is_future=false" >> $GITHUB_OUTPUT
+          fi
       - name: Find all compatibility_dates in Terraform files
         id: find_dates
+        if: steps.get_date.outputs.is_future == 'false'
         run: |
           DATES=$(grep -rh "compatibility_date" . --include="*.tf" | grep -oP 'compatibility_date\s*=\s*"\K[0-9]{4}-[0-9]{2}-[0-9]{2}' | sort -u)
           if [ -z "$DATES" ]; then
@@ -51,7 +62,7 @@ jobs:
           fi
       - name: Check if any updates are needed
         id: check_update
-        if: steps.find_dates.outputs.found == 'true'
+        if: steps.get_date.outputs.is_future == 'false' && steps.find_dates.outputs.found == 'true'
         run: |
           LATEST="${{ steps.get_date.outputs.latest_date }}"
           CURRENT_DATES="${{ steps.find_dates.outputs.dates }}"
@@ -70,7 +81,7 @@ jobs:
             echo "⚠ Update needed. Latest: $LATEST, Current: $CURRENT_DATES"
           fi
       - name: Update all Terraform files
-        if: steps.find_dates.outputs.found == 'true' && steps.check_update.outputs.needs_update == 'true'
+        if: steps.get_date.outputs.is_future == 'false' && steps.find_dates.outputs.found == 'true' && steps.check_update.outputs.needs_update == 'true'
         run: |
           LATEST="${{ steps.get_date.outputs.latest_date }}"
           CURRENT_DATES="${{ steps.find_dates.outputs.dates }}"
@@ -92,7 +103,7 @@ jobs:
             git diff --stat
           fi
       - name: Create Pull Request
-        if: steps.find_dates.outputs.found == 'true' && steps.check_update.outputs.needs_update == 'true'
+        if: steps.get_date.outputs.is_future == 'false' && steps.find_dates.outputs.found == 'true' && steps.check_update.outputs.needs_update == 'true'
         uses: peter-evans/create-pull-request@v8
         id: cpr
         with:
@@ -119,7 +130,7 @@ jobs:
           labels: |
             dependencies
       - name: Enable Pull Request Automerge
-        if: steps.find_dates.outputs.found == 'true' && steps.check_update.outputs.needs_update == 'true'
+        if: steps.get_date.outputs.is_future == 'false' && steps.find_dates.outputs.found == 'true' && steps.check_update.outputs.needs_update == 'true'
         run: |
           gh pr checkout ${{ steps.cpr.outputs.pull-request-number }}
           gh pr merge -m --auto
