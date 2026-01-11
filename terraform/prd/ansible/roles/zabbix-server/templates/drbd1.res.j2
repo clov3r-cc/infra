@@ -5,6 +5,7 @@ resource drbd1 {
 
 {% for host in groups['zabbix_server'] %}
   on {{ host }} {
+    node-id {{ hostvars[host]['host_index'] }};
     address {{ hostvars[host]['heartbeat_nw_ip'] }}:7789;
   }
 {% endfor %}

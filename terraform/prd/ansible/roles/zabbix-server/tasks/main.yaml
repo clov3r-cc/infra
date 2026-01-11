@@ -1,0 +1,89 @@
+---
+- name: Install Pacemaker
+  when: "'zabbix_server__ha' in group_names"
+  become: true
+  ansible.builtin.dnf:
+    name:
+      - corosync
+      - corosync-qdevice
+      - pacemaker
+      - pcs
+    state: present
+    enablerepo: highavailability
+
+- name: Set hacluster user password
+  when: "'zabbix_server__ha' in group_names"
+  become: true
+  ansible.builtin.user:
+    name: hacluster
+    password: "{{ hacluster_password | password_hash('sha512') }}"
+  changed_when: false
+
+- name: Generate corosync authkey on first node
+  when: "'zabbix_server__ha' in group_names and inventory_hostname == groups['zabbix_server__ha'][0]"
+  become: true
+  ansible.builtin.shell: test {{ ansible_check_mode | lower }} = false && corosync-keygen
+  args:
+    creates: /etc/corosync/authkey
+  check_mode: false
+  register: generate_corosync_key
+  failed_when: ansible_check_mode == false and generate_corosync_key.rc != 0
+
+- name: Fetch authkey from first node
+  when: "'zabbix_server__ha' in group_names and inventory_hostname == groups['zabbix_server__ha'][0]"
+  become: true
+  ansible.builtin.fetch:
+    src: /etc/corosync/authkey
+    dest: /tmp/corosync-authkey
+    flat: true
+
+- name: Distribute authkey to all nodes
+  when: "'zabbix_server__ha' in group_names and inventory_hostname != groups['zabbix_server__ha'][0]"
+  become: true
+  ansible.builtin.copy:
+    src: /tmp/corosync-authkey
+    dest: /etc/corosync/authkey
+    owner: root
+    group: root
+    mode: '0400'
+  notify:
+    - Restart corosync
+    - Restart pacemaker
+
+- name: Deploy corosync configuration
+  when: "'zabbix_server__ha' in group_names"
+  become: true
+  ansible.builtin.template:
+    src: corosync.conf.j2
+    dest: /etc/corosync/corosync.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify:
+    - Restart corosync
+    - Restart pacemaker
+
+- name: Enable and start corosync
+  when: "'zabbix_server__ha' in group_names"
+  become: true
+  ansible.builtin.systemd_service:
+    name: corosync
+    state: started
+    enabled: true
+
+- name: Enable and start pacemaker
+  when: "'zabbix_server__ha' in group_names"
+  become: true
+  ansible.builtin.systemd_service:
+    name: pacemaker
+    state: started
+    enabled: true
+
+- name: Disable, stop and mask pcsd
+  when: "'zabbix_server__ha' in group_names"
+  become: true
+  ansible.builtin.systemd_service:
+    name: pcsd
+    state: stopped
+    enabled: false
+    masked: true

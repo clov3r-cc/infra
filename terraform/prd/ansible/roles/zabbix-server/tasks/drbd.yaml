@@ -1,5 +1,6 @@
 ---
 - name: Create a new ext4 primary partition
+  when: "'zabbix_server__ha' in group_names"
   become: true
   community.general.parted:
     device: /dev/vdb
@@ -13,18 +14,21 @@
     resize: false
 
 - name: Import ELRepo repo key
+  when: "'zabbix_server__ha' in group_names"
   become: true
   ansible.builtin.rpm_key:
     key: https://www.elrepo.org/RPM-GPG-KEY-v2-elrepo.org
     state: present
 
 - name: Install ELRepo
+  when: "'zabbix_server__ha' in group_names"
   become: true
   ansible.builtin.dnf:
     name: https://www.elrepo.org/elrepo-release-10.el10.elrepo.noarch.rpm
     state: present
 
 - name: Install DRBD
+  when: "'zabbix_server__ha' in group_names"
   become: true
   ansible.builtin.dnf:
     name:
@@ -34,6 +38,7 @@
 
 # systemd に DRBD を操作させない
 - name: Stop, disable and mask drbd
+  when: "'zabbix_server__ha' in group_names"
   become: true
   ansible.builtin.systemd_service:
     name: drbd
@@ -42,6 +47,7 @@
     masked: true
 
 - name: Deploy DRBD configuration
+  when: "'zabbix_server__ha' in group_names"
   become: true
   ansible.builtin.template:
     src: drbd1.res.j2
@@ -49,6 +55,7 @@
     mode: '0644'
 
 - name: Check if DRBD connection is configured
+  when: "'zabbix_server__ha' in group_names"
   become: true
   ansible.builtin.shell: drbdadm cstate drbd1
   register: drbd_cstate
@@ -57,7 +64,7 @@
   changed_when: false
 
 - name: Initialize DRBD device metadata
-  when: drbd_cstate.rc != 0
+  when: "'zabbix_server__ha' in group_names and drbd_cstate.rc != 0"
   become: true
   ansible.builtin.shell: test {{ ansible_check_mode | lower }} = false && drbdadm create-md drbd1 --force
   check_mode: false
@@ -65,7 +72,7 @@
   failed_when: ansible_check_mode == false and init_drbd_dev_metadata.rc != 0
 
 - name: Start DRBD device
-  when: drbd_cstate.rc != 0
+  when: "'zabbix_server__ha' in group_names and drbd_cstate.rc != 0"
   become: true
   ansible.builtin.shell: test {{ ansible_check_mode | lower }} = false && drbdadm up drbd1
   check_mode: false
@@ -73,6 +80,7 @@
   failed_when: ansible_check_mode == false and start_drbd_dev.rc != 0
 
 - name: Check if DRBD connection is configured again
+  when: "'zabbix_server__ha' in group_names"
   become: true
   ansible.builtin.shell: drbdadm cstate drbd1
   register: drbd_cstate
@@ -83,6 +91,7 @@
   delay: 10
 
 - name: Check if DRBD disk is synced
+  when: "'zabbix_server__ha' in group_names"
   become: true
   ansible.builtin.shell: drbdadm dstate drbd1
   register: drbd_dstate
@@ -91,7 +100,7 @@
   changed_when: false
 
 - name: Make all nodes secondary
-  when: drbd_dstate.stdout != 'UpToDate/UpToDate'
+  when: "'zabbix_server__ha' in group_names and drbd_dstate.stdout != 'UpToDate/UpToDate'"
   become: true
   ansible.builtin.shell: test {{ ansible_check_mode | lower }} = false && drbdadm secondary drbd1
   check_mode: false
@@ -99,7 +108,7 @@
   failed_when: ansible_check_mode == false and make_nodes_secondary.rc != 0
 
 - name: Sync disk at first node
-  when: drbd_dstate.stdout != 'UpToDate/UpToDate' and inventory_hostname == groups['zabbix_server'][0]
+  when: "'zabbix_server__ha' in group_names and drbd_dstate.stdout != 'UpToDate/UpToDate' and inventory_hostname == groups['zabbix_server__ha'][0]"
   become: true
   ansible.builtin.shell: drbdadm primary drbd1 --force
   check_mode: false
@@ -107,6 +116,7 @@
   failed_when: ansible_check_mode == false and sync_disk.rc != 0
 
 - name: Check if DRBD disk is synced again
+  when: "'zabbix_server__ha' in group_names"
   become: true
   ansible.builtin.shell: drbdadm dstate drbd1
   register: drbd_dstate_synced
@@ -117,7 +127,7 @@
   delay: 100
 
 - name: Check if 1st node is primary
-  when: inventory_hostname == groups['zabbix_server'][0]
+  when: "'zabbix_server__ha' in group_names and inventory_hostname == groups['zabbix_server__ha'][0]"
   become: true
   ansible.builtin.shell: drbdadm role drbd1
   register: drbd_role__1st
@@ -126,7 +136,7 @@
   changed_when: false
 
 - name: Check if other nodes is secondary
-  when: inventory_hostname != groups['zabbix_server'][0]
+  when: "'zabbix_server__ha' in group_names and inventory_hostname != groups['zabbix_server__ha'][0]"
   become: true
   ansible.builtin.shell: drbdadm role drbd1
   register: drbd_role__others
@@ -135,7 +145,7 @@
   changed_when: false
 
 - name: Create a new ext4 primary partition
-  when: drbd_dstate.stdout != 'UpToDate/UpToDate' and inventory_hostname == groups['zabbix_server'][0]
+  when: "'zabbix_server__ha' in group_names and drbd_dstate.stdout != 'UpToDate/UpToDate' and inventory_hostname == groups['zabbix_server__ha'][0]"
   become: true
   community.general.filesystem:
     dev: /dev/drbd1
@@ -144,7 +154,7 @@
     resizefs: false
 
 - name: Make all nodes secondary
-  when: drbd_dstate.stdout != 'UpToDate/UpToDate'
+  when: "'zabbix_server__ha' in group_names and drbd_dstate.stdout != 'UpToDate/UpToDate'"
   become: true
   ansible.builtin.shell: test {{ ansible_check_mode | lower }} = false && drbdadm secondary drbd1
   check_mode: false
@@ -152,6 +162,7 @@
   failed_when: ansible_check_mode == false and make_nodes_secondary.rc != 0
 
 - name: Create /mnt/drbd1 directory to use mount point
+  when: "'zabbix_server__ha' in group_names"
   become: true
   ansible.builtin.file:
     path: /mnt/drbd1

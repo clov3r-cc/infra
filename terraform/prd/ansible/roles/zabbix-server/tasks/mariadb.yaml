@@ -1,0 +1,16 @@
+---
+- name: Copy MariaDB repo
+  when: "'zabbix_server__ha' in group_names or 'zabbix_server__single' in group_names"
+  become: true
+  ansible.builtin.copy:
+    src: files/MariaDB.repo
+    dest: /etc/yum.repos.d/MariaDB.repo
+
+- name: Install MariaDB
+  when: "'zabbix_server' in group_names or 'zabbix_server__single' in group_names"
+  become: true
+  ansible.builtin.dnf:
+    name:
+      - MariaDB-client
+      - MariaDB-server
+    state: present
