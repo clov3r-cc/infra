@@ -20,7 +20,7 @@ output "zabbix_servers__prd" {
 }
 
 output "linux_operators__prd" {
-  value = [for vm in proxmox_vm_qemu.linux_operatator : {
+  value = [for vm in proxmox_vm_qemu.linux_operator : {
     host_name   = vm.current_node
     id          = vm.vmid
     name        = vm.name
