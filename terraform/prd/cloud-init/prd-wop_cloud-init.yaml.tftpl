@@ -1,7 +1,7 @@
 #cloud-config
 set_hostname: ${CI_HOSTNAME}
 users:
-  - name: Admin
+  - name: Administrator
     passwd: ${CI_ADMIN_PASSWORD}
     primary_group: Administrators
   - name: ${CI_MACHINEUSER_NAME}

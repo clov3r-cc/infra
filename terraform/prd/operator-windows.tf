@@ -125,13 +125,21 @@ resource "proxmox_vm_qemu" "windows_operator" {
     }
   }
 
-  serial {
-    id   = 0
-    type = "socket"
-  }
+  // Note: Serial device is unnecessary
 
   vga {
-    type = "serial0"
+    type = "std"
+  }
+
+  // EFI disk is necessary b/c using UEFI
+  efidisk {
+    storage = local.vm_disk_storage
+  }
+
+  // Note: TPM v2.0 is necessary b/c using Windows 11+
+  tpm_state {
+    storage = local.vm_disk_storage
+    version = "v2.0"
   }
 
   lifecycle {
