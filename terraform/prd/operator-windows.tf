@@ -66,7 +66,7 @@ resource "proxmox_vm_qemu" "windows_operator" {
   target_node        = each.value.host_name
   vmid               = each.value.vm_id
   description        = "Windows VM to operate something. This VM is managed by Terraform."
-  bios               = "seabios"
+  bios               = "ovmf"
   start_at_node_boot = true
   agent              = 1
   clone              = "winsrv-2025"
