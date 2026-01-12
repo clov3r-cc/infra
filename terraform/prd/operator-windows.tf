@@ -2,7 +2,7 @@ locals {
   vm_settings__windows_operator = {
     "01" = {
       host_name                = local.pve_hosts["pve-01"]["host_name"]
-      vm_id                    = 104
+      vm_id                    = 105
       managemt_nw_host_section = 18
       cpu_socket               = 1
       cpu_core                 = 2
