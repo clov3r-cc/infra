@@ -35,7 +35,9 @@ resource "random_password" "vm_user_password__windows_operator" {
 resource "terraform_data" "cloud_init_config__windows_operator" {
   for_each = local.vm_settings__windows_operator
   triggers_replace = [
-    filesha1("cloud-init/${local.env}-wop_cloud-init.yaml.tftpl")
+    filesha1("cloud-init/${local.env}-wop_cloud-init.yaml.tftpl"),
+    random_password.vm_admin_password__windows_operator[each.key],
+    random_password.vm_user_password__windows_operator[each.key]
   ]
 
   connection {
