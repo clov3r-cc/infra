@@ -52,4 +52,5 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Terraform Plan
+        if: always()
         run: cat import.tf
