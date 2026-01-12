@@ -48,6 +48,8 @@ jobs:
           oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
           tags: tag:gha
       - name: Terraform Plan
-        run: tfcmt plan -patch --config "${{ github.workspace }}/.github/tfcmt-config.yaml" -- terraform plan -input=false -no-color -lock-timeout=10m
+        run: tfcmt plan -patch --config "${{ github.workspace }}/.github/tfcmt-config.yaml" -- terraform plan -input=false -no-color -lock-timeout=10m -generate-config-out=import.tf
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Terraform Plan
+        run: cat import.tf
