@@ -1,0 +1,12 @@
+#cloud-config
+set_hostname: ${CI_HOSTNAME}
+users:
+  - name: Admin
+    passwd: ${CI_ADMIN_PASSWORD}
+    primary_group: Administrators
+  - name: ${CI_MACHINEUSER_NAME}
+    passwd: ${CI_MACHINEUSER_PASSWORD}
+    primary_group: Administrators
+    ssh_authorized_keys:
+      - ${CI_MACHINEUSER_SSH_PUBKEY}
+set_timezone: Asia/Tokyo
