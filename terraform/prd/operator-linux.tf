@@ -66,13 +66,13 @@ resource "proxmox_vm_qemu" "linux_operator" {
   name               = "${local.env}-lop-${format("%02d", tonumber(each.key))}"
   target_node        = each.value.host_name
   vmid               = each.value.vm_id
-  description        = "Linux VM to operator something. This VM is managed by Terraform."
+  description        = "Linux VM to operate something. This VM is managed by Terraform."
   bios               = "seabios"
   start_at_node_boot = true
   agent              = 1
   clone              = local.vm_template__alma
   full_clone         = true
-  tags               = "${local.env};terraform;op;linux-op"
+  tags               = "${local.env};terraform;operator;linux-operator"
   qemu_os            = "l26"
 
   startup_shutdown {
