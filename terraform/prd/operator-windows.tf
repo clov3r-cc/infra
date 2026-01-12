@@ -129,6 +129,17 @@ resource "proxmox_vm_qemu" "windows_operator" {
     type = "std"
   }
 
+  // EFI disk is necessary b/c using UEFI
+  efidisk {
+    storage = local.vm_disk_storage
+  }
+
+  // Note: TPM v2.0 is necessary b/c using Windows 11+
+  tpm_state {
+    storage = local.vm_disk_storage
+    version = "v2.0"
+  }
+
   lifecycle {
     ignore_changes = [
       tags
