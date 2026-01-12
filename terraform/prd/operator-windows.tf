@@ -125,6 +125,8 @@ resource "proxmox_vm_qemu" "windows_operator" {
     }
   }
 
+  // Note: Serial device is unnecessary
+
   vga {
     type = "std"
   }
