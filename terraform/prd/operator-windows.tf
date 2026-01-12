@@ -125,13 +125,8 @@ resource "proxmox_vm_qemu" "windows_operator" {
     }
   }
 
-  serial {
-    id   = 0
-    type = "socket"
-  }
-
   vga {
-    type = "serial0"
+    type = "std"
   }
 
   lifecycle {
