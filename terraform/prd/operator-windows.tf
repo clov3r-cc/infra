@@ -15,21 +15,27 @@ locals {
 resource "random_password" "vm_admin_password__windows_operator" {
   for_each = local.vm_settings__windows_operator
 
-  length      = 30
+  # cloudbase-init requires passwords to be 20 characters or less (hardcoded)
+  # https://github.com/cloudbase/cloudbase-init/issues/114
+  # https://github.com/cloudbase/cloudbase-init/blob/4cbde8cac2408c75649038bd83900a2dc9edde06/cloudbaseinit/plugins/common/userdataplugins/cloudconfigplugins/users.py#L54
+  length      = 20
   min_lower   = 3
   min_upper   = 3
   min_numeric = 3
-  special     = false
+  special     = true
 }
 
 resource "random_password" "vm_user_password__windows_operator" {
   for_each = local.vm_settings__windows_operator
 
-  length      = 30
+  # cloudbase-init requires passwords to be 20 characters or less (hardcoded)
+  # https://github.com/cloudbase/cloudbase-init/issues/114
+  # https://github.com/cloudbase/cloudbase-init/blob/4cbde8cac2408c75649038bd83900a2dc9edde06/cloudbaseinit/plugins/common/userdataplugins/cloudconfigplugins/users.py#L54
+  length      = 20
   min_lower   = 3
   min_upper   = 3
   min_numeric = 3
-  special     = false
+  special     = true
 }
 
 resource "terraform_data" "cloud_init_config__windows_operator" {
