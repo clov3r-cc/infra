@@ -15,8 +15,7 @@ locals {
 resource "random_password" "vm_admin_password__windows_operator" {
   for_each = local.vm_settings__windows_operator
 
-  # cloudbase-init requires passwords to be 20 characters or less
-  length      = 18
+  length      = 30
   min_lower   = 3
   min_upper   = 3
   min_numeric = 3
@@ -26,8 +25,7 @@ resource "random_password" "vm_admin_password__windows_operator" {
 resource "random_password" "vm_user_password__windows_operator" {
   for_each = local.vm_settings__windows_operator
 
-  # cloudbase-init requires passwords to be 20 characters or less
-  length      = 18
+  length      = 30
   min_lower   = 3
   min_upper   = 3
   min_numeric = 3
