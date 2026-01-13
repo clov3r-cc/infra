@@ -22,8 +22,7 @@ resource "random_password" "vm_admin_password__windows_operator" {
   min_lower   = 3
   min_upper   = 3
   min_numeric = 3
-  min_special = 3
-  special     = true
+  special     = false
 }
 
 resource "random_password" "vm_user_password__windows_operator" {
@@ -36,8 +35,7 @@ resource "random_password" "vm_user_password__windows_operator" {
   min_lower   = 3
   min_upper   = 3
   min_numeric = 3
-  min_special = 3
-  special     = true
+  special     = false
 }
 
 resource "terraform_data" "cloud_init_config__windows_operator" {
