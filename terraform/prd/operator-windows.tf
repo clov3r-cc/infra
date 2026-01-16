@@ -160,9 +160,9 @@ resource "proxmox_vm_qemu" "windows_operator" {
 resource "ansible_group" "windows_operator" {
   name = "windows_operator"
   variables = {
-    ansible_user                = local.machine_user
-    ansible_connection          = "psrp"
-    ansible_psrp_auth           = "kerberos"
+    ansible_user                 = local.machine_user
+    ansible_connection           = "psrp"
+    ansible_psrp_auth            = "kerberos"
     ansible_psrp_cert_validation = "ignore"
   }
 }
