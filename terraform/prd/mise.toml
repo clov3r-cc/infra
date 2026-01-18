@@ -1,2 +1,2 @@
-[env]
-ANSIBLE_VAULT_PASSWORD_FILE = './ansible/files/get_vault_password.sh'
+[tasks.show-inventory]
+run = "uv run ansible-inventory -i ansible/inventory_src.yaml --list --yaml"
