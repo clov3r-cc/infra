@@ -28,13 +28,13 @@ locals {
   #region Proxmox VE
 
   pve_hosts = {
-    "pve-01" = {
-      host_name  = "pve-01"
+    "prod-prox-01" = {
+      host_name  = "prod-prox-01"
       ip_address = "192.168.21.2"
     }
   }
 
-  env = "prd"
+  env = "prod"
 
   machine_user = "machine-user"
 

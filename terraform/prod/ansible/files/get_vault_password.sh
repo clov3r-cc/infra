@@ -8,6 +8,6 @@ if [ -z "$BW_SESSION" ]; then
     exit 1
 fi
 
-# Ansible Vault 暗号化パスワード(prd)
+# Ansible Vault 暗号化パスワード(prod)
 ITEM_ID=b1eeacab-ee1d-4049-a6a5-b3bc00fbe48f
 bw get password "$ITEM_ID"
