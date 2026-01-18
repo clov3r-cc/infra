@@ -32,7 +32,7 @@
 ## 3. 前提条件
 
 - `Proxmox 9.x`がインストール済みで、起動していること
-- ホスト名: `pve-01`
+- ホスト名: `prox-01`
 
 ## 4. 作業手順
 
@@ -288,8 +288,8 @@
 5. Proxmox上のユーザを作成する
 
     ```shell
-    # @pve でレルムに Proxmox VE authentication server を指定する
-    MACHINEUSER_USERNAME='machine-user@pve'
+    # @pam でレルムに Proxmox VE authentication server を指定する
+    MACHINEUSER_USERNAME='machine-user@pam'
 
     # ユーザが存在しないことを確認する。何も出力されなければ OK
     pveum user list | grep "$MACHINEUSER_USERNAME"
@@ -529,7 +529,7 @@
 
 2. ノードを選択する
 
-    左側のメニューから `pve-01` ノードを選択する
+    左側のメニューから `prod-prox-01` ノードを選択する
 
 3. ネットワーク設定画面を開く
 
@@ -563,7 +563,7 @@
 
 2. ノードを選択する
 
-    左側のメニューから `pve-01` ノードを選択する
+    左側のメニューから `prod-prox-01` ノードを選択する
 
 3. ネットワーク設定画面を開く
 

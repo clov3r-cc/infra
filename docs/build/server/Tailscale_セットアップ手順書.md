@@ -39,7 +39,7 @@
 1. LXCコンテナのリストを更新する
 
     ```shell
-    ssh pve-01
+    ssh prox-01
 
     sudo pveam update
     # update successful と表示されればOK
@@ -88,7 +88,7 @@
     sudo pct create "$VM_ID" "local:vztmpl/${IMAGE_TEMPLATE}" \
       --arch amd64 \
       --ostype debian \
-      --hostname prd-tsc-01 \
+      --hostname prod-tail-01 \
       --unprivileged 1 \
       --features nesting=1 \
       --password "$ROOT_PASSWORD" \
@@ -228,7 +228,7 @@
 1. コンテナにIPフォワーディングを許可する
 
     ```shell
-    ssh prd-tsc-01
+    ssh prod-tail-01
 
     echo 'net.ipv4.ip_forward = 1' | sudo tee /etc/sysctl.d/99-tailscale.conf
     echo 'net.ipv6.conf.all.forwarding = 1' | sudo tee -a /etc/sysctl.d/99-tailscale.conf
@@ -241,7 +241,7 @@
 2. `Tailscale`をインストールする
 
     ```shell
-    ssh prd-tsc-01
+    ssh prod-tail-01
 
     curl -fsSL https://tailscale.com/install.sh | sh
     sudo tailscale up --advertise-routes=192.168.21.0/24 --accept-routes
@@ -252,7 +252,7 @@
 ### 4.9. `Tailscale`で経路の広告（アドバタイズ）を設定する
 
 1. [Tailscale](https://login.tailscale.com/admin/machines)を開く。
-2. `prd-tsc-01` > `Edit route settings...`を押下する
+2. `prod-tail-01` > `Edit route settings...`を押下する
 3. `Subnet routes` > `192.168.21.0/24` にチェックを入れる
 4. `Save`を押下する
 
@@ -260,13 +260,13 @@
 
 ref. <https://tailscale.com/kb/1028/key-expiry>
 
-1. `prd-tsc-01` > `Disable key expiry`を押下する
+1. `prod-tail-01` > `Disable key expiry`を押下する
 
 ## 5. 完了条件
 
 - LXCコンテナに対するSSH接続において、`root`ユーザとしてログインできないこと
 - LXCコンテナに対するSSH接続において、作業用ユーザが作成されていて、そのユーザとしてログインできること
 - `Tailscale`により、インターネットからセキュアにネットワーク内にアクセスできること
-- `Tailscale`において、`prd-tsc-01`に以下の設定をしていること
+- `Tailscale`において、`prod-tail-01`に以下の設定をしていること
   - 鍵の有効期限なし
   - サブネットを広告している

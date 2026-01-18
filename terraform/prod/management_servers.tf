@@ -1,9 +1,9 @@
 locals {
-  vm_settings__linux_operator = {
+  vm_settings__management_server = {
     "01" = {
-      host_name                 = local.pve_hosts["pve-01"]["host_name"]
+      host_name                 = local.pve_hosts["prod-prox-01"]["host_name"]
       vm_id                     = 104
-      managemt_nw_host_section  = 19
+      managemt_nw_host_section  = 8
       heartbeat_nw_host_section = 3
       cpu_socket                = 1
       cpu_core                  = 2
@@ -13,8 +13,8 @@ locals {
   }
 }
 
-resource "random_password" "vm_root_password__linux_operator" {
-  for_each = local.vm_settings__linux_operator
+resource "random_password" "vm_root_password__management_server" {
+  for_each = local.vm_settings__management_server
 
   length      = 30
   min_lower   = 3
@@ -23,8 +23,8 @@ resource "random_password" "vm_root_password__linux_operator" {
   special     = false
 }
 
-resource "random_password" "vm_user_password__linux_operator" {
-  for_each = local.vm_settings__linux_operator
+resource "random_password" "vm_user_password__management_server" {
+  for_each = local.vm_settings__management_server
 
   length      = 30
   min_lower   = 3
@@ -33,8 +33,8 @@ resource "random_password" "vm_user_password__linux_operator" {
   special     = false
 }
 
-resource "terraform_data" "cloud_init_config__linux_operator" {
-  for_each = local.vm_settings__linux_operator
+resource "terraform_data" "cloud_init_config__management_server" {
+  for_each = local.vm_settings__management_server
 
   connection {
     type        = "ssh"
@@ -43,40 +43,41 @@ resource "terraform_data" "cloud_init_config__linux_operator" {
     private_key = base64decode(var.vm_ssh_private_key)
   }
   provisioner "file" {
-    content = templatefile("cloud-init/${local.env}-lop_cloud-init.yaml.tftpl", {
-      CI_HOSTNAME               = "${local.env}-lop-${format("%02d", tonumber(each.key))}",
-      CI_ROOT_PASSWORD          = random_password.vm_root_password__linux_operator[each.key].result,
+    content = templatefile("cloud-init/${local.env}-mgmt_cloud-init.yaml.tftpl", {
+      CI_HOSTNAME               = "${local.env}-mgmt-${format("%02d", tonumber(each.key))}",
+      CI_ROOT_PASSWORD          = random_password.vm_root_password__management_server[each.key].result,
       CI_MACHINEUSER_NAME       = local.machine_user,
-      CI_MACHINEUSER_PASSWORD   = random_password.vm_user_password__linux_operator[each.key].result,
+      CI_MACHINEUSER_PASSWORD   = random_password.vm_user_password__management_server[each.key].result,
       CI_MACHINEUSER_SSH_PUBKEY = base64decode(local.vm_ssh_public_key),
     })
-    destination = "/tmp/${local.env}-lop-${format("%02d", tonumber(each.key))}_cloud-init.yaml"
+    destination = "/tmp/${local.env}-mgmt-${format("%02d", tonumber(each.key))}_cloud-init.yaml"
   }
   provisioner "remote-exec" {
     inline = [
-      "echo '${var.pve_user_password}' | sudo -S mv /tmp/${local.env}-lop-${format("%02d", tonumber(each.key))}_cloud-init.yaml /var/lib/vz/snippets/",
+      "echo '${var.pve_user_password}' | sudo -S mv /tmp/${local.env}-mgmt-${format("%02d", tonumber(each.key))}_cloud-init.yaml /var/lib/vz/snippets/",
     ]
   }
 }
 
-resource "proxmox_vm_qemu" "linux_operator" {
-  for_each   = local.vm_settings__linux_operator
-  depends_on = [terraform_data.cloud_init_config__linux_operator]
+resource "proxmox_vm_qemu" "management_server" {
+  for_each   = local.vm_settings__management_server
+  depends_on = [terraform_data.cloud_init_config__management_server]
 
-  name               = "${local.env}-lop-${format("%02d", tonumber(each.key))}"
+  name               = "${local.env}-mgmt-${format("%02d", tonumber(each.key))}"
   target_node        = each.value.host_name
   vmid               = each.value.vm_id
-  description        = "Linux VM to operate something. This VM is managed by Terraform."
+  description        = "Linux VM to manage something. This VM is managed by Terraform."
   bios               = "seabios"
   start_at_node_boot = true
   agent              = 1
   clone              = local.vm_template__alma
   full_clone         = true
-  tags               = "${local.env};terraform;operator;linux-operator"
+  tags               = "${local.env};terraform;management-server"
   qemu_os            = "l26"
 
   startup_shutdown {
-    order            = -1 # Auto
+    # 待機系を先に落とす（例: 2台あるときは、#1 -> 2 + 1 - 1 = 優先度 2、#2 -> 2 + 1 - 2 = 優先度 1）
+    order            = length(local.vm_settings__management_server) + 1 - tonumber(each.key)
     startup_delay    = -1 # No delay
     shutdown_timeout = -1 # No delay
   }
@@ -97,7 +98,7 @@ resource "proxmox_vm_qemu" "linux_operator" {
 
   # cloud-init configuration
   os_type  = "cloud-init"
-  cicustom = "user=local:snippets/${local.env}-lop-${format("%02d", tonumber(each.key))}_cloud-init.yaml"
+  cicustom = "user=local:snippets/${local.env}-mgmt-${format("%02d", tonumber(each.key))}_cloud-init.yaml"
 
   network {
     id     = 0
@@ -149,8 +150,8 @@ resource "proxmox_vm_qemu" "linux_operator" {
   }
 }
 
-resource "ansible_group" "linux_operator" {
-  name = "linux_operator"
+resource "ansible_group" "management_server" {
+  name = "management_server"
   variables = {
     ansible_user                 = local.machine_user
     ansible_ssh_private_key_file = local.ansible_ssh_private_key_path
@@ -161,11 +162,11 @@ resource "ansible_group" "pacemaker_qdevice" {
   name = "pacemaker_qdevice"
 }
 
-resource "ansible_host" "linux_operator" {
-  for_each = proxmox_vm_qemu.linux_operator
+resource "ansible_host" "management_server" {
+  for_each = proxmox_vm_qemu.management_server
 
   name   = each.value.name
-  groups = [ansible_group.linux_operator.name, ansible_group.pacemaker_qdevice.name]
+  groups = [ansible_group.management_server.name, ansible_group.pacemaker_qdevice.name]
   variables = {
     ansible_host    = each.value.ssh_host
     heartbeat_nw_ip = split("/", split("ip=", each.value.ipconfig1)[1])[0]

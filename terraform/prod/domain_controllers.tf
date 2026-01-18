@@ -1,9 +1,9 @@
 locals {
-  vm_settings__windows_operator = {
+  vm_settings__domain_controller = {
     "01" = {
-      host_name                = local.pve_hosts["pve-01"]["host_name"]
-      vm_id                    = 105
-      managemt_nw_host_section = 18
+      host_name                = local.pve_hosts["prod-prox-01"]["host_name"]
+      vm_id                    = 106
+      managemt_nw_host_section = 10
       cpu_socket               = 1
       cpu_core                 = 2
       memory                   = 1024 * 4
@@ -12,8 +12,8 @@ locals {
   }
 }
 
-resource "random_password" "vm_admin_password__windows_operator" {
-  for_each = local.vm_settings__windows_operator
+resource "random_password" "vm_admin_password__domain_controller" {
+  for_each = local.vm_settings__domain_controller
 
   # cloudbase-init requires passwords to be 20 characters or less (hardcoded)
   # https://github.com/cloudbase/cloudbase-init/issues/114
@@ -25,8 +25,8 @@ resource "random_password" "vm_admin_password__windows_operator" {
   special     = false
 }
 
-resource "random_password" "vm_user_password__windows_operator" {
-  for_each = local.vm_settings__windows_operator
+resource "random_password" "vm_user_password__domain_controller" {
+  for_each = local.vm_settings__domain_controller
 
   # cloudbase-init requires passwords to be 20 characters or less (hardcoded)
   # https://github.com/cloudbase/cloudbase-init/issues/114
@@ -38,12 +38,12 @@ resource "random_password" "vm_user_password__windows_operator" {
   special     = false
 }
 
-resource "terraform_data" "cloud_init_config__windows_operator" {
-  for_each = local.vm_settings__windows_operator
+resource "terraform_data" "cloud_init_config__domain_controller" {
+  for_each = local.vm_settings__domain_controller
   triggers_replace = [
-    filesha1("cloud-init/${local.env}-wop_cloud-init.yaml.tftpl"),
-    random_password.vm_admin_password__windows_operator[each.key],
-    random_password.vm_user_password__windows_operator[each.key]
+    filesha1("cloud-init/${local.env}-adds_cloud-init.yaml.tftpl"),
+    random_password.vm_admin_password__domain_controller[each.key],
+    random_password.vm_user_password__domain_controller[each.key]
   ]
 
   connection {
@@ -53,40 +53,41 @@ resource "terraform_data" "cloud_init_config__windows_operator" {
     private_key = base64decode(var.vm_ssh_private_key)
   }
   provisioner "file" {
-    content = templatefile("cloud-init/${local.env}-wop_cloud-init.yaml.tftpl", {
-      CI_HOSTNAME               = "${local.env}-wop-${format("%02d", tonumber(each.key))}",
-      CI_ADMIN_PASSWORD         = random_password.vm_admin_password__windows_operator[each.key].result,
+    content = templatefile("cloud-init/${local.env}-adds_cloud-init.yaml.tftpl", {
+      CI_HOSTNAME               = "${local.env}-adds-${format("%02d", tonumber(each.key))}",
+      CI_ADMIN_PASSWORD         = random_password.vm_admin_password__domain_controller[each.key].result,
       CI_MACHINEUSER_NAME       = local.machine_user,
-      CI_MACHINEUSER_PASSWORD   = random_password.vm_user_password__windows_operator[each.key].result,
+      CI_MACHINEUSER_PASSWORD   = random_password.vm_user_password__domain_controller[each.key].result,
       CI_MACHINEUSER_SSH_PUBKEY = base64decode(local.vm_ssh_public_key),
     })
-    destination = "/tmp/${local.env}-wop-${format("%02d", tonumber(each.key))}_cloud-init.yaml"
+    destination = "/tmp/${local.env}-adds-${format("%02d", tonumber(each.key))}_cloud-init.yaml"
   }
   provisioner "remote-exec" {
     inline = [
-      "echo '${var.pve_user_password}' | sudo -S mv /tmp/${local.env}-wop-${format("%02d", tonumber(each.key))}_cloud-init.yaml /var/lib/vz/snippets/",
+      "echo '${var.pve_user_password}' | sudo -S mv /tmp/${local.env}-adds-${format("%02d", tonumber(each.key))}_cloud-init.yaml /var/lib/vz/snippets/",
     ]
   }
 }
 
-resource "proxmox_vm_qemu" "windows_operator" {
-  for_each   = local.vm_settings__windows_operator
-  depends_on = [terraform_data.cloud_init_config__windows_operator]
+resource "proxmox_vm_qemu" "domain_controller" {
+  for_each   = local.vm_settings__domain_controller
+  depends_on = [terraform_data.cloud_init_config__domain_controller]
 
-  name               = "${local.env}-wop-${format("%02d", tonumber(each.key))}"
+  name               = "${local.env}-adds-${format("%02d", tonumber(each.key))}"
   target_node        = each.value.host_name
   vmid               = each.value.vm_id
-  description        = "Windows VM to operate something. This VM is managed by Terraform."
+  description        = "Active Directory domain contoller. This VM is managed by Terraform."
   bios               = "ovmf"
   start_at_node_boot = true
   agent              = 1
   clone              = "winsrv-2025"
   full_clone         = true
-  tags               = "${local.env};terraform;operator;windows-operator"
+  tags               = "${local.env};terraform;domain-controller"
   qemu_os            = "win11"
 
   startup_shutdown {
-    order            = -1 # Auto
+    # 待機系を先に落とす（例: 2台あるときは、#1 -> 2 + 1 - 1 = 優先度 2、#2 -> 2 + 1 - 2 = 優先度 1）
+    order            = length(local.vm_settings__domain_controller) + 1 - tonumber(each.key)
     startup_delay    = -1 # No delay
     shutdown_timeout = -1 # No delay
   }
@@ -107,7 +108,7 @@ resource "proxmox_vm_qemu" "windows_operator" {
 
   # cloud-init configuration
   os_type  = "cloud-init"
-  cicustom = "user=local:snippets/${local.env}-wop-${format("%02d", tonumber(each.key))}_cloud-init.yaml"
+  cicustom = "user=local:snippets/${local.env}-adds-${format("%02d", tonumber(each.key))}_cloud-init.yaml"
 
   network {
     id     = 0
@@ -157,8 +158,8 @@ resource "proxmox_vm_qemu" "windows_operator" {
   }
 }
 
-resource "ansible_group" "windows_operator" {
-  name = "windows_operator"
+resource "ansible_group" "domain_controller" {
+  name = "domain_controller"
   variables = {
     ansible_user                 = local.machine_user
     ansible_connection           = "psrp"
@@ -167,11 +168,11 @@ resource "ansible_group" "windows_operator" {
   }
 }
 
-resource "ansible_host" "windows_operator" {
-  for_each = proxmox_vm_qemu.windows_operator
+resource "ansible_host" "domain_controller" {
+  for_each = proxmox_vm_qemu.domain_controller
 
   name   = each.value.name
-  groups = [ansible_group.windows_operator.name]
+  groups = [ansible_group.domain_controller.name]
   variables = {
     ansible_host = each.value.ssh_host
   }
