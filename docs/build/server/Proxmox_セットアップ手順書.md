@@ -278,7 +278,7 @@
     pveum role add "$MACHINEUSER_ROLE"
     # 何も出力されなければ OK
 
-    pveum role modify "$MACHINEUSER_ROLE" --privs Pool.Allocate,Datastore.Allocate,Datastore.AllocateSpace,Datastore.AllocateTemplate,Datastore.Audit,SDN.Audit,Sys.Console,SDN.Use,Sys.Audit,Sys.Modify,VM.Allocate,VM.Audit,VM.Clone,VM.Config.CDROM,VM.Config.CPU,VM.Config.Cloudinit,VM.Config.Disk,VM.Config.HWType,VM.Config.Memory,VM.Config.Network,VM.Config.Options,VM.Migrate,VM.Monitor,VM.PowerMgmt
+    pveum role modify "$MACHINEUSER_ROLE" --privs  Datastore.Allocate,Datastore.AllocateSpace,Datastore.AllocateTemplate,Datastore.Audit,Pool.Allocate,Pool.Audit,SDN.Audit,SDN.Use,Sys.Audit,Sys.Console,Sys.Modify,VM.Allocate,VM.Audit,VM.Clone,VM.Config.CDROM,VM.Config.CPU,VM.Config.Cloudinit,VM.Config.Disk,VM.Config.HWType,VM.Config.Memory,VM.Config.Network,VM.Config.Options,VM.Migrate,VM.PowerMgmt
     # 何も出力されなければ OK
 
     # ロールが存在することを確認する。追加したロールと権限が表示されれば OK
@@ -323,7 +323,7 @@
     ╞══════════════╪══════════════════════════════════════╡
     │ full-tokenid │ machine-user@pam!tf                  │
     ├──────────────┼──────────────────────────────────────┤
-    │ info         │ {"privsep":1}                        │
+    │ info         │ {"privsep":0}                        │
     ├──────────────┼──────────────────────────────────────┤
     │ value        │ (シークレット値)                      │
     └──────────────┴──────────────────────────────────────┘
