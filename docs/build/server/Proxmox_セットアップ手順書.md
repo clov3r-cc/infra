@@ -33,7 +33,7 @@
 ## 3. 前提条件
 
 - `Proxmox 9.x`がインストール済みで、起動していること
-- ホスト名: `prox-01`
+- ホスト名: `prod-prox-01`
 
 ## 4. 作業手順
 
@@ -453,14 +453,14 @@
 3. イメージを Proxmox ホストにアップロードする
 
     ```shell
-    sftp proxmox-01 <<< $'put /mnt/c/Users/Lucky/Downloads/rhel-10.1-x86_64-kvm.qcow2 ./'
+    sftp prod-prox-01 <<< $'put /mnt/c/Users/Lucky/Downloads/rhel-10.1-x86_64-kvm.qcow2 ./'
     # エラーが出力されなければ OK
     ```
 
 4. アップロードしたイメージを移動する
 
     ```shell
-    ssh proxmox-01
+    ssh prod-prox-01
     VER='10.1'
     QCOW_NAME="rhel-${VER}-x86_64-kvm.qcow2"
     sudo mv "$QCOW_NAME" /var/lib/vz/template/iso/
@@ -504,7 +504,7 @@
     ダウンロード先URLは、[産業サイバーセキュリティセンターの Alma Linux ISO ミラー](https://ftp.udx.icscoe.jp/Linux/almalinux/10.0/cloud/x86_64/images/) を参照してください。
 
     ```shell
-    ssh proxmox-01
+    ssh prod-prox-01
     MAJOR_VER='10'
     VER="${MAJOR_VER}.0"
     QCOW_NAME="Alma-$VER.x86_64.qcow2"
