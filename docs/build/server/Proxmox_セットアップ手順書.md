@@ -312,7 +312,7 @@
     pveum role add "$MACHINEUSER_ROLE"
     # 何も出力されなければ OK
 
-    pveum role modify "$MACHINEUSER_ROLE" --privs  Datastore.Allocate,Datastore.AllocateSpace,Datastore.AllocateTemplate,Datastore.Audit,Pool.Allocate,Pool.Audit,SDN.Audit,SDN.Use,Sys.Audit,Sys.Console,Sys.Modify,VM.Allocate,VM.Audit,VM.Clone,VM.Config.CDROM,VM.Config.CPU,VM.Config.Cloudinit,VM.Config.Disk,VM.Config.HWType,VM.Config.Memory,VM.Config.Network,VM.Config.Options,VM.Migrate,VM.PowerMgmt
+    pveum role modify "$MACHINEUSER_ROLE" --privs Datastore.Allocate,Datastore.AllocateSpace,Datastore.AllocateTemplate,Datastore.Audit,Pool.Allocate,Pool.Audit,SDN.Audit,SDN.Use,Sys.Audit,Sys.Console,Sys.Modify,VM.Allocate,VM.Audit,VM.Clone,VM.Config.CDROM,VM.Config.CPU,VM.Config.Cloudinit,VM.Config.Disk,VM.Config.HWType,VM.Config.Memory,VM.Config.Network,VM.Config.Options,VM.Migrate,VM.PowerMgmt
     # 何も出力されなければ OK
 
     # ロールが存在することを確認する。追加したロールと権限が表示されれば OK
@@ -322,8 +322,8 @@
 5. Proxmox上のユーザを作成する
 
     ```shell
-    # @pam でレルムに Proxmox VE authentication server を指定する
-    MACHINEUSER_USERNAME='machine-user@pam'
+    # @pve でレルムに Proxmox VE authentication server を指定する
+    MACHINEUSER_USERNAME='machine-user@pve'
 
     # ユーザが存在しないことを確認する。何も出力されなければ OK
     pveum user list | grep "$MACHINEUSER_USERNAME"
@@ -355,7 +355,7 @@
     ┌──────────────┬──────────────────────────────────────┐
     │ key          │ value                                │
     ╞══════════════╪══════════════════════════════════════╡
-    │ full-tokenid │ machine-user@pam!tf                  │
+    │ full-tokenid │ machine-user@pve!tf                  │
     ├──────────────┼──────────────────────────────────────┤
     │ info         │ {"privsep":0}                        │
     ├──────────────┼──────────────────────────────────────┤
