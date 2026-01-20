@@ -40,7 +40,7 @@
 1. LXCコンテナのリストを更新する
 
     ```shell
-    ssh prox-01
+    ssh prod-prox-01
 
     sudo pveam update
     # update successful と表示されればOK
