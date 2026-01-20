@@ -12,15 +12,16 @@
 - [4. 作業手順](#4-作業手順)
   - [4.1. エンタープライズ向けリポジトリへの参照を非エンタープライズ向けのものに変更する](#41-エンタープライズ向けリポジトリへの参照を非エンタープライズ向けのものに変更する)
   - [4.2. rootのパスワードを任意のものに変更する](#42-rootのパスワードを任意のものに変更する)
-  - [4.3. 作業用ユーザを追加する](#43-作業用ユーザを追加する)
-  - [4.4. CI/CD用ユーザを追加する](#44-cicd用ユーザを追加する)
-  - [4.5. SSHサーバの設定をする](#45-sshサーバの設定をする)
-  - [4.6. cloud-init の準備をする](#46-cloud-init-の準備をする)
-    - [4.6.1. Red Hat Enterprise Linux の VM テンプレートを作成する](#461-red-hat-enterprise-linux-の-vm-テンプレートを作成する)
-    - [4.6.2. Alma Linux の VM テンプレートを作成する](#462-alma-linux-の-vm-テンプレートを作成する)
-  - [4.7. ネットワークブリッジを作成する](#47-ネットワークブリッジを作成する)
-    - [4.7.1. 管理用 NW を追加する](#471-管理用-nw-を追加する)
-    - [4.7.2. Zabbix Server のハートビートに用いる NW を追加する](#472-zabbix-server-のハートビートに用いる-nw-を追加する)
+  - [4.3. パスワードレス`sudo`認証を有効にする](#43-パスワードレスsudo認証を有効にする)
+  - [4.4. 作業用ユーザを追加する](#44-作業用ユーザを追加する)
+  - [4.5. CI/CD用ユーザを追加する](#45-cicd用ユーザを追加する)
+  - [4.6. SSHサーバの設定をする](#46-sshサーバの設定をする)
+  - [4.7. cloud-init の準備をする](#47-cloud-init-の準備をする)
+    - [4.7.1. Red Hat Enterprise Linux の VM テンプレートを作成する](#471-red-hat-enterprise-linux-の-vm-テンプレートを作成する)
+    - [4.7.2. Alma Linux の VM テンプレートを作成する](#472-alma-linux-の-vm-テンプレートを作成する)
+  - [4.8. ネットワークブリッジを作成する](#48-ネットワークブリッジを作成する)
+    - [4.8.1. 管理用 NW を追加する](#481-管理用-nw-を追加する)
+    - [4.8.2. Zabbix Server のハートビートに用いる NW を追加する](#482-zabbix-server-のハートビートに用いる-nw-を追加する)
 - [5. 完了条件](#5-完了条件)
 
 <!-- /code_chunk_output -->
@@ -120,7 +121,40 @@
     passwd: password updated successfully
     ```
 
-### 4.3. 作業用ユーザを追加する
+### 4.3. パスワードレス`sudo`認証を有効にする
+
+1. `libpam-ssh-agent-auth`をインストールする
+
+    ```shell
+    apt update && apt install -y libpam-ssh-agent-auth
+    # エラーが出力されなければ OK
+    ```
+
+2. `SSH Agent`用の環境変数を保持する設定をする
+
+    ```shell
+    EDITOR=vim visudo
+    # 以下内容を追加
+
+    # Keep SSH_AUTH_SOCK to forward ssh-agent
+    Defaults env_keep += "SSH_AUTH_SOCK"
+
+    :wq
+    ```
+
+3. `sudo`の認証に公開鍵を用いる設定をする
+
+    ```shell
+    vim /etc/pam.d/sudo
+    # 以下内容を冒頭に追加
+
+    # Use pubkey
+    auth sufficient pam_ssh_agent_auth.so file=~/.ssh/authorized_keys
+
+    :wq
+    ```
+
+### 4.4. 作業用ユーザを追加する
 
 1. 作業用ユーザを追加
 
@@ -180,7 +214,7 @@
     $ exit
     ```
 
-### 4.4. CI/CD用ユーザを追加する
+### 4.5. CI/CD用ユーザを追加する
 
 1. Linux上のユーザを追加する
 
@@ -337,7 +371,7 @@
     └─────────┴─────────┴────────┴─────────┘
     ```
 
-### 4.5. SSHサーバの設定をする
+### 4.6. SSHサーバの設定をする
 
 1. sshdの設定を変更する
 
@@ -380,7 +414,7 @@
     ssh root@192.168.20.2 # will fail
     ```
 
-### 4.6. cloud-init の準備をする
+### 4.7. cloud-init の準備をする
 
 1. snippets を有効化する
 
@@ -398,7 +432,7 @@
     dump  images  snippets  template
     ```
 
-#### 4.6.1. Red Hat Enterprise Linux の VM テンプレートを作成する
+#### 4.7.1. Red Hat Enterprise Linux の VM テンプレートを作成する
 
 ここでは、Red Hat Enterprise Linux 10.1 (x86_64) の Generic Cloud イメージ を使用します。
 
@@ -461,7 +495,7 @@
     echo 'OK.'
     ```
 
-#### 4.6.2. Alma Linux の VM テンプレートを作成する
+#### 4.7.2. Alma Linux の VM テンプレートを作成する
 
 ここでは、Alma Linux 10.0 (x86_64) の Generic Cloud イメージ をダウンロードすることします。
 
@@ -519,9 +553,9 @@
     echo 'OK.'
     ```
 
-### 4.7. ネットワークブリッジを作成する
+### 4.8. ネットワークブリッジを作成する
 
-#### 4.7.1. 管理用 NW を追加する
+#### 4.8.1. 管理用 NW を追加する
 
 1. Proxmox Web UI にログインする
 
@@ -555,7 +589,7 @@
 
     ネットワーク設定画面で `vmbr1` が表示されていることを確認する
 
-#### 4.7.2. Zabbix Server のハートビートに用いる NW を追加する
+#### 4.8.2. Zabbix Server のハートビートに用いる NW を追加する
 
 1. Proxmox Web UI にログインする
 
@@ -595,3 +629,4 @@
 - `Proxmox`ホストに対するSSH接続において、CI/CD用ユーザが作成されていて、そのユーザとしてログインできること
 - cloud-init に使用する VM のテンプレートとスニペットの設定がされていること
 - `Linux Bridge`が作成されていること
+- パスワードを用いずに`sudo`コマンドを実行できること
