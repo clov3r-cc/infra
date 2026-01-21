@@ -466,15 +466,9 @@
 3. VM のテンプレートを作成する
 
     ```shell
-    ISO_DIR='/var/lib/vz/template/iso'
-
-    echo 'Customizing iso...'
     sudo virt-customize -a "$ISO_DIR/$QCOW_NAME" --run-command 'echo -n >/etc/machine-id'
-    echo 'OK!!!'
-    echo ''
 
-    echo 'Creating VM template...'
-    VM_TMPL_ID=902
+    VM_TMPL_ID=901
     VM_TMPL_NAME="alma-$VER"
     VM_DISK_STORAGE=local-lvm
     sudo qm destroy "$VM_TMPL_ID" --purge || true
@@ -488,7 +482,6 @@
     sudo qm template $VM_TMPL_ID
     # WARNING: Combining activation change with other commands is not advised.
     # という警告は無視できる
-    echo 'OK.'
     ```
 
 ### 4.8. ネットワークブリッジを作成する
