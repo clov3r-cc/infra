@@ -432,70 +432,7 @@
     dump  images  snippets  template
     ```
 
-#### 4.7.1. Red Hat Enterprise Linux の VM テンプレートを作成する
-
-ここでは、Red Hat Enterprise Linux 10.1 (x86_64) の Generic Cloud イメージ を使用します。
-
-1. イメージをダウンロードする
-
-    ダウンロード先URLは、[Red Hat Customer Portal](https://access.redhat.com/downloads/content/479/ver=/rhel---10/10.1/x86_64/product-software) を参照してください。
-
-    イメージの種類は Red Hat Enterprise Linux 10.1 KVM Guest Image を使用します。
-
-2. チェックサムを確認する
-
-    照合元のチェックサムはダウンロード元URLと同じページに記載されています。
-
-    ```shell
-    sha256sum /mnt/c/Users/Lucky/Downloads/rhel-10.1-x86_64-kvm.qcow2
-    ```
-
-3. イメージを Proxmox ホストにアップロードする
-
-    ```shell
-    sftp prod-prox-01 <<< $'put /mnt/c/Users/Lucky/Downloads/rhel-10.1-x86_64-kvm.qcow2 ./'
-    # エラーが出力されなければ OK
-    ```
-
-4. アップロードしたイメージを移動する
-
-    ```shell
-    ssh prod-prox-01
-    VER='10.1'
-    QCOW_NAME="rhel-${VER}-x86_64-kvm.qcow2"
-    sudo mv "$QCOW_NAME" /var/lib/vz/template/iso/
-    # エラーが出力されなければ OK
-    ```
-
-5. VM のテンプレートを作成する
-
-    ```shell
-    ISO_DIR='/var/lib/vz/template/iso'
-
-    echo 'Customizing iso...'
-    sudo virt-customize -a "$ISO_DIR/$QCOW_NAME" --run-command 'echo -n > /etc/machine-id'
-    echo 'OK!!!'
-    echo ''
-
-    echo 'Creating VM template...'
-    VM_TMPL_ID=901
-    VM_TMPL_NAME="rhel-$VER"
-    VM_DISK_STORAGE=local-lvm
-    sudo qm destroy "$VM_TMPL_ID" --purge || true
-    sudo qm create $VM_TMPL_ID --name $VM_TMPL_NAME --memory 2048 --cores 2 --net0 virtio,bridge=vmbr0
-    sudo qm set $VM_TMPL_ID --scsihw virtio-scsi-single
-    sudo qm set $VM_TMPL_ID --virtio0 "${VM_DISK_STORAGE}:0,import-from=$ISO_DIR/$QCOW_NAME"
-    sudo qm set $VM_TMPL_ID --boot c --bootdisk virtio0
-    sudo qm set $VM_TMPL_ID --ide2 "${VM_DISK_STORAGE}:cloudinit"
-    sudo qm set $VM_TMPL_ID --serial0 socket --vga serial0
-    sudo qm set $VM_TMPL_ID --agent enabled=1,fstrim_cloned_disks=1
-    sudo qm template $VM_TMPL_ID
-    # WARNING: Combining activation change with other commands is not advised.
-    # という警告は無視できる
-    echo 'OK.'
-    ```
-
-#### 4.7.2. Alma Linux の VM テンプレートを作成する
+#### 4.7.1. Alma Linux の VM テンプレートを作成する
 
 ここでは、Alma Linux 10.0 (x86_64) の Generic Cloud イメージ をダウンロードすることします。
 
