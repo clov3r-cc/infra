@@ -443,7 +443,7 @@
     ```shell
     ssh prod-prox-01
     MAJOR_VER='10'
-    VER="${MAJOR_VER}.0"
+    VER="${MAJOR_VER}.1"
     QCOW_NAME="Alma-$VER.x86_64.qcow2"
     curl -o "$QCOW_NAME" "https://ftp.udx.icscoe.jp/Linux/almalinux/$VER/cloud/x86_64/images/AlmaLinux-${MAJOR_VER}-GenericCloud-latest.x86_64.qcow2"
     # エラーが出力されなければ OK
