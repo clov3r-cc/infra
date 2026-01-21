@@ -105,7 +105,7 @@
 
     ```shell
     apt update && apt upgrade -y && apt dist-upgrade -y && \
-      apt install sudo pwgen vim -y
+      apt install guestfs-tools sudo pwgen vim -y
     # エラーが表示されなければ OK
     ```
 
