@@ -17,8 +17,8 @@
   - [4.5. CI/CD用ユーザを追加する](#45-cicd用ユーザを追加する)
   - [4.6. SSHサーバの設定をする](#46-sshサーバの設定をする)
   - [4.7. cloud-init の準備をする](#47-cloud-init-の準備をする)
-    - [4.7.1. Red Hat Enterprise Linux の VM テンプレートを作成する](#471-red-hat-enterprise-linux-の-vm-テンプレートを作成する)
-    - [4.7.2. Alma Linux の VM テンプレートを作成する](#472-alma-linux-の-vm-テンプレートを作成する)
+    - [4.7.1. Alma Linux の VM テンプレートを作成する](#471-alma-linux-の-vm-テンプレートを作成する)
+    - [4.7.2. Windows Server 2025 の VM テンプレートを作成する](#472-windows-server-2025-の-vm-テンプレートを作成する)
   - [4.8. ネットワークブリッジを作成する](#48-ネットワークブリッジを作成する)
     - [4.8.1. 管理用 NW を追加する](#481-管理用-nw-を追加する)
     - [4.8.2. Zabbix Server のハートビートに用いる NW を追加する](#482-zabbix-server-のハートビートに用いる-nw-を追加する)
@@ -483,6 +483,10 @@
     # WARNING: Combining activation change with other commands is not advised.
     # という警告は無視できる
     ```
+
+#### 4.7.2. Windows Server 2025 の VM テンプレートを作成する
+
+[WinSrv2025_セットアップ手順書.md](WinSrv2025_セットアップ手順書.md)を参照のこと。
 
 ### 4.8. ネットワークブリッジを作成する
 
