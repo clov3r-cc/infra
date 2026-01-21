@@ -449,16 +449,17 @@
     # エラーが出力されなければ OK
 
     # チェックサムを照合
-    | DOWNLOADED_CHECKSUM=$(curl -sS https://repo.almalinux.org/almalinux/${MAJOR_VER}/cloud/x86_64/images/CHECKSUM | grep "GenericCloud-$VER" | awk '{print $1}') |
-    | FILE_CHECKSUM=$(sha256sum "$QCOW_NAME"                                                                        | awk '{print $1}')        |                   |
-    if [ $DOWNLOADED_CHECKSUM = $FILE_CHECKSUM ]; then echo 'OK.'; else echo 'CHECKSUM UNMATCHED!!'; fi
+    DOWNLOADED_CHECKSUM=$(curl -sS "https://repo.almalinux.org/almalinux/${MAJOR_VER}/cloud/x86_64/images/CHECKSUM" | grep "GenericCloud-$VER" | awk '{print $1}')
+    FILE_CHECKSUM=$(sha256sum "$QCOW_NAME" | awk '{print $1}')
+    if [ "$DOWNLOADED_CHECKSUM" = "$FILE_CHECKSUM" ]; then echo 'OK.'; else echo 'CHECKSUM UNMATCHED!!'; fi
     # OK. と出力されればよい
     ```
 
 2. アップロードしたイメージを移動する
 
     ```shell
-    sudo mv "$QCOW_NAME" /var/lib/vz/template/iso/
+    ISO_DIR='/var/lib/vz/template/iso'
+    sudo mv "$QCOW_NAME" "$ISO_DIR/"
     # エラーが出力されなければ OK
     ```
 
