@@ -22,6 +22,7 @@
   - [4.8. ネットワークブリッジを作成する](#48-ネットワークブリッジを作成する)
     - [4.8.1. 管理用 NW を追加する](#481-管理用-nw-を追加する)
     - [4.8.2. Zabbix Server のハートビートに用いる NW を追加する](#482-zabbix-server-のハートビートに用いる-nw-を追加する)
+  - [4.9. イーサネットポートを有効にする](#49-イーサネットポートを有効にする)
 - [5. 完了条件](#5-完了条件)
 
 <!-- /code_chunk_output -->
@@ -555,6 +556,40 @@
 6. ブリッジが作成されたことを確認する
 
     ネットワーク設定画面で `vmbr2` が表示されていることを確認する
+
+### 4.9. イーサネットポートを有効にする
+
+1. 現在のイーサネットポートの状態を確認する
+
+    ```shell
+    $ ip link
+    ...
+    # State が DOWN
+    3: enxc8a362a24690: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel master vmbr1 state DOWN mode DEFAULT group default qlen 1000
+        link/ether c8:a3:62:a2:46:90 brd ff:ff:ff:ff:ff:ff
+    ...
+    $
+    ```
+
+2. ポートをリンクアップさせる
+
+    ```shell
+    sudo ip link set enxc8a362a24690 up
+    ```
+
+3. 現在のイーサネットポートの状態を確認する
+
+    `State`が`DOWN`であることを確認する
+
+    ```shell
+    $ ip link
+    ...
+    # State が UP
+    3: enxc8a362a24690: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel master vmbr1 state DOWN mode DEFAULT group default qlen 1000
+        link/ether c8:a3:62:a2:46:90 brd ff:ff:ff:ff:ff:ff
+    ...
+    $
+    ```
 
 ## 5. 完了条件
 
