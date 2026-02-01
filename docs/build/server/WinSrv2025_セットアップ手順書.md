@@ -28,7 +28,8 @@
       - [4.7.3.1. cloudbase-init.conf](#4731-cloudbase-initconf)
       - [4.7.3.2. cloudbase-init-unattend.conf](#4732-cloudbase-init-unattendconf)
     - [4.7.4. シャットダウンする](#474-シャットダウンする)
-  - [4.8. テンプレートに変換する](#48-テンプレートに変換する)
+    - [4.7.5. CD/DVD ドライブを外す](#475-cddvd-ドライブを外す)
+    - [4.7.6. テンプレートに変換する](#476-テンプレートに変換する)
 - [5. 完了条件](#5-完了条件)
 
 <!-- /code_chunk_output -->
@@ -391,10 +392,30 @@ stop_service_on_exit=false
 
 #### 4.7.4. シャットダウンする
 
+1. Cloudbase-Init のインストールを完了させる
+
 Cloudbase-Init のインストール完了の画面が表示されているので、Finish を選択
 ![言語選択](./diagrams/winsrv2025_setup/install-cloudbase-init/06-completed-installation.png)
 
-### 4.8. テンプレートに変換する
+2. VM が停止したことを確認する
+
+```bash
+uname -n
+# prod-prox-01
+
+sudo qm status $VM_ID
+# status: stopped と表示されれば OK
+```
+
+#### 4.7.5. CD/DVD ドライブを外す
+
+```bash
+for i in 0 1 2; do
+  sudo qm set $VM_ID -delete ide${i}
+done
+```
+
+#### 4.7.6. テンプレートに変換する
 
 ```bash
 uname -n
