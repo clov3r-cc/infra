@@ -119,8 +119,8 @@ resource "proxmox_vm_qemu" "domain_controller" {
   ipconfig0 = "ip=${cidrhost(local.vm_management_nw_subnet_cidr, each.value.managemt_nw_host_section)}${"/${local.vm_management_nw_subnet_mask}"},gw=${local.vm_management_nw_default_gw}"
 
   disks {
-    virtio {
-      virtio0 {
+    scsi {
+      scsi0 {
         disk {
           size     = "${each.value.os_disk_size}G"
           storage  = local.vm_disk_storage
