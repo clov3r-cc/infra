@@ -28,17 +28,17 @@ locals {
   #region Proxmox VE
 
   pve_hosts = {
-    "pve-01" = {
-      host_name  = "pve-01"
+    "prod-prox-01" = {
+      host_name  = "prod-prox-01"
       ip_address = "192.168.21.2"
     }
   }
 
-  env = "prd"
+  env = "prod"
 
   machine_user = "machine-user"
 
-  vm_template__alma = "alma-10.0"
+  vm_template__alma = "alma-10.1"
   vm_disk_storage   = "local-lvm"
   vm_ssh_public_key = <<EOT
 c3NoLWVkMjU1MTkgQUFBQUMzTnphQzFsWkRJMU5URTVBQUFBSU1IWitzblhERk5WSzg5c2ZLQXEx

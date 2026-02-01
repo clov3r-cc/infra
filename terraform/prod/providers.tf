@@ -41,7 +41,7 @@ provider "random" {
 }
 
 provider "proxmox" {
-  pm_api_url          = "https://${local.pve_hosts["pve-01"].ip_address}:8006/api2/json"
+  pm_api_url          = "https://${local.pve_hosts["prod-prox-01"].ip_address}:8006/api2/json"
   pm_api_token_id     = var.pve_api_token_id
   pm_api_token_secret = var.pve_api_token_secret
   pm_http_headers     = "CF-Access-Client-Id,${var.pve_cf_client_id},CF-Access-Client-Secret,${var.pve_cf_client_secret}"

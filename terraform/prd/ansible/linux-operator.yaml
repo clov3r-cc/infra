@@ -1,4 +1,0 @@
----
-- hosts: linux_operator
-  roles:
-    - common

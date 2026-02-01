@@ -10,16 +10,17 @@
 - [2. 目的・概要](#2-目的概要)
 - [3. 前提条件](#3-前提条件)
 - [4. 作業手順](#4-作業手順)
-  - [4.1. ホスト）4.5.1. LXCコンテナに用いるイメージリストを更新する](#41-ホスト451-lxcコンテナに用いるイメージリストを更新する)
+  - [4.1. ホスト）LXCコンテナに用いるイメージリストを更新する](#41-ホストlxcコンテナに用いるイメージリストを更新する)
   - [4.2. ホスト）LXCコンテナに用いるイメージを取得する](#42-ホストlxcコンテナに用いるイメージを取得する)
   - [4.3. ホスト）LXCコンテナを作成する](#43-ホストlxcコンテナを作成する)
   - [4.4. コンテナ）コンテナのパッケージを最新化する](#44-コンテナコンテナのパッケージを最新化する)
-  - [4.5. コンテナ）作業用ユーザを追加する](#45-コンテナ作業用ユーザを追加する)
-  - [4.6. コンテナ）SSHサーバの設定をする](#46-コンテナsshサーバの設定をする)
-  - [4.7. ホスト）コンテナを特権モードで動作させる](#47-ホストコンテナを特権モードで動作させる)
-  - [4.8. コンテナ）`Tailscale`をセットアップする](#48-コンテナtailscaleをセットアップする)
-  - [4.9. `Tailscale`で経路の広告（アドバタイズ）を設定する](#49-tailscaleで経路の広告アドバタイズを設定する)
-  - [4.10. `Tailscale`の鍵の有効期限を無効化をする](#410-tailscaleの鍵の有効期限を無効化をする)
+  - [4.5. コンテナ）パスワードレス`sudo`認証を有効にする](#45-コンテナパスワードレスsudo認証を有効にする)
+  - [4.6. コンテナ）作業用ユーザを追加する](#46-コンテナ作業用ユーザを追加する)
+  - [4.7. コンテナ）SSHサーバの設定をする](#47-コンテナsshサーバの設定をする)
+  - [4.8. ホスト）コンテナを特権モードで動作させる](#48-ホストコンテナを特権モードで動作させる)
+  - [4.9. コンテナ）`Tailscale`をセットアップする](#49-コンテナtailscaleをセットアップする)
+  - [4.10. `Tailscale`で経路の広告（アドバタイズ）を設定する](#410-tailscaleで経路の広告アドバタイズを設定する)
+  - [4.11. `Tailscale`の鍵の有効期限を無効化をする](#411-tailscaleの鍵の有効期限を無効化をする)
 - [5. 完了条件](#5-完了条件)
 
 <!-- /code_chunk_output -->
@@ -34,12 +35,12 @@
 
 ## 4. 作業手順
 
-### 4.1. ホスト）4.5.1. LXCコンテナに用いるイメージリストを更新する
+### 4.1. ホスト）LXCコンテナに用いるイメージリストを更新する
 
 1. LXCコンテナのリストを更新する
 
     ```shell
-    ssh pve-01
+    ssh prod-prox-01
 
     sudo pveam update
     # update successful と表示されればOK
@@ -88,7 +89,7 @@
     sudo pct create "$VM_ID" "local:vztmpl/${IMAGE_TEMPLATE}" \
       --arch amd64 \
       --ostype debian \
-      --hostname prd-tsc-01 \
+      --hostname prod-tail-01 \
       --unprivileged 1 \
       --features nesting=1 \
       --password "$ROOT_PASSWORD" \
@@ -122,7 +123,40 @@
       apt install curl sudo vim -y
     ```
 
-### 4.5. コンテナ）作業用ユーザを追加する
+### 4.5. コンテナ）パスワードレス`sudo`認証を有効にする
+
+1. `libpam-ssh-agent-auth`をインストールする
+
+    ```shell
+    apt update && apt install -y libpam-ssh-agent-auth
+    # エラーが出力されなければ OK
+    ```
+
+2. `SSH Agent`用の環境変数を保持する設定をする
+
+    ```shell
+    EDITOR=vim visudo
+    # 以下内容を追加
+
+    # Keep SSH_AUTH_SOCK to forward ssh-agent
+    Defaults env_keep += "SSH_AUTH_SOCK"
+
+    :wq
+    ```
+
+3. `sudo`の認証に公開鍵を用いる設定をする
+
+    ```shell
+    vim /etc/pam.d/sudo
+    # 以下内容を冒頭に追加
+
+    # Use pubkey
+    auth sufficient pam_ssh_agent_auth.so file=~/.ssh/authorized_keys
+
+    :wq
+    ```
+
+### 4.6. コンテナ）作業用ユーザを追加する
 
 1. 作業用ユーザを追加
 
@@ -145,7 +179,7 @@
     lucky : lucky sudo users
     ```
 
-### 4.6. コンテナ）SSHサーバの設定をする
+### 4.7. コンテナ）SSHサーバの設定をする
 
 1. `sshd`の設定を変更する
 
@@ -173,10 +207,7 @@
     ```shell
     sshd -t # 出力が何も無いことを確認する
 
-    ### LXCコンテナ特有の問題なのか、ポートの変更をするにはssh.socketも再起動させる必要がある
-    ### ref. https://forum.proxmox.com/threads/ssh-doesnt-work-as-expected-in-lxc.54691/page-2
-    systemctl disable ssh.socket
-    systemctl enable ssh
+    sudo reboot
     ```
 
 4. 別ターミナルで、以下のことを確認する
@@ -198,12 +229,12 @@
     sudo systemctl poweroff
     ```
 
-### 4.7. ホスト）コンテナを特権モードで動作させる
+### 4.8. ホスト）コンテナを特権モードで動作させる
 
 1. ProxmoxホストにSSH接続する
 
     ```shell
-    ssh proxmox-01
+    ssh prod-prox-01
     ```
 
 2. 特権モードで動作させるために、以下の書き込みをする
@@ -223,12 +254,12 @@
     exit
     ```
 
-### 4.8. コンテナ）`Tailscale`をセットアップする
+### 4.9. コンテナ）`Tailscale`をセットアップする
 
 1. コンテナにIPフォワーディングを許可する
 
     ```shell
-    ssh prd-tsc-01
+    ssh prod-tail-01
 
     echo 'net.ipv4.ip_forward = 1' | sudo tee /etc/sysctl.d/99-tailscale.conf
     echo 'net.ipv6.conf.all.forwarding = 1' | sudo tee -a /etc/sysctl.d/99-tailscale.conf
@@ -241,7 +272,7 @@
 2. `Tailscale`をインストールする
 
     ```shell
-    ssh prd-tsc-01
+    ssh prod-tail-01
 
     curl -fsSL https://tailscale.com/install.sh | sh
     sudo tailscale up --advertise-routes=192.168.21.0/24 --accept-routes
@@ -249,24 +280,25 @@
     exit
     ```
 
-### 4.9. `Tailscale`で経路の広告（アドバタイズ）を設定する
+### 4.10. `Tailscale`で経路の広告（アドバタイズ）を設定する
 
 1. [Tailscale](https://login.tailscale.com/admin/machines)を開く。
-2. `prd-tsc-01` > `Edit route settings...`を押下する
+2. `prod-tail-01` > `Edit route settings...`を押下する
 3. `Subnet routes` > `192.168.21.0/24` にチェックを入れる
 4. `Save`を押下する
 
-### 4.10. `Tailscale`の鍵の有効期限を無効化をする
+### 4.11. `Tailscale`の鍵の有効期限を無効化をする
 
 ref. <https://tailscale.com/kb/1028/key-expiry>
 
-1. `prd-tsc-01` > `Disable key expiry`を押下する
+1. `prod-tail-01` > `Disable key expiry`を押下する
 
 ## 5. 完了条件
 
 - LXCコンテナに対するSSH接続において、`root`ユーザとしてログインできないこと
 - LXCコンテナに対するSSH接続において、作業用ユーザが作成されていて、そのユーザとしてログインできること
+- パスワードを用いずに`sudo`コマンドを実行できること
 - `Tailscale`により、インターネットからセキュアにネットワーク内にアクセスできること
-- `Tailscale`において、`prd-tsc-01`に以下の設定をしていること
+- `Tailscale`において、`prod-tail-01`に以下の設定をしていること
   - 鍵の有効期限なし
   - サブネットを広告している

@@ -1,0 +1,2 @@
+[tasks.show-inventory]
+run = "uv run ansible-inventory -i ansible/inventory_src.yaml --list --yaml"

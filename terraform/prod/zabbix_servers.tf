@@ -1,9 +1,9 @@
 locals {
   vm_settings__zabbix_server = {
     "01" = {
-      host_name                 = local.pve_hosts["pve-01"]["host_name"]
+      host_name                 = local.pve_hosts["prod-prox-01"]["host_name"]
       vm_id                     = 102
-      managemt_nw_host_section  = 14
+      managemt_nw_host_section  = 5
       heartbeat_nw_host_section = 1
       cpu_socket                = 1
       cpu_core                  = 2
@@ -11,9 +11,9 @@ locals {
       os_disk_size              = 15
     }
     "02" = {
-      host_name                 = local.pve_hosts["pve-01"]["host_name"]
+      host_name                 = local.pve_hosts["prod-prox-01"]["host_name"]
       vm_id                     = 103
-      managemt_nw_host_section  = 15
+      managemt_nw_host_section  = 6
       heartbeat_nw_host_section = 2
       cpu_socket                = 1
       cpu_core                  = 2
@@ -54,18 +54,18 @@ resource "terraform_data" "cloud_init_config__zabbix_server" {
     private_key = base64decode(var.vm_ssh_private_key)
   }
   provisioner "file" {
-    content = templatefile("cloud-init/${local.env}-zbx_cloud-init.yaml.tftpl", {
-      CI_HOSTNAME               = "${local.env}-zbx-${format("%02d", tonumber(each.key))}",
+    content = templatefile("cloud-init/${local.env}-zbbx_cloud-init.yaml.tftpl", {
+      CI_HOSTNAME               = "${local.env}-zbbx-${format("%02d", tonumber(each.key))}",
       CI_ROOT_PASSWORD          = random_password.vm_root_password__zabbix_server[each.key].result,
       CI_MACHINEUSER_NAME       = local.machine_user,
       CI_MACHINEUSER_PASSWORD   = random_password.vm_user_password__zabbix_server[each.key].result,
       CI_MACHINEUSER_SSH_PUBKEY = base64decode(local.vm_ssh_public_key),
     })
-    destination = "/tmp/${local.env}-zbx-${format("%02d", tonumber(each.key))}_cloud-init.yaml"
+    destination = "/tmp/${local.env}-zbbx-${format("%02d", tonumber(each.key))}_cloud-init.yaml"
   }
   provisioner "remote-exec" {
     inline = [
-      "echo '${var.pve_user_password}' | sudo -S mv /tmp/${local.env}-zbx-${format("%02d", tonumber(each.key))}_cloud-init.yaml /var/lib/vz/snippets/",
+      "echo '${var.pve_user_password}' | sudo -S mv /tmp/${local.env}-zbbx-${format("%02d", tonumber(each.key))}_cloud-init.yaml /var/lib/vz/snippets/",
     ]
   }
 }
@@ -79,7 +79,7 @@ resource "proxmox_vm_qemu" "zabbix_server" {
   for_each   = local.vm_settings__zabbix_server
   depends_on = [terraform_data.cloud_init_config__zabbix_server]
 
-  name               = "${local.env}-zbx-${format("%02d", tonumber(each.key))}"
+  name               = "${local.env}-zbbx-${format("%02d", tonumber(each.key))}"
   target_node        = each.value.host_name
   vmid               = each.value.vm_id
   description        = "Zabbix Server. This VM is managed by Terraform."
@@ -114,7 +114,7 @@ resource "proxmox_vm_qemu" "zabbix_server" {
 
   # cloud-init configuration
   os_type  = "cloud-init"
-  cicustom = "user=local:snippets/${local.env}-zbx-${format("%02d", tonumber(each.key))}_cloud-init.yaml"
+  cicustom = "user=local:snippets/${local.env}-zbbx-${format("%02d", tonumber(each.key))}_cloud-init.yaml"
 
   network {
     id     = 0

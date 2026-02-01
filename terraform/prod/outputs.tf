@@ -1,6 +1,6 @@
 #region Proxmox VE
 
-output "zabbix_servers__prd" {
+output "zabbix_servers__prod" {
   value = [for vm in proxmox_vm_qemu.zabbix_server : {
     host_name   = vm.current_node
     id          = vm.vmid
@@ -19,8 +19,8 @@ output "zabbix_servers__prd" {
   }]
 }
 
-output "linux_operators__prd" {
-  value = [for vm in proxmox_vm_qemu.linux_operator : {
+output "management_servers__prod" {
+  value = [for vm in proxmox_vm_qemu.management_server : {
     host_name   = vm.current_node
     id          = vm.vmid
     name        = vm.name
@@ -60,7 +60,7 @@ output "oci_identity_availability_domain" {
   value = data.oci_identity_availability_domain.ad
 }
 
-output "cloud-server__prd" {
+output "cloud-server__prod" {
   value = {
     id        = oci_core_instance.cloud_server.id
     host_name = oci_core_instance.cloud_server.display_name

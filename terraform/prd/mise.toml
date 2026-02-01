@@ -1,2 +1,0 @@
-[env]
-ANSIBLE_VAULT_PASSWORD_FILE = './ansible/files/get_vault_password.sh'

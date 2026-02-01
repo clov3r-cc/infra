@@ -1,5 +1,7 @@
 default: true
 MD013:
   line_length: 200
+  # Disable checks on a code block
+  code_blocks: false
 MD060:
   enabled: false

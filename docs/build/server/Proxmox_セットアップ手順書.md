@@ -12,15 +12,17 @@
 - [4. 作業手順](#4-作業手順)
   - [4.1. エンタープライズ向けリポジトリへの参照を非エンタープライズ向けのものに変更する](#41-エンタープライズ向けリポジトリへの参照を非エンタープライズ向けのものに変更する)
   - [4.2. rootのパスワードを任意のものに変更する](#42-rootのパスワードを任意のものに変更する)
-  - [4.3. 作業用ユーザを追加する](#43-作業用ユーザを追加する)
-  - [4.4. CI/CD用ユーザを追加する](#44-cicd用ユーザを追加する)
-  - [4.5. SSHサーバの設定をする](#45-sshサーバの設定をする)
-  - [4.6. cloud-init の準備をする](#46-cloud-init-の準備をする)
-    - [4.6.1. Red Hat Enterprise Linux の VM テンプレートを作成する](#461-red-hat-enterprise-linux-の-vm-テンプレートを作成する)
-    - [4.6.2. Alma Linux の VM テンプレートを作成する](#462-alma-linux-の-vm-テンプレートを作成する)
-  - [4.7. ネットワークブリッジを作成する](#47-ネットワークブリッジを作成する)
-    - [4.7.1. 管理用 NW を追加する](#471-管理用-nw-を追加する)
-    - [4.7.2. Zabbix Server のハートビートに用いる NW を追加する](#472-zabbix-server-のハートビートに用いる-nw-を追加する)
+  - [4.3. パスワードレス sudo 認証を有効にする](#43-パスワードレス-sudo-認証を有効にする)
+  - [4.4. 作業用ユーザを追加する](#44-作業用ユーザを追加する)
+  - [4.5. CI/CD用ユーザを追加する](#45-cicd用ユーザを追加する)
+  - [4.6. SSHサーバの設定をする](#46-sshサーバの設定をする)
+  - [4.7. cloud-init の準備をする](#47-cloud-init-の準備をする)
+    - [4.7.1. Alma Linux の VM テンプレートを作成する](#471-alma-linux-の-vm-テンプレートを作成する)
+    - [4.7.2. Windows Server 2025 の VM テンプレートを作成する](#472-windows-server-2025-の-vm-テンプレートを作成する)
+  - [4.8. ネットワークブリッジを作成する](#48-ネットワークブリッジを作成する)
+    - [4.8.1. 管理用 NW を追加する](#481-管理用-nw-を追加する)
+    - [4.8.2. Zabbix Server のハートビートに用いる NW を追加する](#482-zabbix-server-のハートビートに用いる-nw-を追加する)
+  - [4.9. イーサネットポートを有効にする](#49-イーサネットポートを有効にする)
 - [5. 完了条件](#5-完了条件)
 
 <!-- /code_chunk_output -->
@@ -32,7 +34,7 @@
 ## 3. 前提条件
 
 - `Proxmox 9.x`がインストール済みで、起動していること
-- ホスト名: `pve-01`
+- ホスト名: `prod-prox-01`
 
 ## 4. 作業手順
 
@@ -104,7 +106,7 @@
 
     ```shell
     apt update && apt upgrade -y && apt dist-upgrade -y && \
-      apt install sudo pwgen vim -y
+      apt install guestfs-tools sudo pwgen vim -y
     # エラーが表示されなければ OK
     ```
 
@@ -120,7 +122,40 @@
     passwd: password updated successfully
     ```
 
-### 4.3. 作業用ユーザを追加する
+### 4.3. パスワードレス sudo 認証を有効にする
+
+1. `libpam-ssh-agent-auth`をインストールする
+
+    ```shell
+    apt update && apt install -y libpam-ssh-agent-auth
+    # エラーが出力されなければ OK
+    ```
+
+2. `SSH Agent`用の環境変数を保持する設定をする
+
+    ```shell
+    EDITOR=vim visudo
+    # 以下内容を追加
+
+    # Keep SSH_AUTH_SOCK to forward ssh-agent
+    Defaults env_keep += "SSH_AUTH_SOCK"
+
+    :wq
+    ```
+
+3. `sudo`の認証に公開鍵を用いる設定をする
+
+    ```shell
+    vim /etc/pam.d/sudo
+    # 以下内容を冒頭に追加
+
+    # Use pubkey
+    auth sufficient pam_ssh_agent_auth.so file=~/.ssh/authorized_keys
+
+    :wq
+    ```
+
+### 4.4. 作業用ユーザを追加する
 
 1. 作業用ユーザを追加
 
@@ -180,7 +215,7 @@
     $ exit
     ```
 
-### 4.4. CI/CD用ユーザを追加する
+### 4.5. CI/CD用ユーザを追加する
 
 1. Linux上のユーザを追加する
 
@@ -278,7 +313,7 @@
     pveum role add "$MACHINEUSER_ROLE"
     # 何も出力されなければ OK
 
-    pveum role modify "$MACHINEUSER_ROLE" --privs  Datastore.Allocate,Datastore.AllocateSpace,Datastore.AllocateTemplate,Datastore.Audit,Pool.Allocate,Pool.Audit,SDN.Audit,SDN.Use,Sys.Audit,Sys.Console,Sys.Modify,VM.Allocate,VM.Audit,VM.Clone,VM.Config.CDROM,VM.Config.CPU,VM.Config.Cloudinit,VM.Config.Disk,VM.Config.HWType,VM.Config.Memory,VM.Config.Network,VM.Config.Options,VM.Migrate,VM.PowerMgmt
+    pveum role modify "$MACHINEUSER_ROLE" --privs Datastore.Allocate,Datastore.AllocateSpace,Datastore.AllocateTemplate,Datastore.Audit,Pool.Allocate,Pool.Audit,SDN.Audit,SDN.Use,Sys.Audit,Sys.Console,Sys.Modify,VM.Allocate,VM.Audit,VM.Clone,VM.Config.CDROM,VM.Config.CPU,VM.Config.Cloudinit,VM.Config.Disk,VM.Config.HWType,VM.Config.Memory,VM.Config.Network,VM.Config.Options,VM.Migrate,VM.PowerMgmt
     # 何も出力されなければ OK
 
     # ロールが存在することを確認する。追加したロールと権限が表示されれば OK
@@ -321,7 +356,7 @@
     ┌──────────────┬──────────────────────────────────────┐
     │ key          │ value                                │
     ╞══════════════╪══════════════════════════════════════╡
-    │ full-tokenid │ machine-user@pam!tf                  │
+    │ full-tokenid │ machine-user@pve!tf                  │
     ├──────────────┼──────────────────────────────────────┤
     │ info         │ {"privsep":0}                        │
     ├──────────────┼──────────────────────────────────────┤
@@ -337,7 +372,7 @@
     └─────────┴─────────┴────────┴─────────┘
     ```
 
-### 4.5. SSHサーバの設定をする
+### 4.6. SSHサーバの設定をする
 
 1. sshdの設定を変更する
 
@@ -380,7 +415,7 @@
     ssh root@192.168.20.2 # will fail
     ```
 
-### 4.6. cloud-init の準備をする
+### 4.7. cloud-init の準備をする
 
 1. snippets を有効化する
 
@@ -398,70 +433,7 @@
     dump  images  snippets  template
     ```
 
-#### 4.6.1. Red Hat Enterprise Linux の VM テンプレートを作成する
-
-ここでは、Red Hat Enterprise Linux 10.1 (x86_64) の Generic Cloud イメージ を使用します。
-
-1. イメージをダウンロードする
-
-    ダウンロード先URLは、[Red Hat Customer Portal](https://access.redhat.com/downloads/content/479/ver=/rhel---10/10.1/x86_64/product-software) を参照してください。
-
-    イメージの種類は Red Hat Enterprise Linux 10.1 KVM Guest Image を使用します。
-
-2. チェックサムを確認する
-
-    照合元のチェックサムはダウンロード元URLと同じページに記載されています。
-
-    ```shell
-    sha256sum /mnt/c/Users/Lucky/Downloads/rhel-10.1-x86_64-kvm.qcow2
-    ```
-
-3. イメージを Proxmox ホストにアップロードする
-
-    ```shell
-    sftp proxmox-01 <<< $'put /mnt/c/Users/Lucky/Downloads/rhel-10.1-x86_64-kvm.qcow2 ./'
-    # エラーが出力されなければ OK
-    ```
-
-4. アップロードしたイメージを移動する
-
-    ```shell
-    ssh proxmox-01
-    VER='10.1'
-    QCOW_NAME="rhel-${VER}-x86_64-kvm.qcow2"
-    sudo mv "$QCOW_NAME" /var/lib/vz/template/iso/
-    # エラーが出力されなければ OK
-    ```
-
-5. VM のテンプレートを作成する
-
-    ```shell
-    ISO_DIR='/var/lib/vz/template/iso'
-
-    echo 'Customizing iso...'
-    sudo virt-customize -a "$ISO_DIR/$QCOW_NAME" --run-command 'echo -n > /etc/machine-id'
-    echo 'OK!!!'
-    echo ''
-
-    echo 'Creating VM template...'
-    VM_TMPL_ID=901
-    VM_TMPL_NAME="rhel-$VER"
-    VM_DISK_STORAGE=local-lvm
-    sudo qm destroy "$VM_TMPL_ID" --purge || true
-    sudo qm create $VM_TMPL_ID --name $VM_TMPL_NAME --memory 2048 --cores 2 --net0 virtio,bridge=vmbr0
-    sudo qm set $VM_TMPL_ID --scsihw virtio-scsi-single
-    sudo qm set $VM_TMPL_ID --virtio0 "${VM_DISK_STORAGE}:0,import-from=$ISO_DIR/$QCOW_NAME"
-    sudo qm set $VM_TMPL_ID --boot c --bootdisk virtio0
-    sudo qm set $VM_TMPL_ID --ide2 "${VM_DISK_STORAGE}:cloudinit"
-    sudo qm set $VM_TMPL_ID --serial0 socket --vga serial0
-    sudo qm set $VM_TMPL_ID --agent enabled=1,fstrim_cloned_disks=1
-    sudo qm template $VM_TMPL_ID
-    # WARNING: Combining activation change with other commands is not advised.
-    # という警告は無視できる
-    echo 'OK.'
-    ```
-
-#### 4.6.2. Alma Linux の VM テンプレートを作成する
+#### 4.7.1. Alma Linux の VM テンプレートを作成する
 
 ここでは、Alma Linux 10.0 (x86_64) の Generic Cloud イメージ をダウンロードすることします。
 
@@ -470,39 +442,34 @@
     ダウンロード先URLは、[産業サイバーセキュリティセンターの Alma Linux ISO ミラー](https://ftp.udx.icscoe.jp/Linux/almalinux/10.0/cloud/x86_64/images/) を参照してください。
 
     ```shell
-    ssh proxmox-01
+    ssh prod-prox-01
     MAJOR_VER='10'
-    VER="${MAJOR_VER}.0"
+    VER="${MAJOR_VER}.1"
     QCOW_NAME="Alma-$VER.x86_64.qcow2"
     curl -o "$QCOW_NAME" "https://ftp.udx.icscoe.jp/Linux/almalinux/$VER/cloud/x86_64/images/AlmaLinux-${MAJOR_VER}-GenericCloud-latest.x86_64.qcow2"
     # エラーが出力されなければ OK
 
     # チェックサムを照合
-    | DOWNLOADED_CHECKSUM=$(curl -sS https://repo.almalinux.org/almalinux/${MAJOR_VER}/cloud/x86_64/images/CHECKSUM | grep "GenericCloud-$VER" | awk '{print $1}') |
-    | FILE_CHECKSUM=$(sha256sum "$QCOW_NAME"                                                                        | awk '{print $1}')        |                   |
-    if [ $DOWNLOADED_CHECKSUM = $FILE_CHECKSUM ]; then echo 'OK.'; else echo 'CHECKSUM UNMATCHED!!'; fi
+    DOWNLOADED_CHECKSUM=$(curl -sS "https://repo.almalinux.org/almalinux/${MAJOR_VER}/cloud/x86_64/images/CHECKSUM" | grep "GenericCloud-$VER" | awk '{print $1}')
+    FILE_CHECKSUM=$(sha256sum "$QCOW_NAME" | awk '{print $1}')
+    if [ "$DOWNLOADED_CHECKSUM" = "$FILE_CHECKSUM" ]; then echo 'OK.'; else echo 'CHECKSUM UNMATCHED!!'; fi
     # OK. と出力されればよい
     ```
 
 2. アップロードしたイメージを移動する
 
     ```shell
-    sudo mv "$QCOW_NAME" /var/lib/vz/template/iso/
+    ISO_DIR='/var/lib/vz/template/iso'
+    sudo mv "$QCOW_NAME" "$ISO_DIR/"
     # エラーが出力されなければ OK
     ```
 
 3. VM のテンプレートを作成する
 
     ```shell
-    ISO_DIR='/var/lib/vz/template/iso'
-
-    echo 'Customizing iso...'
     sudo virt-customize -a "$ISO_DIR/$QCOW_NAME" --run-command 'echo -n >/etc/machine-id'
-    echo 'OK!!!'
-    echo ''
 
-    echo 'Creating VM template...'
-    VM_TMPL_ID=902
+    VM_TMPL_ID=901
     VM_TMPL_NAME="alma-$VER"
     VM_DISK_STORAGE=local-lvm
     sudo qm destroy "$VM_TMPL_ID" --purge || true
@@ -516,12 +483,15 @@
     sudo qm template $VM_TMPL_ID
     # WARNING: Combining activation change with other commands is not advised.
     # という警告は無視できる
-    echo 'OK.'
     ```
 
-### 4.7. ネットワークブリッジを作成する
+#### 4.7.2. Windows Server 2025 の VM テンプレートを作成する
 
-#### 4.7.1. 管理用 NW を追加する
+[WinSrv2025_セットアップ手順書.md](WinSrv2025_セットアップ手順書.md)を参照のこと。
+
+### 4.8. ネットワークブリッジを作成する
+
+#### 4.8.1. 管理用 NW を追加する
 
 1. Proxmox Web UI にログインする
 
@@ -529,7 +499,7 @@
 
 2. ノードを選択する
 
-    左側のメニューから `pve-01` ノードを選択する
+    左側のメニューから `prod-prox-01` ノードを選択する
 
 3. ネットワーク設定画面を開く
 
@@ -555,7 +525,7 @@
 
     ネットワーク設定画面で `vmbr1` が表示されていることを確認する
 
-#### 4.7.2. Zabbix Server のハートビートに用いる NW を追加する
+#### 4.8.2. Zabbix Server のハートビートに用いる NW を追加する
 
 1. Proxmox Web UI にログインする
 
@@ -563,7 +533,7 @@
 
 2. ノードを選択する
 
-    左側のメニューから `pve-01` ノードを選択する
+    左側のメニューから `prod-prox-01` ノードを選択する
 
 3. ネットワーク設定画面を開く
 
@@ -587,6 +557,40 @@
 
     ネットワーク設定画面で `vmbr2` が表示されていることを確認する
 
+### 4.9. イーサネットポートを有効にする
+
+1. 現在のイーサネットポートの状態を確認する
+
+    ```shell
+    $ ip link
+    ...
+    # State が DOWN
+    3: enxc8a362a24690: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel master vmbr1 state DOWN mode DEFAULT group default qlen 1000
+        link/ether c8:a3:62:a2:46:90 brd ff:ff:ff:ff:ff:ff
+    ...
+    $
+    ```
+
+2. ポートをリンクアップさせる
+
+    ```shell
+    sudo ip link set enxc8a362a24690 up
+    ```
+
+3. 現在のイーサネットポートの状態を確認する
+
+    `State`が`DOWN`であることを確認する
+
+    ```shell
+    $ ip link
+    ...
+    # State が UP
+    3: enxc8a362a24690: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel master vmbr1 state DOWN mode DEFAULT group default qlen 1000
+        link/ether c8:a3:62:a2:46:90 brd ff:ff:ff:ff:ff:ff
+    ...
+    $
+    ```
+
 ## 5. 完了条件
 
 - パッケージの更新が行えること
@@ -595,3 +599,4 @@
 - `Proxmox`ホストに対するSSH接続において、CI/CD用ユーザが作成されていて、そのユーザとしてログインできること
 - cloud-init に使用する VM のテンプレートとスニペットの設定がされていること
 - `Linux Bridge`が作成されていること
+- パスワードを用いずに`sudo`コマンドを実行できること
