@@ -186,7 +186,7 @@ sudo qm create $VM_ID \
   --ide0 local:iso/virtio-win.iso,media=cdrom \
   --net0 virtio,bridge=vmbr1 \
   --agent 1 \
-  --boot "order=scsi0;ide2;ide1;ide0;net0" \
+  --boot "order=scsi0;ide2;net0" \
   --onboot 1
 sudo qm start $VM_ID
 sudo qm status $VM_ID
