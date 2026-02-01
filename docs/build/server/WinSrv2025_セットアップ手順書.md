@@ -69,7 +69,7 @@ convert gpt
 
 create partition msr size=16
 
-create partition primary size=500
+create partition primary size=1536
 format quick fs=ntfs label="Recovery"
 assign letter="R"
 set id="de94bba4-06d1-4d40-a16a-bfd50179d6ac"
