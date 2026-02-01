@@ -158,6 +158,13 @@ resource "proxmox_vm_qemu" "domain_controller" {
   }
 }
 
+resource "ansible_group" "domain_computer" {
+  name = "domain_computer"
+  variables = {
+    ansible_domain_dn = "DC=ad,DC=labo,DC=clov3r,DC=cc"
+  }
+}
+
 resource "ansible_group" "domain_controller" {
   name = "domain_controller"
   variables = {
@@ -172,7 +179,7 @@ resource "ansible_host" "domain_controller" {
   for_each = proxmox_vm_qemu.domain_controller
 
   name   = each.value.name
-  groups = [ansible_group.domain_controller.name]
+  groups = [ansible_group.domain_computer.name, ansible_group.domain_controller.name]
   variables = {
     ansible_host = "${each.value.name}.ad.labo.clov3r.cc"
   }
