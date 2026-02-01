@@ -19,8 +19,8 @@ output "zabbix_servers__prod" {
   }]
 }
 
-output "linux_operators__prod" {
-  value = [for vm in proxmox_vm_qemu.linux_operator : {
+output "management_servers__prod" {
+  value = [for vm in proxmox_vm_qemu.management_server : {
     host_name   = vm.current_node
     id          = vm.vmid
     name        = vm.name
