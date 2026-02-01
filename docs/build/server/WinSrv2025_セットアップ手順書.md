@@ -392,20 +392,18 @@ stop_service_on_exit=false
 
 #### 4.7.4. シャットダウンする
 
-1. Cloudbase-Init のインストールを完了させる
-
-Cloudbase-Init のインストール完了の画面が表示されているので、Finish を選択
-![言語選択](./diagrams/winsrv2025_setup/install-cloudbase-init/06-completed-installation.png)
+1. Cloudbase-Init のインストール完了の画面が表示されているので、Finish を選択
+  ![言語選択](./diagrams/winsrv2025_setup/install-cloudbase-init/06-completed-installation.png)
 
 2. VM が停止したことを確認する
 
-```bash
-uname -n
-# prod-prox-01
+    ```bash
+    uname -n
+    # prod-prox-01
 
-sudo qm status $VM_ID
-# status: stopped と表示されれば OK
-```
+    sudo qm status $VM_ID
+    # status: stopped と表示されれば OK
+    ```
 
 #### 4.7.5. CD/DVD ドライブを外す
 
