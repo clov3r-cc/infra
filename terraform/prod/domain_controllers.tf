@@ -174,6 +174,6 @@ resource "ansible_host" "domain_controller" {
   name   = each.value.name
   groups = [ansible_group.domain_controller.name]
   variables = {
-    ansible_host = each.value.ssh_host
+    ansible_host = "${each.value.name}.ad.labo.clov3r.cc"
   }
 }
