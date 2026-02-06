@@ -281,6 +281,12 @@
     sudo netplan apply
     ```
 
+5. ifupdownを削除する
+
+    ```bash
+    sudo apt purge -y ifupdown
+    ```
+
 ### 4.9. VM）`Tailscale`をセットアップする
 
 1. VMにIPフォワーディングを許可する
@@ -301,6 +307,16 @@
 
     curl -fsSL https://tailscale.com/install.sh | sh
     sudo tailscale up --advertise-routes=192.168.21.0/24 --accept-routes
+    ```
+
+3. iptablesのルールを永続化する
+
+    ```shell
+    sudo apt install --no-install-recommends -y iptables-persistent
+    # 既存のiptablesルールを保存するか聞かれるので、Yesを選択
+
+    ls /etc/iptables
+    # rules.v4 と rules.v6 が表示されればOK
 
     exit
     ```
