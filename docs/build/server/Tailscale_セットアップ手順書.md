@@ -131,7 +131,7 @@
     su -
 
     apt update && apt upgrade -y && apt dist-upgrade -y && \
-      apt install curl sudo vim -y
+      apt install --no-install-recommends -y curl sudo vim
     ```
 
 ### 4.5. コンテナ）パスワードレス`sudo`認証を有効にする
@@ -139,7 +139,7 @@
 1. `libpam-ssh-agent-auth`をインストールする
 
     ```shell
-    apt update && apt install -y libpam-ssh-agent-auth
+    apt install --no-install-recommends -y libpam-ssh-agent-auth
     # エラーが出力されなければ OK
     ```
 
