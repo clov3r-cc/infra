@@ -82,7 +82,13 @@
 
 以下を選択、入力して、Continueを選択し続ける。
 
-- 言語: en-US
+- インストール中に使用する言語: en-US
+- 所在地
+  - other
+  - Asia
+  - Japan
+  - en_US.UTF8
+- キーボード: American English
 - ネットワーク構成: Static
   - IPアドレス: 192.168.21.3/24
   - デフォルトゲートウェイ: 192.168.21.1
