@@ -68,7 +68,7 @@
       --ide0 "local:iso/$IMAGE_NAME,media=cdrom" \
       --net0 virtio,bridge=vmbr1 \
       --agent 1 \
-      --boot "order=ide0;scsi0;net0" \
+      --boot "order=scsi0;ide0;net0" \
       --onboot 1
     # エラーが表示されなければOK
     sudo qm start "$VM_ID"
