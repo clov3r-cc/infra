@@ -14,10 +14,10 @@
   - [4.2. ホスト）VMを作成する](#42-ホストvmを作成する)
   - [4.3. ホスト）Debianのインストールをする](#43-ホストdebianのインストールをする)
   - [4.4. VM）必要なパッケージのインストールを行う](#44-vm必要なパッケージのインストールを行う)
-  - [4.5. コンテナ）パスワードレス`sudo`認証を有効にする](#45-コンテナパスワードレスsudo認証を有効にする)
+  - [4.5. VM）パスワードレス`sudo`認証を有効にする](#45-vmパスワードレスsudo認証を有効にする)
   - [4.6. VM）作業用ユーザをセットアップする](#46-vm作業用ユーザをセットアップする)
   - [4.7. VM）SSHサーバの設定をする](#47-vmsshサーバの設定をする)
-  - [4.8. `/etc/network/interfaces`からnetplanに移行する](#48-etcnetworkinterfacesからnetplanに移行する)
+  - [4.8. VM）`/etc/network/interfaces`からnetplanに移行する](#48-vmetcnetworkinterfacesからnetplanに移行する)
   - [4.9. VM）`Tailscale`をセットアップする](#49-vmtailscaleをセットアップする)
   - [4.10. `Tailscale`で経路の広告（アドバタイズ）を設定する](#410-tailscaleで経路の広告アドバタイズを設定する)
   - [4.11. `Tailscale`の鍵の有効期限を無効化をする](#411-tailscaleの鍵の有効期限を無効化をする)
@@ -134,7 +134,7 @@
       apt install --no-install-recommends -y curl sudo vim
     ```
 
-### 4.5. コンテナ）パスワードレス`sudo`認証を有効にする
+### 4.5. VM）パスワードレス`sudo`認証を有効にする
 
 1. `libpam-ssh-agent-auth`をインストールする
 
@@ -223,7 +223,7 @@
     ssh root@192.168.21.3 # will fail
     ```
 
-### 4.8. `/etc/network/interfaces`からnetplanに移行する
+### 4.8. VM）`/etc/network/interfaces`からnetplanに移行する
 
 1. 必要なパッケージをインストールする
 
