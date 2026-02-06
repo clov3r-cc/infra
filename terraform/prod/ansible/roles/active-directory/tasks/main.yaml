@@ -1,0 +1,172 @@
+---
+- name: Check if `Hide Shutdown Button` GPO exists
+  ansible.windows.win_powershell:
+    script: |
+      $gpo = Get-GPO -Name "Hide Shutdown Button" -ErrorAction SilentlyContinue
+      $Ansible.Changed = -not $gpo
+  register: gpo_check
+  run_once: true
+
+- name: Create `Hide Shutdown Button` GPO
+  ansible.windows.win_powershell:
+    script: New-GPO -Name "Hide Shutdown Button"
+  when: gpo_check is changed
+  notify: Update group policies on domain computers
+  run_once: true
+
+- name: Check if `Hide Shutdown Button` GPO registry value is set
+  ansible.windows.win_powershell:
+    script: |
+      $val = Get-GPRegistryValue `
+        -Name "Hide Shutdown Button" `
+        -Key "HKCU\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer" `
+        -ValueName "NoClose" `
+        -ErrorAction SilentlyContinue
+      $Ansible.Changed = -not ($val -and $val.Value -eq 1)
+  register: gpo_shutdown_reg_check
+  run_once: true
+
+- name: Set GPO registry value to hide shutdown button
+  ansible.windows.win_powershell:
+    script: |
+      Set-GPRegistryValue `
+        -Name "Hide Shutdown Button" `
+        -Key "HKCU\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer" `
+        -ValueName "NoClose" `
+        -Type DWord `
+        -Value 1
+  when: gpo_shutdown_reg_check is changed
+  notify: Update group policies on domain computers
+  run_once: true
+
+- name: Check if `Hide Shutdown Button` GPO is linked to domain
+  ansible.windows.win_powershell:
+    script: |
+      $target = "{{ ansible_domain_dn }}"
+      $link = Get-GPInheritance -Target $target |
+        Select-Object -ExpandProperty GpoLinks |
+        Where-Object { $_.DisplayName -eq "Hide Shutdown Button" }
+      $Ansible.Changed = -not $link
+  register: gpo_link_check
+  run_once: true
+
+- name: Link `Hide Shutdown Button` GPO to domain
+  ansible.windows.win_powershell:
+    script: New-GPLink -Name "Hide Shutdown Button" -Target "{{ ansible_domain_dn }}"
+  when: gpo_link_check is changed
+  notify: Update group policies on domain computers
+  run_once: true
+
+- name: Check if `WindowsUpdate` GPO exists
+  ansible.windows.win_powershell:
+    script: |
+      $gpo = Get-GPO -Name "WindowsUpdate" -ErrorAction SilentlyContinue
+      $Ansible.Changed = -not $gpo
+  register: gpo_wu_check
+  run_once: true
+
+- name: Create `WindowsUpdate` GPO
+  ansible.windows.win_powershell:
+    script: New-GPO -Name "WindowsUpdate"
+  when: gpo_wu_check is changed
+  notify: Update group policies on domain computers
+  run_once: true
+
+- name: Check if `WindowsUpdate` GPO registry values are set
+  ansible.windows.win_powershell:
+    script: |
+      $gpoName = "WindowsUpdate"
+      $wuKey = "HKLM\Software\Policies\Microsoft\Windows\WindowsUpdate"
+      $auKey = "HKLM\Software\Policies\Microsoft\Windows\WindowsUpdate\AU"
+
+      $expected = @(
+        @{ Key = $wuKey; Name = "SetAllowOptionalContent"; Value = 1 },
+        @{ Key = $wuKey; Name = "AllowOptionalContent"; Value = 1 },
+        @{ Key = $wuKey; Name = "ElevateNonAdmins"; Value = 0 },
+        @{ Key = $auKey; Name = "AutoInstallMinorUpdates"; Value = 1 },
+        @{ Key = $auKey; Name = "NoAutoUpdate"; Value = 0 },
+        @{ Key = $auKey; Name = "AUOptions"; Value = 4 },
+        @{ Key = $auKey; Name = "AutomaticMaintenanceEnabled"; Value = 1 },
+        @{ Key = $auKey; Name = "ScheduledInstallDay"; Value = 6 },
+        @{ Key = $auKey; Name = "ScheduledInstallTime"; Value = 4 },
+        @{ Key = $auKey; Name = "ScheduledInstallEveryWeek"; Value = 1 },
+        @{ Key = $auKey; Name = "AllowMUUpdateService"; Value = 1 },
+        @{ Key = $auKey; Name = "NoAutoRebootWithLoggedOnUsers"; Value = 1 },
+        @{ Key = $auKey; Name = "IncludeRecommendedUpdates"; Value = 1 },
+        @{ Key = $auKey; Name = "EnableFeaturedSoftware"; Value = 0 },
+        @{ Key = $auKey; Name = "DetectionFrequencyEnabled"; Value = 1 },
+        @{ Key = $auKey; Name = "DetectionFrequency"; Value = 12 }
+      )
+
+      $needsUpdate = $false
+      foreach ($e in $expected) {
+        $val = Get-GPRegistryValue -Name $gpoName -Key $e.Key -ValueName $e.Name -ErrorAction SilentlyContinue
+        if (-not ($val -and $val.Value -eq $e.Value)) {
+          $needsUpdate = $true
+          break
+        }
+      }
+      $Ansible.Changed = $needsUpdate
+  register: gpo_wu_reg_check
+  run_once: true
+
+- name: Set `WindowsUpdate` GPO registry values
+  ansible.windows.win_powershell:
+    script: |
+      $gpoName = "WindowsUpdate"
+      $wuKey = "HKLM\Software\Policies\Microsoft\Windows\WindowsUpdate"
+      $auKey = "HKLM\Software\Policies\Microsoft\Windows\WindowsUpdate\AU"
+
+      # WindowsUpdate key
+      Set-GPRegistryValue -Name $gpoName -Key $wuKey -ValueName "SetAllowOptionalContent" -Type DWord -Value 1
+      Set-GPRegistryValue -Name $gpoName -Key $wuKey -ValueName "AllowOptionalContent" -Type DWord -Value 1
+      Set-GPRegistryValue -Name $gpoName -Key $wuKey -ValueName "ElevateNonAdmins" -Type DWord -Value 0
+
+      # WindowsUpdate\AU key
+      Set-GPRegistryValue -Name $gpoName -Key $auKey -ValueName "AutoInstallMinorUpdates" -Type DWord -Value 1
+      Set-GPRegistryValue -Name $gpoName -Key $auKey -ValueName "NoAutoUpdate" -Type DWord -Value 0
+      Set-GPRegistryValue -Name $gpoName -Key $auKey -ValueName "AUOptions" -Type DWord -Value 4
+      Set-GPRegistryValue -Name $gpoName -Key $auKey -ValueName "AutomaticMaintenanceEnabled" -Type DWord -Value 1
+      Set-GPRegistryValue -Name $gpoName -Key $auKey -ValueName "ScheduledInstallDay" -Type DWord -Value 6
+      Set-GPRegistryValue -Name $gpoName -Key $auKey -ValueName "ScheduledInstallTime" -Type DWord -Value 4
+      Set-GPRegistryValue -Name $gpoName -Key $auKey -ValueName "ScheduledInstallEveryWeek" -Type DWord -Value 1
+      Set-GPRegistryValue -Name $gpoName -Key $auKey -ValueName "AllowMUUpdateService" -Type DWord -Value 1
+      Set-GPRegistryValue -Name $gpoName -Key $auKey -ValueName "NoAutoRebootWithLoggedOnUsers" -Type DWord -Value 1
+      Set-GPRegistryValue -Name $gpoName -Key $auKey -ValueName "IncludeRecommendedUpdates" -Type DWord -Value 1
+      Set-GPRegistryValue -Name $gpoName -Key $auKey -ValueName "EnableFeaturedSoftware" -Type DWord -Value 0
+      Set-GPRegistryValue -Name $gpoName -Key $auKey -ValueName "DetectionFrequencyEnabled" -Type DWord -Value 1
+      Set-GPRegistryValue -Name $gpoName -Key $auKey -ValueName "DetectionFrequency" -Type DWord -Value 12
+
+      Set-GPRegistryValue -Name $gpoName -Key $auKey -ValueName "ScheduledInstallFirstWeek" -ErrorAction SilentlyContinue
+
+      # Remove specific week schedule values (GPO **del. entries)
+      $delValues = @(
+        "ScheduledInstallFirstWeek",
+        "ScheduledInstallSecondWeek",
+        "ScheduledInstallThirdWeek",
+        "ScheduledInstallFourthWeek"
+      )
+      foreach ($name in $delValues) {
+        Remove-GPRegistryValue -Name $gpoName -Key $auKey -ValueName $name -ErrorAction SilentlyContinue
+      }
+  when: gpo_wu_reg_check is changed
+  notify: Update group policies on domain computers
+  run_once: true
+
+- name: Check if `WindowsUpdate` GPO is linked to domain
+  ansible.windows.win_powershell:
+    script: |
+      $target = "{{ ansible_domain_dn }}"
+      $link = Get-GPInheritance -Target $target |
+        Select-Object -ExpandProperty GpoLinks |
+        Where-Object { $_.DisplayName -eq "WindowsUpdate" }
+      $Ansible.Changed = -not $link
+  register: gpo_wu_link_check
+  run_once: true
+
+- name: Link `WindowsUpdate` GPO to domain
+  ansible.windows.win_powershell:
+    script: New-GPLink -Name "WindowsUpdate" -Target "{{ ansible_domain_dn }}"
+  when: gpo_wu_link_check is changed
+  notify: Update group policies on domain computers
+  run_once: true
