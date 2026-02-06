@@ -281,6 +281,12 @@
     sudo netplan apply
     ```
 
+5. ifupdownを削除する
+
+    ```bash
+    sudo apt purge -y ifupdown
+    ```
+
 ### 4.9. VM）`Tailscale`をセットアップする
 
 1. VMにIPフォワーディングを許可する
