@@ -1,2 +1,11 @@
+[env]
+KRB5_CONFIG = "./ansible/files/krb5.conf"
+
 [tasks.show-inventory]
 run = "uv run ansible-inventory -i ansible/inventory_src.yaml --list --yaml"
+
+[tasks.kinit]
+run = "kdestroy && kinit machine-user@AD.LABO.CLOV3R.CC"
+
+[tasks.play-ansible]
+run = "uv run ansible-playbook -i ansible/inventory_src.yaml" # 実行する Playbook のパスを引数で渡す必要がある
