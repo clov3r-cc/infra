@@ -62,7 +62,7 @@
       --sockets 1 \
       --cores 1 \
       --cpu x86-64-v3 \
-      --memory 2048 \
+      --memory 1024 \
       --scsihw virtio-scsi-single \
       --scsi0 local-lvm:15,format=raw \
       --ide0 "local:iso/$IMAGE_NAME,media=cdrom" \
