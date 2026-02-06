@@ -347,7 +347,7 @@ wheels = [
 ]
 
 [[package]]
-name = "prd"
+name = "prod"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
