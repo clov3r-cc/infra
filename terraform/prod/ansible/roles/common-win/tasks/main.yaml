@@ -1,0 +1,90 @@
+---
+- name: Show file extensions in Explorer
+  ansible.windows.win_regedit:
+    path: HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced
+    name: HideFileExt
+    type: dword
+    data: 0
+
+- name: Disable unnecessary Windows features
+  notify: Reboot Windows
+  ansible.windows.win_optional_feature:
+    name:
+      - MicrosoftWindowsPowerShellV2
+      - SMB1Protocol
+      - Printing-Client
+      - Printing-Client-Gui
+      - Printing-PrintToPDFServices-Features
+      - Server-Drivers-Printers
+      - WirelessNetworking
+      - MediaPlayback
+      - WindowsMediaPlayer
+      - Xps-Foundation-Xps-Viewer
+      - WorkFolders-Client
+      - WindowsAdminCenterSetup
+      - SystemDataArchiver
+    state: absent
+  failed_when: false
+
+- name: Disable unnecessary Windows services
+  ansible.windows.win_service:
+    name: "{{ item }}"
+    start_mode: disabled
+    state: stopped
+    force_dependent_services: true
+  loop:
+    # Bluetooth
+    - bthserv
+    - BthAvctpSvc
+    - BTAGService
+    # Diagnostics / Telemetry
+    - DiagTrack
+    - DPS
+    # Xbox
+    - XblAuthManager
+    # Windows Insider
+    - wisvc
+    # Hyper-V
+    - vmicguestinterface
+    - vmicheartbeat
+    - vmickvpexchange
+    - vmicrdv
+    - vmicshutdown
+    - vmictimesync
+    - vmicvmsession
+    - vmicvss
+    # Offline Files
+    - CscService
+    # Connected Devices Platform
+    - CDPSvc
+    # Location
+    - lfsvc
+    # Internet Connection Sharing
+    - SharedAccess
+    # Microsoft Account Sign-in Assistant
+    - wlidsvc
+    # Sensor
+    - SensorDataService
+    - SensrSvc
+    - SensorService
+    # Shell Hardware Detection
+    - ShellHWDetection
+    # Smart Card
+    - SCardSvr
+    - ScDeviceEnum
+    - SCPolicySvc
+    # Wallet
+    - WalletService
+    # Biometric
+    - WbioSrvc
+    # Scanner / Camera
+    - StiSvc
+    # Portable Device Enumeration
+    - WPDBusEnum
+    # Error Reporting
+    - WerSvc
+    - wercplsupport
+    # Diagnostic Service Host
+    - WdiServiceHost
+    - WdiSystemHost
+  failed_when: false
