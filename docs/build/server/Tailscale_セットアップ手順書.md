@@ -17,10 +17,11 @@
   - [4.5. コンテナ）パスワードレス`sudo`認証を有効にする](#45-コンテナパスワードレスsudo認証を有効にする)
   - [4.6. VM）作業用ユーザをセットアップする](#46-vm作業用ユーザをセットアップする)
   - [4.7. VM）SSHサーバの設定をする](#47-vmsshサーバの設定をする)
-  - [4.8. VM）`Tailscale`をセットアップする](#48-vmtailscaleをセットアップする)
-  - [4.9. `Tailscale`で経路の広告（アドバタイズ）を設定する](#49-tailscaleで経路の広告アドバタイズを設定する)
-  - [4.10. `Tailscale`の鍵の有効期限を無効化をする](#410-tailscaleの鍵の有効期限を無効化をする)
-  - [4.11. `Tailscale`クライアントとしてタグをつける](#411-tailscaleクライアントとしてタグをつける)
+  - [4.8. `/etc/network/interfaces`からnetplanに移行する](#48-etcnetworkinterfacesからnetplanに移行する)
+  - [4.9. VM）`Tailscale`をセットアップする](#49-vmtailscaleをセットアップする)
+  - [4.10. `Tailscale`で経路の広告（アドバタイズ）を設定する](#410-tailscaleで経路の広告アドバタイズを設定する)
+  - [4.11. `Tailscale`の鍵の有効期限を無効化をする](#411-tailscaleの鍵の有効期限を無効化をする)
+  - [4.12. `Tailscale`クライアントとしてタグをつける](#412-tailscaleクライアントとしてタグをつける)
 - [5. 完了条件](#5-完了条件)
 
 <!-- /code_chunk_output -->
@@ -216,13 +217,69 @@
     ssh root@192.168.21.3 # will fail
     ```
 
-### 4.8. VM）`Tailscale`をセットアップする
+### 4.8. `/etc/network/interfaces`からnetplanに移行する
 
-1. VMにIPフォワーディングを許可する
+1. 必要なパッケージをインストールする
 
     ```shell
     ssh prod-tail-01
 
+    sudo apt install --no-install-recommends -y netplan.io
+    ```
+
+2. 設定ファイルを作成する
+
+    ```shell
+    cat << EOF | sudo tee /etc/netplan/99-config.yaml
+    network:
+      version: 2
+      # systemd-networkdを明示的に使用
+      renderer: networkd
+      ethernets:
+        ens18:
+          addresses:
+            - 192.168.21.3/24
+          routes:
+            - to: default
+              via: 192.168.21.1
+          nameservers:
+            addresses:
+              - 192.168.21.1
+    EOF
+    sudo chmod 600 /etc/netplan/99-config.yaml
+    ```
+
+3. netplanの設定を確認する
+
+    ```bash
+    # systemd-networkdを有効にして起動させる
+    sudo systemctl enable --now systemd-networkd
+
+    sudo netplan try --timeout 20
+
+    # 別ターミナルを開いて
+    ssh prod-tail-01
+    # 接続できること
+    ip -4 a
+    # IPアドレスが想定通りであること
+    ip r
+    # デフォルトゲートウェイが設定されていること
+    # を確認する
+    # 別ターミナルを閉じる
+    exit
+    ```
+
+4. netplanの設定を反映する
+
+    ```bash
+    sudo netplan apply
+    ```
+
+### 4.9. VM）`Tailscale`をセットアップする
+
+1. VMにIPフォワーディングを許可する
+
+    ```shell
     echo 'net.ipv4.ip_forward = 1' | sudo tee /etc/sysctl.d/99-tailscale.conf
     echo 'net.ipv6.conf.all.forwarding = 1' | sudo tee -a /etc/sysctl.d/99-tailscale.conf
     sudo sysctl -p /etc/sysctl.d/99-tailscale.conf
@@ -242,20 +299,20 @@
     exit
     ```
 
-### 4.9. `Tailscale`で経路の広告（アドバタイズ）を設定する
+### 4.10. `Tailscale`で経路の広告（アドバタイズ）を設定する
 
 1. [Tailscale](https://login.tailscale.com/admin/machines)を開く。
 2. `prod-tail-01` > `Edit route settings...`を押下する
 3. `Subnet routes` > `192.168.21.0/24` にチェックを入れる
 4. `Save`を押下する
 
-### 4.10. `Tailscale`の鍵の有効期限を無効化をする
+### 4.11. `Tailscale`の鍵の有効期限を無効化をする
 
 ref. <https://tailscale.com/kb/1028/key-expiry>
 
 1. `prod-tail-01` > `Disable key expiry`を押下する
 
-### 4.11. `Tailscale`クライアントとしてタグをつける
+### 4.12. `Tailscale`クライアントとしてタグをつける
 
 1. `prod-tail-01` > `Edit ACL tags...`を押下する
 2. `Add tags` > `tag:pve`を選択する
