@@ -9,6 +9,7 @@ locals {
       memory                   = 1024 * 4
       os_disk_size             = 40
       ad_disk_size             = 15
+      log_disk_size            = 20
     }
   }
 }
@@ -131,6 +132,13 @@ resource "proxmox_vm_qemu" "domain_controller" {
       scsi1 {
         disk {
           size     = "${each.value.ad_disk_size}G"
+          storage  = local.vm_disk_storage
+          iothread = true
+        }
+      }
+      scsi2 {
+        disk {
+          size     = "${each.value.log_disk_size}G"
           storage  = local.vm_disk_storage
           iothread = true
         }
