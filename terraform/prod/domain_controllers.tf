@@ -168,10 +168,11 @@ resource "ansible_group" "domain_computer" {
 resource "ansible_group" "domain_controller" {
   name = "domain_controller"
   variables = {
-    ansible_user                 = local.machine_user
-    ansible_connection           = "psrp"
-    ansible_psrp_auth            = "kerberos"
-    ansible_psrp_cert_validation = "ignore"
+    ansible_user                   = local.machine_user
+    ansible_connection             = "psrp"
+    ansible_psrp_auth              = "kerberos"
+    ansible_psrp_negotiate_service = "HTTP"
+    ansible_psrp_cert_validation   = "ignore"
   }
 }
 
