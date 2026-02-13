@@ -1,6 +1,11 @@
 name: Terraform CI
 on:
   pull_request:
+    branches:
+      - main
+  pull_request_target:
+    branches:
+      - main
 permissions:
   pull-requests: write
 jobs:
@@ -17,6 +22,14 @@ jobs:
   tf_plan:
     name: Plan Terraform
     runs-on: ubuntu-24.04
+    #  pull_request は Dependabot 以外のユーザーのみ、pull_request_target は Dependabot のみが実行できる
+    # pull_request_target でないと、Dependabot の作成した PR において、secrets にあるトークンを読み取れず、Terraform CLI が失敗する
+    # ref.
+    # https://zenn.dev/thaim/articles/2022-04-allow-dependabot-access-secrets
+    # https://engineering.mobalab.net/2021/04/30/make-secrets-available-in-pull-request-opened-by-dependabot/
+    if: |
+      (github.event_name == 'pull_request_target' && github.actor == 'dependabot[bot]') ||
+      (github.event_name != 'pull_request_target' && github.actor != 'dependabot[bot]')
     needs: [ find_envs ]
     strategy:
       fail-fast: false
