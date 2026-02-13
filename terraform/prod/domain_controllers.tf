@@ -181,6 +181,7 @@ resource "ansible_host" "domain_controller" {
   name   = each.value.name
   groups = [ansible_group.domain_computer.name, ansible_group.domain_controller.name]
   variables = {
-    ansible_host = "${each.value.name}.ad.labo.clov3r.cc"
+    ansible_host                             = regex("ip=([0-9.]+)", each.value.ipconfig0)[0]
+    ansible_psrp_negotiate_hostname_override = "${each.value.name}.ad.labo.clov3r.cc"
   }
 }
