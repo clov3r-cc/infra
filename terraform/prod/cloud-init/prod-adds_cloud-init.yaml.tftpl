@@ -14,21 +14,18 @@ write_files:
   - path: C:\Init-ADDisks.ps1
     permissions: '0640'
     content: |
-      @(
-          @("1", "AD_DB", "E"),
-          @("2", "AD_Log", "F")
-      ) | ForEach-Object {
-          $DiskNum, $Label, $Drive = $_
-          $Disk = Get-Disk -Number $DiskNum
-          $Disk | Set-Disk -IsReadOnly $False
-          $Disk | Set-Disk -IsOffline $False
+      $DiskIndex = "1"
+      $DiskLabel = "ADElements"
+      $DriveLetter = "E"
+      $Disk = Get-Disk -Number $DiskIndex
+      $Disk | Set-Disk -IsReadOnly $False
+      $Disk | Set-Disk -IsOffline $False
 
-          if ($Disk.PartitionStyle -eq 'RAW') {
-              $Disk | Initialize-Disk -PartitionStyle GPT
-          }
-
-          $Disk | New-Partition -UseMaximumSize | Format-Volume -FileSystem NTFS -NewFileSystemLabel $Label -Force | Get-Partition | Add-PartitionAccessPath -AccessPath "$${Drive}:"
+      if ($Disk.PartitionStyle -eq 'RAW') {
+          $Disk | Initialize-Disk -PartitionStyle GPT
       }
+
+      $Disk | New-Partition -UseMaximumSize | Format-Volume -FileSystem NTFS -NewFileSystemLabel $DiskLabel -Force | Get-Partition | Add-PartitionAccessPath -AccessPath "$${DriveLetter}:"
   - path: C:\Setup-AD.ps1
     permissions: '0640'
     content: |
@@ -44,20 +41,27 @@ write_files:
           DomainMode                    = "Win$WINSRV_VER"
           ForestMode                    = "Win$WINSRV_VER"
           DatabasePath                  = "E:\AD_DB"
+          LogPath                       = "E:\AD_LOG"
           SysvolPath                    = "E:\AD_SYSVOL"
-          LogPath                       = "F:\AD_LOG"
           SafeModeAdministratorPassword = $ENCRYPTED_AD_SAFEMODE_ADMIN_PASS
-          NoRebootOnCompletion          = $false
           Force                         = $true
       }
       Install-WindowsFeature -name AD-Domain-Services -IncludeManagementTools
       Import-Module ADDSDeployment
       Install-ADDSForest @AD_ARGS
 
+  - path: C:\Post-Reboot.ps1
+    permissions: '0640'
+    content: |
       setspn -A HTTP/${CI_HOSTNAME}.$DOMAIN_NAME ${CI_HOSTNAME}
-      ktpass -princ ${CI_MACHINEUSER_NAME}@$($DOMAIN_NAME.toUpper()) -mapuser ${CI_MACHINEUSER_NAME} -pass ${CI_MACHINEUSER_PASSWORD} -crypto AES256-SHA1 -ptype KRB5_NT_PRINCIPAL -out C:\${CI_MACHINEUSER_NAME}.keytab
+      ktpass -princ ${CI_MACHINEUSER_NAME}@AD.LABO.CLOV3R.CC -mapuser ${CI_MACHINEUSER_NAME} -pass ${CI_MACHINEUSER_PASSWORD} -crypto AES256-SHA1 -ptype KRB5_NT_PRINCIPAL -out C:\${CI_MACHINEUSER_NAME}.keytab
+
+      setspn -L ${CI_HOSTNAME} > C:\ci.log
+      ls C:\ >> C:\ci.log
+
+      Remove-Item C:\Init-ADDisks.ps1 C:\Setup-AD.ps1 C:\Post-Reboot.ps1
+
 runcmd:
   - 'powershell -NoProfile -ExecutionPolicy Bypass -File C:\Init-ADDisks.ps1'
+  - 'powershell -NoProfile -ExecutionPolicy Bypass -Command "New-ItemProperty -Path ''HKLM:\Software\Microsoft\Windows\CurrentVersion\RunOnce'' -Name ''ADPostReboot'' -Value ''powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:\Post-Reboot.ps1'' -PropertyType String"'
   - 'powershell -NoProfile -ExecutionPolicy Bypass -File C:\Setup-AD.ps1'
-  - 'shutdown /r /t 0'
-  - 'del C:\Init-ADDisks.ps1 C:\Setup-AD.ps1'
