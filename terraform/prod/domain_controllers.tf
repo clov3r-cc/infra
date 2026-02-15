@@ -8,6 +8,8 @@ locals {
       cpu_core                 = 2
       memory                   = 1024 * 4
       os_disk_size             = 40
+      ad_disk_size             = 15
+      log_disk_size            = 20
     }
   }
 }
@@ -28,6 +30,17 @@ resource "random_password" "vm_admin_password__domain_controller" {
 resource "random_password" "vm_user_password__domain_controller" {
   for_each = local.vm_settings__domain_controller
 
+  # cloudbase-init requires passwords to be 20 characters or less (hardcoded)
+  # https://github.com/cloudbase/cloudbase-init/issues/114
+  # https://github.com/cloudbase/cloudbase-init/blob/4cbde8cac2408c75649038bd83900a2dc9edde06/cloudbaseinit/plugins/common/userdataplugins/cloudconfigplugins/users.py#L54
+  length      = 20
+  min_lower   = 3
+  min_upper   = 3
+  min_numeric = 3
+  special     = false
+}
+
+resource "random_password" "ad_safemode_admin_password" {
   # cloudbase-init requires passwords to be 20 characters or less (hardcoded)
   # https://github.com/cloudbase/cloudbase-init/issues/114
   # https://github.com/cloudbase/cloudbase-init/blob/4cbde8cac2408c75649038bd83900a2dc9edde06/cloudbaseinit/plugins/common/userdataplugins/cloudconfigplugins/users.py#L54
@@ -59,6 +72,7 @@ resource "terraform_data" "cloud_init_config__domain_controller" {
       CI_MACHINEUSER_NAME       = local.machine_user,
       CI_MACHINEUSER_PASSWORD   = random_password.vm_user_password__domain_controller[each.key].result,
       CI_MACHINEUSER_SSH_PUBKEY = base64decode(local.vm_ssh_public_key),
+      AD_SAFEMODE_ADMIN_PASS    = random_password.ad_safemode_admin_password.result,
     })
     destination = "/tmp/${local.env}-adds-${format("%02d", tonumber(each.key))}_cloud-init.yaml"
   }
@@ -123,6 +137,20 @@ resource "proxmox_vm_qemu" "domain_controller" {
       scsi0 {
         disk {
           size     = "${each.value.os_disk_size}G"
+          storage  = local.vm_disk_storage
+          iothread = true
+        }
+      }
+      scsi1 {
+        disk {
+          size     = "${each.value.ad_disk_size}G"
+          storage  = local.vm_disk_storage
+          iothread = true
+        }
+      }
+      scsi2 {
+        disk {
+          size     = "${each.value.log_disk_size}G"
           storage  = local.vm_disk_storage
           iothread = true
         }
