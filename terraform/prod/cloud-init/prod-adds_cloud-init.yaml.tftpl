@@ -10,3 +10,33 @@ users:
     ssh_authorized_keys:
       - ${CI_MACHINEUSER_SSH_PUBKEY}
 set_timezone: Asia/Tokyo
+write_files:
+  - path: C:\Setup-AD.ps1
+    permissions: '0640'
+    content: |
+      ---
+      $WINSRV_VER="2025"
+      $NETBIOS_NAME="AD"
+      $DOMAIN_NAME="$($NETBIOS_NAME.toLower()).labo.clov3r.cc"
+      $AD_ARGS = @{
+          DomainNetbiosName             = "$NETBIOS_NAME"
+          DomainName                    = "$DOMAIN_NAME"
+          InstallDns                    = $true
+          CreateDnsDelegation           = $false
+          DomainMode                    = "Win$WINSRV_VER"
+          ForestMode                    = "Win$WINSRV_VER"
+          DatabasePath                  = "D:\AD_DB"
+          SysvolPath                    = "D:\AD_SYSVOL"
+          LogPath                       = "E:\AD_LOG"
+          SafeModeAdministratorPassword = "${AD_SAFEMODE_ADMIN_PASS}"
+      }
+      $DESKTOP_PATH=$([System.Environment]::GetFolderPath("Desktop"))
+      Install-WindowsFeature -name AD-Domain-Services -IncludeManagementTools
+      Import-Module ADDSDeployment
+      Install-ADDSForest @AD_ARGS
+
+      setspn -A HTTP/${CI_HOSTNAME}.$DOMAIN_NAME ${CI_HOSTNAME}
+      ktpass -princ ${CI_MACHINEUSER_NAME}@$($DOMAIN_NAME.toUpper()) -mapuser ${CI_MACHINEUSER_NAME} -pass ${CI_MACHINEUSER_PASSWORD} -crypto AES256-SHA1 -ptype KRB5_NT_PRINCIPAL -out $DESKTOP_PATH\${CI_MACHINEUSER_NAME}.keytab
+runcmd:
+  - 'powershell -NoProfile -ExecutionPolicy Unrestricted C:\Setup-AD.ps1'
+  - 'del C:\Setup-AD.ps1'

@@ -40,6 +40,17 @@ resource "random_password" "vm_user_password__domain_controller" {
   special     = false
 }
 
+resource "random_password" "ad_safemode_admin_password" {
+  # cloudbase-init requires passwords to be 20 characters or less (hardcoded)
+  # https://github.com/cloudbase/cloudbase-init/issues/114
+  # https://github.com/cloudbase/cloudbase-init/blob/4cbde8cac2408c75649038bd83900a2dc9edde06/cloudbaseinit/plugins/common/userdataplugins/cloudconfigplugins/users.py#L54
+  length      = 20
+  min_lower   = 3
+  min_upper   = 3
+  min_numeric = 3
+  special     = false
+}
+
 resource "terraform_data" "cloud_init_config__domain_controller" {
   for_each = local.vm_settings__domain_controller
   triggers_replace = [
@@ -61,6 +72,7 @@ resource "terraform_data" "cloud_init_config__domain_controller" {
       CI_MACHINEUSER_NAME       = local.machine_user,
       CI_MACHINEUSER_PASSWORD   = random_password.vm_user_password__domain_controller[each.key].result,
       CI_MACHINEUSER_SSH_PUBKEY = base64decode(local.vm_ssh_public_key),
+      AD_SAFEMODE_ADMIN_PASS    = random_password.ad_safemode_admin_password.result,
     })
     destination = "/tmp/${local.env}-adds-${format("%02d", tonumber(each.key))}_cloud-init.yaml"
   }
