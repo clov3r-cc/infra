@@ -14,21 +14,18 @@ write_files:
   - path: C:\Init-ADDisks.ps1
     permissions: '0640'
     content: |
-      @(
-          @("1", "AD_DB", "E"),
-          @("2", "AD_Log", "F")
-      ) | ForEach-Object {
-          $DiskNum, $Label, $Drive = $_
-          $Disk = Get-Disk -Number $DiskNum
-          $Disk | Set-Disk -IsReadOnly $False
-          $Disk | Set-Disk -IsOffline $False
+      $DiskIndex = "1"
+      $DiskLabel = "ADElements"
+      $DriveLetter = "E"
+      $Disk = Get-Disk -Number $DiskIndex
+      $Disk | Set-Disk -IsReadOnly $False
+      $Disk | Set-Disk -IsOffline $False
 
-          if ($Disk.PartitionStyle -eq 'RAW') {
-              $Disk | Initialize-Disk -PartitionStyle GPT
-          }
-
-          $Disk | New-Partition -UseMaximumSize | Format-Volume -FileSystem NTFS -NewFileSystemLabel $Label -Force | Get-Partition | Add-PartitionAccessPath -AccessPath "$${Drive}:"
+      if ($Disk.PartitionStyle -eq 'RAW') {
+          $Disk | Initialize-Disk -PartitionStyle GPT
       }
+
+      $Disk | New-Partition -UseMaximumSize | Format-Volume -FileSystem NTFS -NewFileSystemLabel $DiskLabel -Force | Get-Partition | Add-PartitionAccessPath -AccessPath "$${DriveLetter}:"
   - path: C:\Setup-AD.ps1
     permissions: '0640'
     content: |
@@ -44,8 +41,8 @@ write_files:
           DomainMode                    = "Win$WINSRV_VER"
           ForestMode                    = "Win$WINSRV_VER"
           DatabasePath                  = "E:\AD_DB"
+          LogPath                       = "E:\AD_LOG"
           SysvolPath                    = "E:\AD_SYSVOL"
-          LogPath                       = "F:\AD_LOG"
           SafeModeAdministratorPassword = $ENCRYPTED_AD_SAFEMODE_ADMIN_PASS
           NoRebootOnCompletion          = $false
           Force                         = $true
