@@ -47,6 +47,7 @@ write_files:
           SysvolPath                    = "E:\AD_SYSVOL"
           LogPath                       = "F:\AD_LOG"
           SafeModeAdministratorPassword = $ENCRYPTED_AD_SAFEMODE_ADMIN_PASS
+          Force                         = $true
       }
       $DESKTOP_PATH=$([System.Environment]::GetFolderPath("Desktop"))
       Install-WindowsFeature -name AD-Domain-Services -IncludeManagementTools
