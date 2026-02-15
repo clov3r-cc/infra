@@ -47,16 +47,17 @@ write_files:
           SysvolPath                    = "E:\AD_SYSVOL"
           LogPath                       = "F:\AD_LOG"
           SafeModeAdministratorPassword = $ENCRYPTED_AD_SAFEMODE_ADMIN_PASS
+          NoRebootOnCompletion          = $false
           Force                         = $true
       }
-      $DESKTOP_PATH=$([System.Environment]::GetFolderPath("Desktop"))
       Install-WindowsFeature -name AD-Domain-Services -IncludeManagementTools
       Import-Module ADDSDeployment
       Install-ADDSForest @AD_ARGS
 
       setspn -A HTTP/${CI_HOSTNAME}.$DOMAIN_NAME ${CI_HOSTNAME}
-      ktpass -princ ${CI_MACHINEUSER_NAME}@$($DOMAIN_NAME.toUpper()) -mapuser ${CI_MACHINEUSER_NAME} -pass ${CI_MACHINEUSER_PASSWORD} -crypto AES256-SHA1 -ptype KRB5_NT_PRINCIPAL -out $DESKTOP_PATH\${CI_MACHINEUSER_NAME}.keytab
+      ktpass -princ ${CI_MACHINEUSER_NAME}@$($DOMAIN_NAME.toUpper()) -mapuser ${CI_MACHINEUSER_NAME} -pass ${CI_MACHINEUSER_PASSWORD} -crypto AES256-SHA1 -ptype KRB5_NT_PRINCIPAL -out C:\${CI_MACHINEUSER_NAME}.keytab
 runcmd:
   - 'powershell -NoProfile -ExecutionPolicy Bypass -File C:\Init-ADDisks.ps1'
   - 'powershell -NoProfile -ExecutionPolicy Bypass -File C:\Setup-AD.ps1'
+  - 'shutdown /r /t 0'
   - 'del C:\Init-ADDisks.ps1 C:\Setup-AD.ps1'
