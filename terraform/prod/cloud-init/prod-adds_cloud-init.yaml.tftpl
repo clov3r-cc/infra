@@ -28,7 +28,7 @@ write_files:
           }
 
           if (-not ($Disk | Get-Partition -ErrorAction SilentlyContinue)) {
-              $Disk | New-Partition -UseMaximumSize | Format-Volume -FileSystem NTFS -NewFileSystemLabel $Label -Force | Get-Partition | Add-PartitionAccessPath -AccessPath "$\{Drive\}:"
+              $Disk | New-Partition -UseMaximumSize | Format-Volume -FileSystem NTFS -NewFileSystemLabel $Label -Force | Get-Partition | Add-PartitionAccessPath -AccessPath "$${Drive}:"
           }
       }
   - path: C:\Setup-AD.ps1
