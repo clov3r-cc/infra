@@ -57,6 +57,6 @@ write_files:
       setspn -A HTTP/${CI_HOSTNAME}.$DOMAIN_NAME ${CI_HOSTNAME}
       ktpass -princ ${CI_MACHINEUSER_NAME}@$($DOMAIN_NAME.toUpper()) -mapuser ${CI_MACHINEUSER_NAME} -pass ${CI_MACHINEUSER_PASSWORD} -crypto AES256-SHA1 -ptype KRB5_NT_PRINCIPAL -out $DESKTOP_PATH\${CI_MACHINEUSER_NAME}.keytab
 runcmd:
-  - "powershell -Command \"Start-Process powershell -ArgumentList '-NoProfile -ExecutionPolicy Bypass -File C:\\Init-ADDisks.ps1' -Verb RunAs\""
-  - "powershell -Command \"Start-Process powershell -ArgumentList '-NoProfile -ExecutionPolicy Bypass -File C:\\Setup-AD.ps1' -Verb RunAs\""
+  - 'powershell -NoProfile -ExecutionPolicy Bypass -File C:\Init-ADDisks.ps1'
+  - 'powershell -NoProfile -ExecutionPolicy Bypass -File C:\Setup-AD.ps1'
   - 'del C:\Init-ADDisks.ps1 C:\Setup-AD.ps1'
