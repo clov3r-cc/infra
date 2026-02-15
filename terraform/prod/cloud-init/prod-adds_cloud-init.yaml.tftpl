@@ -56,9 +56,6 @@ write_files:
       setspn -A HTTP/${CI_HOSTNAME}.$DOMAIN_NAME ${CI_HOSTNAME}
       ktpass -princ ${CI_MACHINEUSER_NAME}@AD.LABO.CLOV3R.CC -mapuser ${CI_MACHINEUSER_NAME} -pass ${CI_MACHINEUSER_PASSWORD} -crypto AES256-SHA1 -ptype KRB5_NT_PRINCIPAL -out C:\${CI_MACHINEUSER_NAME}.keytab
 
-      setspn -L ${CI_HOSTNAME} > C:\ci.log
-      ls C:\ >> C:\ci.log
-
       Remove-Item C:\Init-ADDisks.ps1 C:\Setup-AD.ps1 C:\Post-Reboot.ps1
 
 runcmd:
