@@ -28,7 +28,7 @@ write_files:
           }
 
           if (-not ($Disk | Get-Partition -ErrorAction SilentlyContinue)) {
-              $Disk | New-Partition -UseMaximumSize | Format-Volume -FileSystem NTFS -NewFileSystemLabel $Label -Force | Get-Partition | Add-PartitionAccessPath -AccessPath "$Drive:"
+              $Disk | New-Partition -UseMaximumSize | Format-Volume -FileSystem NTFS -NewFileSystemLabel $Label -Force | Get-Partition | Add-PartitionAccessPath -AccessPath "$\{Drive\}:"
           }
       }
   - path: C:\Setup-AD.ps1
@@ -37,6 +37,7 @@ write_files:
       $WINSRV_VER="2025"
       $NETBIOS_NAME="AD"
       $DOMAIN_NAME="$($NETBIOS_NAME.toLower()).labo.clov3r.cc"
+      $ENCRYPTED_AD_SAFEMODE_ADMIN_PASS = ConvertTo-SecureString "${AD_SAFEMODE_ADMIN_PASS}" -AsPlainText -Force
       $AD_ARGS = @{
           DomainNetbiosName             = "$NETBIOS_NAME"
           DomainName                    = "$DOMAIN_NAME"
@@ -47,7 +48,7 @@ write_files:
           DatabasePath                  = "E:\AD_DB"
           SysvolPath                    = "E:\AD_SYSVOL"
           LogPath                       = "F:\AD_LOG"
-          SafeModeAdministratorPassword = "${AD_SAFEMODE_ADMIN_PASS}"
+          SafeModeAdministratorPassword = $ENCRYPTED_AD_SAFEMODE_ADMIN_PASS
       }
       $DESKTOP_PATH=$([System.Environment]::GetFolderPath("Desktop"))
       Install-WindowsFeature -name AD-Domain-Services -IncludeManagementTools
