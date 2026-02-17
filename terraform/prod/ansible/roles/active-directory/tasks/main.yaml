@@ -170,3 +170,15 @@
   when: gpo_wu_link_check is changed
   notify: Update group policies on domain computers
   run_once: true
+
+- name: Check if Administrator has SmartcardLogonRequired enabled
+  ansible.windows.win_powershell:
+    script: |
+      $user = Get-ADUser -Identity "Administrator" -Properties SmartcardLogonRequired
+      $Ansible.Changed = -not $user.SmartcardLogonRequired
+  register: admin_smartcard_check
+
+- name: Enable SmartcardLogonRequired for Administrator
+  ansible.windows.win_powershell:
+    script: Set-ADUser -Identity "Administrator" -SmartcardLogonRequired $true
+  when: admin_smartcard_check is changed
