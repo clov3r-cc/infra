@@ -182,3 +182,15 @@
   ansible.windows.win_powershell:
     script: Set-ADUser -Identity "Administrator" -SmartcardLogonRequired $true
   when: admin_smartcard_check is changed
+
+- name: Check if Administrator has AccountNotDelegated enabled
+  ansible.windows.win_powershell:
+    script: |
+      $user = Get-ADUser -Identity "Administrator" -Properties AccountNotDelegated
+      $Ansible.Changed = -not $user.AccountNotDelegated
+  register: admin_not_delegated_check
+
+- name: Enable AccountNotDelegated for Administrator
+  ansible.windows.win_powershell:
+    script: Set-ADAccountControl -Identity "Administrator" -AccountNotDelegated $true
+  when: admin_not_delegated_check is changed
