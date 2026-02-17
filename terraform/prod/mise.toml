@@ -10,3 +10,12 @@ run = "uv run ansible-playbook ${usage_playbook:?} -i ansible/inventory_src.yaml
 usage = '''
 arg "<playbook>" help="Which playbook do you want to play?"
 '''
+
+[tasks.ping]
+depends = "ping:*"
+
+[tasks."ping:win"]
+run = "uv run ansible -i ansible/inventory_src.yaml -m win_ping domain_computer"
+
+[tasks."ping:linux"]
+run = "uv run ansible -i ansible/inventory_src.yaml -m ping 'all:!domain_computer'"
