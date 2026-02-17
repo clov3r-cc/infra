@@ -6,4 +6,7 @@ KRB5_CLIENT_KTNAME = "./ansible/files/machine-user.keytab"
 run = "uv run ansible-inventory -i ansible/inventory_src.yaml --list --yaml"
 
 [tasks.play-ansible]
-run = "uv run ansible-playbook -i ansible/inventory_src.yaml" # 実行する Playbook のパスを引数で渡す必要がある
+run = "uv run ansible-playbook ${usage_playbook:?} -i ansible/inventory_src.yaml"
+usage = '''
+arg "<playbook>" help="Which playbook do you want to play?"
+'''
