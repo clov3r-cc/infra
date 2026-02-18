@@ -1,5 +1,5 @@
 ---
 - hosts: domain_controller
   roles:
-    - common-win
+  #   - common-win
     - active-directory
