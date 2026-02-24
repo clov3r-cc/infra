@@ -32,7 +32,7 @@ jobs:
         working-directory: terraform/${{ matrix.env }}
     steps:
       - uses: actions/checkout@v6
-      - uses: hashicorp/setup-terraform@v3
+      - uses: hashicorp/setup-terraform@v4
         with:
           cli_config_credentials_token: ${{ secrets.TERRAFORM_CLOUD_API_TOKEN }}
       - uses: shmokmt/actions-setup-tfcmt@v2
