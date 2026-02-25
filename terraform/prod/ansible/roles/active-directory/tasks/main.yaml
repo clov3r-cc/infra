@@ -1,5 +1,5 @@
 ---
-- name: Check if `Hide Shutdown Button` GPO exists
+- name: Check if Hide Shutdown Button GPO exists
   ansible.windows.win_powershell:
     script: Get-GPO -Name "Hide Shutdown Button"
   register: gpo_hide_shutdown_check
@@ -8,7 +8,7 @@
   changed_when: false
   run_once: true
 
-- name: Create `Hide Shutdown Button` GPO
+- name: Create Hide Shutdown Button GPO
   when: gpo_hide_shutdown_check.error | length != 0
   ansible.windows.win_powershell:
     script: New-GPO -Name "Hide Shutdown Button"
@@ -18,48 +18,56 @@
   notify: Update group policies on domain computers
   run_once: true
 
-# - name: Check if `Hide Shutdown Button` GPO registry value is set
-#   ansible.windows.win_powershell:
-#     script: |
-#       $val = Get-GPRegistryValue `
-#         -Name "Hide Shutdown Button" `
-#         -Key "HKCU\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer" `
-#         -ValueName "NoClose" `
-#         -ErrorAction SilentlyContinue
-#       $Ansible.Changed = -not ($val -and $val.Value -eq 1)
-#   register: gpo_shutdown_reg_check
-#   run_once: true
+- name: Check if Hide Shutdown Button GPO registry value is set
+  ansible.windows.win_powershell:
+    script: Get-GPRegistryValue `
+        -Name "Hide Shutdown Button" `
+        -Key "HKCU\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer" `
+        -ValueName "NoClose"
+  register: gpo_shutdown_reg_check
+  check_mode: false
+  failed_when: false
+  changed_when: false
+  run_once: true
 
-# - name: Set GPO registry value to hide shutdown button
-#   ansible.windows.win_powershell:
-#     script: |
-#       Set-GPRegistryValue `
-#         -Name "Hide Shutdown Button" `
-#         -Key "HKCU\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer" `
-#         -ValueName "NoClose" `
-#         -Type DWord `
-#         -Value 1
-#   when: gpo_shutdown_reg_check is changed
-#   notify: Update group policies on domain computers
-#   run_once: true
+- name: Set GPO registry value to hide shutdown button
+  when: gpo_shutdown_reg_check.error | length != 0
+  ansible.windows.win_powershell:
+    script: |
+      Set-GPRegistryValue `
+        -Name "Hide Shutdown Button" `
+        -Key "HKCU\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer" `
+        -ValueName "NoClose" `
+        -Type DWord `
+        -Value 1
+  check_mode: false
+  register: gpo_shutdown_reg
+  failed_when: ansible_check_mode == false and gpo_shutdown_reg.error | length != 0
+  notify: Update group policies on domain computers
+  run_once: true
 
-# - name: Check if `Hide Shutdown Button` GPO is linked to domain
-#   ansible.windows.win_powershell:
-#     script: |
-#       $target = "{{ ansible_domain_dn }}"
-#       $link = Get-GPInheritance -Target $target |
-#         Select-Object -ExpandProperty GpoLinks |
-#         Where-Object { $_.DisplayName -eq "Hide Shutdown Button" }
-#       $Ansible.Changed = -not $link
-#   register: gpo_link_check
-#   run_once: true
+- name: Check if Hide Shutdown Button GPO is linked to domain
+  ansible.windows.win_powershell:
+    script: |
+      $link = Get-GPInheritance -Target "{{ ansible_domain_dn }}" |
+        Select-Object -ExpandProperty GpoLinks |
+        Where-Object { $_.DisplayName -eq "Hide Shutdown Button" }
+      if (-not $link) { throw "GPO link not found" }
+  register: gpo_link_check
+  check_mode: false
+  failed_when: false
+  changed_when: false
+  run_once: true
 
-# - name: Link `Hide Shutdown Button` GPO to domain
-#   ansible.windows.win_powershell:
-#     script: New-GPLink -Name "Hide Shutdown Button" -Target "{{ ansible_domain_dn }}"
-#   when: gpo_link_check is changed
-#   notify: Update group policies on domain computers
-#   run_once: true
+- name: Link Hide Shutdown Button GPO to domain
+  when: gpo_link_check.error | length != 0
+  ansible.windows.win_powershell:
+    script: New-GPLink -Name "Hide Shutdown Button" -Target "{{ ansible_domain_dn }}"
+  check_mode: false
+  register: gpo_link
+  failed_when: ansible_check_mode == false and gpo_link.error | length != 0
+  notify: Update group policies on domain computers
+  run_once: true
 
 # - name: Check if `WindowsUpdate` GPO exists
 #   ansible.windows.win_powershell:
