@@ -1,4 +1,0 @@
----
-- import_tasks: gpo-hide-shutdown-button.yaml
-- import_tasks: gpo-windows-update.yaml
-- import_tasks: administrator-hardening.yaml
