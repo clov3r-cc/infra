@@ -1,14 +1,13 @@
 locals {
   vm_settings__dns_server = {
     "01" = {
-      host_name                 = local.pve_hosts["prd-pve-01"]["host_name"]
-      vm_id                     = 102
-      managemt_nw_host_section  = 4
-      heartbeat_nw_host_section = 3
-      cpu_socket                = 1
-      cpu_core                  = 2
-      memory                    = 1024 * 2
-      os_disk_size              = 15
+      host_name           = local.pve_hosts["prd-pve-01"]["host_name"]
+      vm_id               = 203
+      dmz_nw_host_section = 4
+      cpu_socket          = 1
+      cpu_core            = 2
+      memory              = 1024 * 2
+      os_disk_size        = 15
     }
   }
 }
@@ -103,17 +102,10 @@ resource "proxmox_vm_qemu" "dns_server" {
   network {
     id     = 0
     model  = "virtio"
-    bridge = local.vm_dns_nw_bridge
+    bridge = local.vm_dmz_nw_bridge
   }
 
-  network {
-    id     = 1
-    model  = "virtio"
-    bridge = local.zabbix_server_heartbeat_nw_bridge
-  }
-
-  ipconfig0 = "ip=${cidrhost(local.vm_dns_nw_subnet_cidr, each.value.managemt_nw_host_section)}${"/${local.vm_dns_nw_subnet_mask}"},gw=${local.vm_dns_nw_default_gw}"
-  ipconfig1 = "ip=${cidrhost(local.zabbix_server_heartbeat_nw_subnet_cidr, each.value.heartbeat_nw_host_section)}${"/${local.zabbix_server_heartbeat_nw_subnet_mask}"}"
+  ipconfig0 = "ip=${cidrhost(local.vm_dmz_nw_subnet_cidr, each.value.dmz_nw_host_section)}${"/${local.vm_dmz_nw_subnet_mask}"},gw=${local.vm_dmz_nw_default_gw}"
 
   disks {
     virtio {
@@ -158,18 +150,13 @@ resource "ansible_group" "dns_server" {
   }
 }
 
-resource "ansible_group" "pacemaker_qdevice" {
-  name = "pacemaker_qdevice"
-}
-
 resource "ansible_host" "dns_server" {
   for_each = proxmox_vm_qemu.dns_server
 
   name   = each.value.name
   groups = [ansible_group.dns_server.name, ansible_group.pacemaker_qdevice.name]
   variables = {
-    ansible_host    = each.value.ssh_host
-    heartbeat_nw_ip = split("/", split("ip=", each.value.ipconfig1)[1])[0]
-    host_index      = tonumber(each.key)
+    ansible_host = each.value.ssh_host
+    host_index   = tonumber(each.key)
   }
 }

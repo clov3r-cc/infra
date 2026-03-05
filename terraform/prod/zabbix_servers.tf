@@ -1,20 +1,10 @@
 locals {
   vm_settings__zabbix_server = {
     "01" = {
-      host_name                 = local.pve_hosts["prod-prox-01"]["host_name"]
-      vm_id                     = 102
-      managemt_nw_host_section  = 5
+      host_name                 = local.pve_hosts["prd-pve-01"]["host_name"]
+      vm_id                     = 401
+      internal_nw_host_section  = 8
       heartbeat_nw_host_section = 1
-      cpu_socket                = 1
-      cpu_core                  = 2
-      memory                    = 1024 * 3
-      os_disk_size              = 15
-    }
-    "02" = {
-      host_name                 = local.pve_hosts["prod-prox-01"]["host_name"]
-      vm_id                     = 103
-      managemt_nw_host_section  = 6
-      heartbeat_nw_host_section = 2
       cpu_socket                = 1
       cpu_core                  = 2
       memory                    = 1024 * 3
@@ -119,7 +109,7 @@ resource "proxmox_vm_qemu" "zabbix_server" {
   network {
     id     = 0
     model  = "virtio"
-    bridge = local.vm_management_nw_bridge
+    bridge = local.vm_internal_nw_bridge
   }
 
   network {
@@ -128,7 +118,7 @@ resource "proxmox_vm_qemu" "zabbix_server" {
     bridge = local.zabbix_server_heartbeat_nw_bridge
   }
 
-  ipconfig0 = "ip=${cidrhost(local.vm_management_nw_subnet_cidr, each.value.managemt_nw_host_section)}${"/${local.vm_management_nw_subnet_mask}"},gw=${local.vm_management_nw_default_gw}"
+  ipconfig0 = "ip=${cidrhost(local.vm_internal_nw_subnet_cidr, each.value.managemt_nw_host_section)}${"/${local.vm_internal_nw_subnet_mask}"},gw=${local.vm_internal_nw_default_gw}"
   ipconfig1 = "ip=${cidrhost(local.zabbix_server_heartbeat_nw_subnet_cidr, each.value.heartbeat_nw_host_section)}${"/${local.zabbix_server_heartbeat_nw_subnet_mask}"}"
 
   disks {

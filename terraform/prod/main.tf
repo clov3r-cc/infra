@@ -28,9 +28,9 @@ locals {
   #region Proxmox VE
 
   pve_hosts = {
-    "prod-prox-01" = {
-      host_name  = "prod-prox-01"
-      ip_address = "192.168.21.2"
+    "prd-pve-01" = {
+      host_name  = "prd-pve-01"
+      ip_address = "192.168.20.2"
     }
   }
 
@@ -45,18 +45,24 @@ c3NoLWVkMjU1MTkgQUFBQUMzTnphQzFsWkRJMU5URTVBQUFBSU1IWitzblhERk5WSzg5c2ZLQXEx
 VUxFSTV5Ukx4cVdRSFlpVlRHVVZsYjgK
 EOT
 
-  # Public network configuration
-  vm_service_nw_bridge      = "vmbr0"
-  vm_service_nw_subnet_cidr = "192.168.20.0/24"
-  vm_service_nw_subnet_mask = split("/", local.vm_service_nw_subnet_cidr)[1]
-  vm_service_nw_default_gw  = cidrhost(local.vm_service_nw_subnet_cidr, 1)
+  # DMZ network configuration
+  vm_dmz_nw_bridge      = "vmbr1"
+  vm_dmz_nw_subnet_cidr = "192.168.20.16/28"
+  vm_dmz_nw_subnet_mask = split("/", local.vm_service_nw_subnet_cidr)[1]
+  vm_dmz_nw_default_gw  = cidrhost(local.vm_service_nw_subnet_cidr, 17)
   # Internal network configuration
-  vm_management_nw_bridge      = "vmbr1"
-  vm_management_nw_subnet_cidr = "192.168.21.0/24"
-  vm_management_nw_subnet_mask = split("/", local.vm_management_nw_subnet_cidr)[1]
-  vm_management_nw_default_gw  = cidrhost(local.vm_management_nw_subnet_cidr, 1)
+  # Service network configuration
+  vm_service_nw_bridge      = "vmbr2"
+  vm_service_nw_subnet_cidr = "192.168.21.0/24"
+  vm_service_nw_subnet_mask = split("/", local.vm_service_nw_subnet_cidr)[1]
+  vm_service_nw_default_gw  = cidrhost(local.vm_service_nw_subnet_cidr, 3)
+  # Internal network configuration
+  vm_internal_nw_bridge      = "vmbr3"
+  vm_internal_nw_subnet_cidr = "192.168.22.0/24"
+  vm_internal_nw_subnet_mask = split("/", local.vm_internal_nw_subnet_cidr)[1]
+  vm_internal_nw_default_gw  = cidrhost(local.vm_internal_nw_subnet_cidr, 3)
   # Zabbix Server Heartbeat network configuration
-  zabbix_server_heartbeat_nw_bridge      = "vmbr2"
+  zabbix_server_heartbeat_nw_bridge      = "vmbr4"
   zabbix_server_heartbeat_nw_subnet_cidr = "192.168.91.0/29"
   zabbix_server_heartbeat_nw_subnet_mask = split("/", local.zabbix_server_heartbeat_nw_subnet_cidr)[1]
 
