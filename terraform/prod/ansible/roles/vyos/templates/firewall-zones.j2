@@ -1,0 +1,8 @@
+{% for zone in fw_zones %}
+{% if zone.local_zone | default(false) %}
+set firewall zone {{ zone.name }} local-zone
+{% else %}
+set firewall zone {{ zone.name }} member interface {{ zone.interface }}
+{% endif %}
+set firewall zone {{ zone.name }} default-action {{ zone.default_action }}
+{% endfor %}

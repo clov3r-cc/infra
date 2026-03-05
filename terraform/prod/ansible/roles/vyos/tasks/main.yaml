@@ -1,0 +1,8 @@
+---
+- ansible.builtin.import_tasks: system.yaml
+- ansible.builtin.import_tasks: dns.yaml
+- ansible.builtin.import_tasks: firewall.yaml
+- ansible.builtin.import_tasks: vrrp.yaml
+- name: Save configuration
+  vyos.vyos.vyos_config:
+    save: true

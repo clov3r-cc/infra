@@ -1,0 +1,45 @@
+---
+fw_network_groups:
+  - name: HOME-CLIENTS
+    networks:
+      - 192.168.10.0/24
+
+fw_address_groups:
+  - name: WAN-GATEWAY
+    addresses:
+      - 192.168.20.1
+  - name: FW-WAN-VIP
+    addresses:
+      - 192.168.20.3
+  - name: FW-WAN-NODES
+    addresses:
+      - 192.168.20.4
+      - 192.168.20.5
+  - name: TAILSCALE-NODES
+    addresses:
+      - 192.168.20.20
+      - 192.168.20.21
+  - name: FW-DMZ-VIP
+    addresses:
+      - 192.168.20.17
+  - name: FW-DMZ-NODES
+    addresses:
+      - 192.168.20.18
+      - 192.168.20.19
+  - name: DNS-SERVERS
+    addresses:
+      - 192.168.20.22
+      - 192.168.20.23
+  - name: FW-INTERNAL-VIP
+    addresses:
+      - 192.168.22.3
+  - name: NAS-SERVERS
+    addresses:
+      - 192.168.22.6
+  - name: ZABBIX-SERVERS
+    addresses:
+      - 192.168.22.8
+      - 192.168.22.9
+  - name: VRRP-MULTICAST
+    addresses:
+      - 224.0.0.18

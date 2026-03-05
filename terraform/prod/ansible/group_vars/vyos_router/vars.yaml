@@ -1,0 +1,6 @@
+---
+vyos_ssh_public_key_type: ssh-ed25519
+vyos_ssh_public_key: AAAAC3NzaC1lZDI1NTE5AAAAIN1qNyXKdZGZQO3ulp99hfGyUniFVdQIpmoCQveLh9WZ
+
+vyos_dns_server: 192.168.20.1
+vyos_default_gateway: 192.168.20.1

@@ -1,0 +1,22 @@
+vyos_router:
+  vars:
+    ansible_network_os: vyos.vyos.vyos
+    ansible_connection: ansible.netcommon.network_cli
+    ansible_user: vyos
+  hosts:
+    prd-vyo-01:
+      ansible_host: 192.168.20.4
+      vyos_eth0_address: 192.168.20.4/29
+      vyos_eth1_address: 192.168.20.18/28
+      vyos_eth2_address: 192.168.21.4/24
+      vyos_eth3_address: 192.168.22.4/24
+      vyos_vrrp_priority: 150
+      vyos_vrrp_expected_state: MASTER
+    prd-vyo-02:
+      ansible_host: 192.168.20.5
+      vyos_eth0_address: 192.168.20.5/29
+      vyos_eth1_address: 192.168.20.19/28
+      vyos_eth2_address: 192.168.21.5/24
+      vyos_eth3_address: 192.168.22.5/24
+      vyos_vrrp_priority: 100
+      vyos_vrrp_expected_state: BACKUP

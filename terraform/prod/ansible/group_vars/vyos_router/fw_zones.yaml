@@ -1,0 +1,17 @@
+---
+fw_zones:
+  - name: WAN
+    interface: eth0
+    default_action: drop
+  - name: DMZ
+    interface: eth1
+    default_action: drop
+  - name: SERVICE
+    interface: eth2
+    default_action: drop
+  - name: INTERNAL
+    interface: eth3
+    default_action: drop
+  - name: LOCAL
+    local_zone: true
+    default_action: drop

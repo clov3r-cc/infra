@@ -1,0 +1,347 @@
+---
+fw_rulesets:
+  - name: WAN-TO-LOCAL
+    default_action: drop
+    default_log: true
+    rules:
+      - number: 10
+        action: accept
+        description: Allow SSH from HOME-CLIENTS to FW-WAN-NODES
+        protocol: tcp
+        source:
+          network_group: HOME-CLIENTS
+        destination:
+          address_group: FW-WAN-NODES
+          port: 22
+      - number: 20
+        action: accept
+        description: Allow ICMP from HOME-CLIENTS to FW-WAN-NODES
+        protocol: icmp
+        source:
+          network_group: HOME-CLIENTS
+        destination:
+          address_group: FW-WAN-NODES
+      - number: 25
+        action: accept
+        description: Allow UDP traceroute from HOME-CLIENTS to FW-WAN-NODES
+        protocol: udp
+        source:
+          network_group: HOME-CLIENTS
+        destination:
+          address_group: FW-WAN-NODES
+          port: 33434-33534
+      - number: 30
+        action: accept
+        description: Allow ICMP from HOME-CLIENTS to FW-WAN-VIP
+        protocol: icmp
+        source:
+          network_group: HOME-CLIENTS
+        destination:
+          address_group: FW-WAN-VIP
+      - number: 35
+        action: accept
+        description: Allow UDP traceroute from HOME-CLIENTS to FW-WAN-VIP
+        protocol: udp
+        source:
+          network_group: HOME-CLIENTS
+        destination:
+          address_group: FW-WAN-VIP
+          port: 33434-33534
+      - number: 40
+        action: accept
+        description: Allow VRRP from FW-WAN-NODES
+        protocol: "112"
+        source:
+          address_group: FW-WAN-NODES
+
+  - name: WAN-TO-DMZ
+    default_action: drop
+    default_log: true
+    rules:
+      - number: 10
+        action: accept
+        description: Allow SSH from HOME-CLIENTS to TAILSCALE-NODES
+        protocol: tcp
+        source:
+          network_group: HOME-CLIENTS
+        destination:
+          address_group: TAILSCALE-NODES
+          port: 22
+      - number: 20
+        action: accept
+        description: Allow ICMP from HOME-CLIENTS to TAILSCALE-NODES
+        protocol: icmp
+        source:
+          network_group: HOME-CLIENTS
+        destination:
+          address_group: TAILSCALE-NODES
+      - number: 25
+        action: accept
+        description: Allow UDP traceroute from HOME-CLIENTS to TAILSCALE-NODES
+        protocol: udp
+        source:
+          network_group: HOME-CLIENTS
+        destination:
+          address_group: TAILSCALE-NODES
+          port: 33434-33534
+
+  - name: DMZ-TO-WAN
+    default_action: drop
+    default_log: true
+    rules:
+      - number: 10
+        action: accept
+        description: Allow Tailscale control/DERP (TCP 443)
+        protocol: tcp
+        source:
+          address_group: TAILSCALE-NODES
+        destination:
+          port: 443
+      - number: 20
+        action: accept
+        description: Allow Tailscale WireGuard tunnel (UDP 41641)
+        protocol: udp
+        source:
+          address_group: TAILSCALE-NODES
+          port: 41641
+      - number: 30
+        action: accept
+        description: Allow Tailscale STUN (UDP 3478)
+        protocol: udp
+        source:
+          address_group: TAILSCALE-NODES
+        destination:
+          port: 3478
+
+  - name: DMZ-TO-LOCAL
+    default_action: drop
+    default_log: true
+    rules:
+      - number: 10
+        action: accept
+        description: Allow SSH from TAILSCALE-NODES to FW-DMZ-NODES
+        protocol: tcp
+        source:
+          address_group: TAILSCALE-NODES
+        destination:
+          address_group: FW-DMZ-NODES
+          port: 22
+      - number: 20
+        action: accept
+        description: Allow NTP from TAILSCALE-NODES to FW-DMZ-VIP
+        protocol: udp
+        source:
+          address_group: TAILSCALE-NODES
+        destination:
+          address_group: FW-DMZ-VIP
+          port: 123
+      - number: 25
+        action: accept
+        description: Allow DNS from TAILSCALE-NODES to FW-DMZ-VIP
+        protocol: tcp_udp
+        source:
+          address_group: TAILSCALE-NODES
+        destination:
+          address_group: FW-DMZ-VIP
+          port: 53
+      - number: 30
+        action: accept
+        description: Allow DNS from DNS-SERVERS to FW-DMZ-VIP
+        protocol: tcp_udp
+        source:
+          address_group: DNS-SERVERS
+        destination:
+          address_group: FW-DMZ-VIP
+          port: 53
+      - number: 40
+        action: accept
+        description: Allow NTP from DNS-SERVERS to FW-DMZ-VIP
+        protocol: udp
+        source:
+          address_group: DNS-SERVERS
+        destination:
+          address_group: FW-DMZ-VIP
+          port: 123
+      - number: 50
+        action: accept
+        description: Allow ICMP from TAILSCALE-NODES to FW-DMZ-NODES
+        protocol: icmp
+        source:
+          address_group: TAILSCALE-NODES
+        destination:
+          address_group: FW-DMZ-NODES
+      - number: 55
+        action: accept
+        description: Allow UDP traceroute from TAILSCALE-NODES to FW-DMZ-NODES
+        protocol: udp
+        source:
+          address_group: TAILSCALE-NODES
+        destination:
+          address_group: FW-DMZ-NODES
+          port: 33434-33534
+      - number: 60
+        action: accept
+        description: Allow VRRP from FW-DMZ-NODES
+        protocol: "112"
+        source:
+          address_group: FW-DMZ-NODES
+
+  - name: DMZ-TO-INTERNAL
+    default_action: drop
+    default_log: true
+    rules:
+      - number: 10
+        action: accept
+        description: Allow ICMP from TAILSCALE-NODES to NAS-SERVERS
+        protocol: icmp
+        source:
+          address_group: TAILSCALE-NODES
+        destination:
+          address_group: NAS-SERVERS
+      - number: 15
+        action: accept
+        description: Allow UDP traceroute from TAILSCALE-NODES to NAS-SERVERS
+        protocol: udp
+        source:
+          address_group: TAILSCALE-NODES
+        destination:
+          address_group: NAS-SERVERS
+          port: 33434-33534
+
+  - name: INTERNAL-TO-DMZ
+    default_action: drop
+    default_log: true
+    rules:
+      - number: 10
+        action: accept
+        description: Allow DNS from ZABBIX-SERVERS to DNS-SERVERS
+        protocol: tcp_udp
+        source:
+          address_group: ZABBIX-SERVERS
+        destination:
+          address_group: DNS-SERVERS
+          port: 53
+
+  - name: INTERNAL-TO-LOCAL
+    default_action: drop
+    default_log: true
+    rules:
+      - number: 10
+        action: accept
+        description: Allow NTP from ZABBIX-SERVERS to FW-INTERNAL-VIP
+        protocol: udp
+        source:
+          address_group: ZABBIX-SERVERS
+        destination:
+          address_group: FW-INTERNAL-VIP
+          port: 123
+
+  - name: LOCAL-TO-WAN
+    default_action: drop
+    default_log: true
+    rules:
+      - number: 10
+        action: accept
+        description: Allow NTP to WAN-GATEWAY
+        protocol: udp
+        destination:
+          address_group: WAN-GATEWAY
+          port: 123
+      - number: 20
+        action: accept
+        description: Allow DNS to WAN-GATEWAY
+        protocol: tcp_udp
+        destination:
+          address_group: WAN-GATEWAY
+          port: 53
+      - number: 30
+        action: accept
+        description: Allow HTTPS for image download
+        protocol: tcp
+        destination:
+          fqdn: github.com
+          port: 443
+      - number: 31
+        action: accept
+        description: Allow HTTPS for image download (GitHub CDN)
+        protocol: tcp
+        destination:
+          fqdn: objects.githubusercontent.com
+          port: 443
+      - number: 40
+        action: accept
+        description: Allow ICMP to WAN
+        protocol: icmp
+      - number: 45
+        action: accept
+        description: Allow UDP traceroute to WAN
+        protocol: udp
+        destination:
+          port: 33434-33534
+      - number: 50
+        action: accept
+        description: Allow VRRP to FW-WAN-NODES
+        protocol: "112"
+        destination:
+          address_group: VRRP-MULTICAST
+
+  - name: LOCAL-TO-DMZ
+    default_action: drop
+    default_log: true
+    rules:
+      - number: 10
+        action: accept
+        description: Allow VRRP to FW-DMZ-NODES
+        protocol: "112"
+        destination:
+          address_group: VRRP-MULTICAST
+      - number: 20
+        action: accept
+        description: Allow ICMP to DMZ
+        protocol: icmp
+      - number: 25
+        action: accept
+        description: Allow UDP traceroute to DMZ
+        protocol: udp
+        destination:
+          port: 33434-33534
+
+  - name: LOCAL-TO-SERVICE
+    default_action: drop
+    rules:
+      - number: 10
+        action: accept
+        description: Allow VRRP to SERVICE
+        protocol: "112"
+        destination:
+          address_group: VRRP-MULTICAST
+      - number: 20
+        action: accept
+        description: Allow ICMP to SERVICE
+        protocol: icmp
+      - number: 25
+        action: accept
+        description: Allow UDP traceroute to SERVICE
+        protocol: udp
+        destination:
+          port: 33434-33534
+
+  - name: LOCAL-TO-INTERNAL
+    default_action: drop
+    rules:
+      - number: 10
+        action: accept
+        description: Allow VRRP to INTERNAL
+        protocol: "112"
+        destination:
+          address_group: VRRP-MULTICAST
+      - number: 20
+        action: accept
+        description: Allow ICMP to INTERNAL
+        protocol: icmp
+      - number: 25
+        action: accept
+        description: Allow UDP traceroute to INTERNAL
+        protocol: udp
+        destination:
+          port: 33434-33534

@@ -1,0 +1,5 @@
+---
+- name: Configure DNS forwarding
+  vyos.vyos.vyos_config:
+    lines: "{{ lookup('ansible.builtin.template', role_path + '/templates/dns.j2').splitlines() | select | list }}"
+    save: false

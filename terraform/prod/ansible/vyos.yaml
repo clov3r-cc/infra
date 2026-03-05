@@ -1,0 +1,5 @@
+---
+- hosts: vyos_router
+  gather_facts: false
+  roles:
+    - vyos
