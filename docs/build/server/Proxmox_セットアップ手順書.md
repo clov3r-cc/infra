@@ -17,11 +17,12 @@
   - [4.5. CI/CD用ユーザを追加する](#45-cicd用ユーザを追加する)
   - [4.6. SSHサーバの設定をする](#46-sshサーバの設定をする)
   - [4.7. cloud-init の準備をする](#47-cloud-init-の準備をする)
+    - [4.7.1. Debian の VM テンプレートを作成する](#471-debian-の-vm-テンプレートを作成する)
     - [4.7.1. Alma Linux の VM テンプレートを作成する](#471-alma-linux-の-vm-テンプレートを作成する)
-    - [4.7.2. Windows Server 2025 の VM テンプレートを作成する](#472-windows-server-2025-の-vm-テンプレートを作成する)
   - [4.8. ネットワークブリッジを作成する](#48-ネットワークブリッジを作成する)
-    - [4.8.1. 管理用 NW を追加する](#481-管理用-nw-を追加する)
-    - [4.8.2. Zabbix Server のハートビートに用いる NW を追加する](#482-zabbix-server-のハートビートに用いる-nw-を追加する)
+    - [4.8.1. Linux Bond を追加する](#481-linux-bond-を追加する)
+    - [4.8.2. 内部通信に用いる NW を追加する](#482-内部通信に用いる-nw-を追加する)
+    - [4.8.3. Zabbix Server のハートビートに用いる NW を追加する](#483-zabbix-server-のハートビートに用いる-nw-を追加する)
   - [4.9. イーサネットポートを有効にする](#49-イーサネットポートを有効にする)
 - [5. 完了条件](#5-完了条件)
 
@@ -34,7 +35,7 @@
 ## 3. 前提条件
 
 - `Proxmox 9.x`がインストール済みで、起動していること
-- ホスト名: `prod-prox-01`
+- ホスト名: `prd-pve-01`
 
 ## 4. 作業手順
 
@@ -433,6 +434,64 @@
     dump  images  snippets  template
     ```
 
+#### 4.7.1. Debian の VM テンプレートを作成する
+
+ここでは、Debian 13 (x86_64) の Generic Cloud イメージ をダウンロードすることします。
+
+1. イメージをダウンロードする
+
+    ダウンロード先URLは、[Debian 公式サイト](https://cloud.debian.org/images/cloud/) を参照してください。
+
+    ```shell
+    ssh prd-pve-01
+    MAJOR_VER='13'
+    MAJOR_VER_CODENAME='trixie'
+    QCOW_NAME="debian-$MAJOR_VER-generic-amd64.qcow2"
+    curl -o "$QCOW_NAME" "https://cloud.debian.org/images/cloud/$MAJOR_VER_CODENAME/latest/$QCOW_NAME"    # エラーが出力されなければ OK
+
+    # チェックサムを照合
+    DOWNLOADED_CHECKSUM=$(curl -sS "https://cloud.debian.org/images/cloud/$MAJOR_VER_CODENAME/latest/SHA512SUMS" | grep "$QCOW_NAME" | awk '{print $1}')
+    FILE_CHECKSUM=$(sha512sum "$QCOW_NAME" | awk '{print $1}')
+    if [ "$DOWNLOADED_CHECKSUM" = "$FILE_CHECKSUM" ]; then echo 'OK.'; else echo 'CHECKSUM UNMATCHED!!'; fi
+    # OK. と出力されればよい
+    ```
+
+2. アップロードしたイメージを移動する
+
+    ```shell
+    ISO_DIR='/var/lib/vz/template/iso'
+    sudo mv "$QCOW_NAME" "$ISO_DIR/"
+    # エラーが出力されなければ OK
+    ```
+
+3. VM のテンプレートを作成する
+
+    ```shell
+    sudo virt-customize -a "$ISO_DIR/$QCOW_NAME" --run-command 'echo -n >/etc/machine-id'
+
+    VM_TMPL_ID=901
+    VM_TMPL_NAME="debian-$MAJOR_VER"
+    VM_DISK_STORAGE=local-lvm
+    sudo qm destroy "$VM_TMPL_ID" --purge || true
+    sudo qm create $VM_TMPL_ID \
+      --name $VM_TMPL_NAME \
+      --ostype l26 \
+      --machine q35 \
+      --sockets 1 \
+      --cores 1 \
+      --cpu x86-64-v3 \
+      --memory 1024 \
+      --scsihw virtio-scsi-single \
+      --virtio0 "${VM_DISK_STORAGE}:0,import-from=$ISO_DIR/$QCOW_NAME",discard=on \
+      --bootdisk virtio0 \
+      --ide2 "${VM_DISK_STORAGE}:cloudinit" \
+      --net0 virtio,bridge=vmbr0 \
+      --serial0 socket --vga serial0 \
+      --onboot 1 \
+      --agent enabled=1,fstrim_cloned_disks=1
+    sudo qm template $VM_TMPL_ID
+    ```
+
 #### 4.7.1. Alma Linux の VM テンプレートを作成する
 
 ここでは、Alma Linux 10.0 (x86_64) の Generic Cloud イメージ をダウンロードすることします。
@@ -442,7 +501,7 @@
     ダウンロード先URLは、[産業サイバーセキュリティセンターの Alma Linux ISO ミラー](https://ftp.udx.icscoe.jp/Linux/almalinux/10.0/cloud/x86_64/images/) を参照してください。
 
     ```shell
-    ssh prod-prox-01
+    ssh prd-pve-01
     MAJOR_VER='10'
     VER="${MAJOR_VER}.1"
     QCOW_NAME="Alma-$VER.x86_64.qcow2"
@@ -469,7 +528,7 @@
     ```shell
     sudo virt-customize -a "$ISO_DIR/$QCOW_NAME" --run-command 'echo -n >/etc/machine-id'
 
-    VM_TMPL_ID=901
+    VM_TMPL_ID=902
     VM_TMPL_NAME="alma-$VER"
     VM_DISK_STORAGE=local-lvm
     sudo qm destroy "$VM_TMPL_ID" --purge || true
@@ -485,13 +544,9 @@
     # という警告は無視できる
     ```
 
-#### 4.7.2. Windows Server 2025 の VM テンプレートを作成する
-
-[WinSrv2025_セットアップ手順書.md](WinSrv2025_セットアップ手順書.md)を参照のこと。
-
 ### 4.8. ネットワークブリッジを作成する
 
-#### 4.8.1. 管理用 NW を追加する
+#### 4.8.1. Linux Bond を追加する
 
 1. Proxmox Web UI にログインする
 
@@ -499,7 +554,62 @@
 
 2. ノードを選択する
 
-    左側のメニューから `prod-prox-01` ノードを選択する
+    左側のメニューから `prd-pve-01` ノードを選択する
+
+3. ネットワーク設定画面を開く
+
+    `システム` > `ネットワーク` をクリックする
+
+4. ブリッジポートの設定を一旦削除する
+
+    1. `vmbr0`を選択する
+    2. `編集`ボタンをクリックする
+    3. `ブリッジポート`を空にする
+    4. `OK`ボタンをクリックする
+
+5. `Linux Bond` を作成する
+
+    1. `作成` > `Linux Bond` をクリックする
+    2. 以下の設定を入力する
+        - 名前: `bond0`
+        - 自動起動: チェックあり
+        - スレーブ: `enp2s0 enxc8a362a24690`
+        - モード: `balance-xor`
+    3. `作成` ボタンをクリックする
+
+6. ブリッジポートを設定する
+
+    1. `vmbr0`を選択する
+    2. `編集`ボタンをクリックする
+    3. 以下の設定を入力する
+        - 自動起動: チェックあり
+        - VLAN aware: チェックあり
+        - ブリッジポート: `bond0`
+    4. `詳細設定`にチェックを入れる
+    5. `VLAN IDs`に`2-4094`を指定する
+    6. `OK`ボタンをクリックする
+
+7. 設定を適用する
+
+    1. 画面上部の `設定を適用` ボタンをクリックする
+    2. 確認ダイアログで `OK` をクリックする
+
+8. `Linux Bond` が作成されたことを確認する
+
+    以下を確認する
+
+    - `bond0` が表示されていること
+    - `vmbr0` のブリッジポートが `bond0` であること
+
+#### 4.8.2. 内部通信に用いる NW を追加する
+
+1. Proxmox Web UI にログインする
+
+    ブラウザで `https://192.168.20.2:8006` にアクセスし、ログインする
+
+2. ノードを選択する
+
+    左側のメニューから `prd-pve-01` ノードを選択する
 
 3. ネットワーク設定画面を開く
 
@@ -510,10 +620,8 @@
     1. `作成` > `Linux Bridge` をクリックする
     2. 以下の設定を入力する
         - 名前: `vmbr1`
-        - IPv4/CIDR: `192.168.21.0/24`
         - 自動起動: チェックあり
-        - ブリッジポート: `enxc8a362a24690`
-        - コメント: `管理用NW`
+        - コメント: `内部通信NW`
     3. `作成` ボタンをクリックする
 
 5. 設定を適用する
@@ -525,7 +633,7 @@
 
     ネットワーク設定画面で `vmbr1` が表示されていることを確認する
 
-#### 4.8.2. Zabbix Server のハートビートに用いる NW を追加する
+#### 4.8.3. Zabbix Server のハートビートに用いる NW を追加する
 
 1. Proxmox Web UI にログインする
 
@@ -533,7 +641,7 @@
 
 2. ノードを選択する
 
-    左側のメニューから `prod-prox-01` ノードを選択する
+    左側のメニューから `prd-pve-01` ノードを選択する
 
 3. ネットワーク設定画面を開く
 
@@ -579,13 +687,13 @@
 
 3. 現在のイーサネットポートの状態を確認する
 
-    `State`が`DOWN`であることを確認する
+    `State`が`UP`であることを確認する
 
     ```shell
     $ ip link
     ...
     # State が UP
-    3: enxc8a362a24690: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel master vmbr1 state DOWN mode DEFAULT group default qlen 1000
+    3: enxc8a362a24690: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel master vmbr1 state UP mode DEFAULT group default qlen 1000
         link/ether c8:a3:62:a2:46:90 brd ff:ff:ff:ff:ff:ff
     ...
     $
@@ -598,5 +706,6 @@
 - `Proxmox`ホストに対するSSH接続において、作業用ユーザが作成されていて、そのユーザとしてログインできること
 - `Proxmox`ホストに対するSSH接続において、CI/CD用ユーザが作成されていて、そのユーザとしてログインできること
 - cloud-init に使用する VM のテンプレートとスニペットの設定がされていること
+- `Linux Bond`が作成されていること
 - `Linux Bridge`が作成されていること
 - パスワードを用いずに`sudo`コマンドを実行できること
