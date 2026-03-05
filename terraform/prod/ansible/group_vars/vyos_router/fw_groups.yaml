@@ -8,6 +8,9 @@ fw_address_groups:
   - name: WAN-GATEWAY
     addresses:
       - 192.168.20.1
+  - name: PVE-NODES
+    addresses:
+      - 192.168.20.2
   - name: FW-WAN-VIP
     addresses:
       - 192.168.20.3

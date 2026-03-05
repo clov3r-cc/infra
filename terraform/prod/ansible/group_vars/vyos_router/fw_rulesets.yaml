@@ -97,6 +97,15 @@ fw_rulesets:
           address_group: TAILSCALE-NODES
         destination:
           port: 443
+      - number: 11
+        action: accept
+        description: Allow Proxmox API (TCP 8006) from TAILSCALE-NODES to PVE-NODES
+        protocol: tcp
+        source:
+          address_group: TAILSCALE-NODES
+        destination:
+          address_group: PVE-NODES
+          port: 8006
       - number: 20
         action: accept
         description: Allow Tailscale WireGuard tunnel (UDP 41641)
