@@ -40,16 +40,16 @@ output "zabbix_servers__prd" {
 }
 
 # TODO: Fix me
-# output "prod__k8s_gateway_node" {
-#   value = module.prod__k8s_nodes.gateway
+# output "prd__k8s_gateway_node" {
+#   value = module.prd__k8s_nodes.gateway
 # }
 
-# output "prod__k8s_worker_nodes" {
-#   value = module.prod__k8s_nodes.worker_nodes
+# output "prd__k8s_worker_nodes" {
+#   value = module.prd__k8s_nodes.worker_nodes
 # }
 
-# output "prod__k8s_control_plane_nodes" {
-#   value = module.prod__k8s_nodes.control_plane_nodes
+# output "prd__k8s_control_plane_nodes" {
+#   value = module.prd__k8s_nodes.control_plane_nodes
 # }
 
 #endregion
@@ -60,7 +60,7 @@ output "oci_identity_availability_domain" {
   value = data.oci_identity_availability_domain.ad
 }
 
-output "cloud-server__prod" {
+output "cloud-server__prd" {
   value = {
     id        = oci_core_instance.cloud_server.id
     host_name = oci_core_instance.cloud_server.display_name

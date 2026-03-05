@@ -34,7 +34,7 @@ locals {
     }
   }
 
-  env = "prod"
+  env = "prd"
 
   machine_user = "machine-user"
 
