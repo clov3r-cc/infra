@@ -39,26 +39,6 @@ output "zabbix_servers__prd" {
   }]
 }
 
-output "management_servers__prod" {
-  value = [for vm in proxmox_vm_qemu.management_server : {
-    host_name   = vm.current_node
-    id          = vm.vmid
-    name        = vm.name
-    description = vm.description
-    ethernet_adapters = {
-      ip0 = {
-        bridge          = vm.network[0].bridge
-        ip_address      = trimprefix(split(",", vm.ipconfig0)[0], "ip=")
-        default_gateway = trimprefix(split(",", vm.ipconfig0)[1], "gw=")
-      }
-      ip1 = {
-        bridge     = vm.network[1].bridge
-        ip_address = trimprefix(split(",", vm.ipconfig1)[0], "ip=")
-      }
-    }
-  }]
-}
-
 # TODO: Fix me
 # output "prod__k8s_gateway_node" {
 #   value = module.prod__k8s_nodes.gateway
