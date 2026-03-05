@@ -1,0 +1,6 @@
+---
+- name: Install Tailscale
+  become: true
+  ansible.builtin.shell: curl -fsSL https://tailscale.com/install.sh | sh
+  args:
+    creates: /usr/bin/tailscale

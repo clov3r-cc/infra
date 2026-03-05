@@ -1,0 +1,6 @@
+---
+- name: Remove cloud-init sudoers file
+  become: true
+  ansible.builtin.file:
+    path: /etc/sudoers.d/90-cloud-init-users
+    state: absent

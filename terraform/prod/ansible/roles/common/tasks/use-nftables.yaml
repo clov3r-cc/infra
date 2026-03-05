@@ -1,6 +1,6 @@
 ---
 - name: Check whether firewalld is installed
-  ansible.builtin.shell: dnf list installed firewalld
+  ansible.builtin.shell: systemctl list-units --type=service --all | grep -q firewalld
   register: whether_firewalld_is_installed
   check_mode: false
   failed_when: false
@@ -15,10 +15,9 @@
     enabled: false
     masked: true
 
-# cloud-initによってインストールされている想定だが、念のため
 - name: Install nftables
   become: true
-  ansible.builtin.dnf:
+  ansible.builtin.package:
     name: nftables
     state: present
 

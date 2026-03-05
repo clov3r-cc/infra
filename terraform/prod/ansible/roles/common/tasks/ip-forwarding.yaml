@@ -1,0 +1,12 @@
+---
+- name: Configure IP forwarding
+  become: true
+  ansible.builtin.copy:
+    dest: /etc/sysctl.d/99-ip-forwarding.conf
+    content: |
+      net.ipv4.ip_forward = 1
+      net.ipv6.conf.all.forwarding = 1
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Apply sysctl settings
