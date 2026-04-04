@@ -118,7 +118,7 @@ uv run ansible-playbook -i ansible/inventory_tailscale.yaml ansible/tailscale-se
 
     ```shell
     ssh prd-tal-**
-    sudo tailscale up --advertise-routes=192.168.20.16/28,192.168.21.0/24,192.168.22.0/24
+    sudo tailscale up --advertise-routes=192.168.20.0/29,192.168.20.16/28,192.168.21.0/24,192.168.22.0/24
     ```
 
 ### 4.4. `Tailscale`で経路の広告（アドバタイズ）を設定する
@@ -126,6 +126,7 @@ uv run ansible-playbook -i ansible/inventory_tailscale.yaml ansible/tailscale-se
 1. [Tailscale](https://login.tailscale.com/admin/machines)を開く。
 2. `prd-tal-**` > `Edit route settings...`を押下する
 3. `Subnet routes` で、以下にチェックを入れる
+     - `192.168.20.0/29`
      - `192.168.20.16/28`
      - `192.168.21.0/24`
      - `192.168.22.0/24`
