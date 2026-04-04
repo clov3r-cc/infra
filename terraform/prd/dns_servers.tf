@@ -42,18 +42,18 @@ resource "terraform_data" "cloud_init_config__dns_server" {
     private_key = base64decode(var.vm_ssh_private_key)
   }
   provisioner "file" {
-    content = templatefile("cloud-init/${local.env}-mgmt_cloud-init.yaml.tftpl", {
-      CI_HOSTNAME               = "${local.env}-mgmt-${format("%02d", tonumber(each.key))}",
+    content = templatefile("cloud-init/${local.env}-dsq_cloud-init.yaml.tftpl", {
+      CI_HOSTNAME               = "${local.env}-dsq-${format("%02d", tonumber(each.key))}",
       CI_ROOT_PASSWORD          = random_password.vm_root_password__dns_server[each.key].result,
       CI_MACHINEUSER_NAME       = local.machine_user,
       CI_MACHINEUSER_PASSWORD   = random_password.vm_user_password__dns_server[each.key].result,
       CI_MACHINEUSER_SSH_PUBKEY = base64decode(local.vm_ssh_public_key),
     })
-    destination = "/tmp/${local.env}-mgmt-${format("%02d", tonumber(each.key))}_cloud-init.yaml"
+    destination = "/tmp/${local.env}-dsq-${format("%02d", tonumber(each.key))}_cloud-init.yaml"
   }
   provisioner "remote-exec" {
     inline = [
-      "echo '${var.pve_user_password}' | sudo -S mv /tmp/${local.env}-mgmt-${format("%02d", tonumber(each.key))}_cloud-init.yaml /var/lib/vz/snippets/",
+      "echo '${var.pve_user_password}' | sudo -S mv /tmp/${local.env}-dsq-${format("%02d", tonumber(each.key))}_cloud-init.yaml /var/lib/vz/snippets/",
     ]
   }
 }
@@ -62,7 +62,7 @@ resource "proxmox_vm_qemu" "dns_server" {
   for_each   = local.vm_settings__dns_server
   depends_on = [terraform_data.cloud_init_config__dns_server]
 
-  name               = "${local.env}-mgmt-${format("%02d", tonumber(each.key))}"
+  name               = "${local.env}-dsq-${format("%02d", tonumber(each.key))}"
   target_node        = each.value.host_name
   vmid               = each.value.vm_id
   description        = "Linux VM to manage something. This VM is managed by Terraform."
@@ -97,7 +97,7 @@ resource "proxmox_vm_qemu" "dns_server" {
 
   # cloud-init configuration
   os_type  = "cloud-init"
-  cicustom = "user=local:snippets/${local.env}-mgmt-${format("%02d", tonumber(each.key))}_cloud-init.yaml"
+  cicustom = "user=local:snippets/${local.env}-dsq-${format("%02d", tonumber(each.key))}_cloud-init.yaml"
 
   network {
     id     = 0

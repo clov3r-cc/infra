@@ -33,6 +33,10 @@ packages:
   - vim-enhanced
   # ファイアウォールを構成するため
   - nftables
+  # DNS サーバを構成するため
+  - dnsmasq
+  # プロキシサーバを構成するため
+  - squid
 runcmd:
   # `passwd` がうまく機能しないので、コマンドで各ユーザのパスワードを設定
   - echo 'root:${CI_ROOT_PASSWORD}' | chpasswd
