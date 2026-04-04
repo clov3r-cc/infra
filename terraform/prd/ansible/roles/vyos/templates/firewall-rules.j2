@@ -1,0 +1,33 @@
+{% for ruleset in fw_rulesets %}
+set firewall ipv4 name {{ ruleset.name }} default-action {{ ruleset.default_action }}
+{% if ruleset.default_log | default(false) %}
+set firewall ipv4 name {{ ruleset.name }} default-log
+{% endif %}
+{% for rule in ruleset.rules %}
+set firewall ipv4 name {{ ruleset.name }} rule {{ rule.number }} action {{ rule.action }}
+set firewall ipv4 name {{ ruleset.name }} rule {{ rule.number }} description '{{ rule.description }}'
+set firewall ipv4 name {{ ruleset.name }} rule {{ rule.number }} protocol {{ rule.protocol }}
+{% if rule.source is defined %}
+{% if rule.source.network_group is defined %}
+set firewall ipv4 name {{ ruleset.name }} rule {{ rule.number }} source group network-group {{ rule.source.network_group }}
+{% elif rule.source.address_group is defined %}
+set firewall ipv4 name {{ ruleset.name }} rule {{ rule.number }} source group address-group {{ rule.source.address_group }}
+{% endif %}
+{% if rule.source.port is defined %}
+set firewall ipv4 name {{ ruleset.name }} rule {{ rule.number }} source port {{ rule.source.port }}
+{% endif %}
+{% endif %}
+{% if rule.destination is defined %}
+{% if rule.destination.fqdn is defined %}
+set firewall ipv4 name {{ ruleset.name }} rule {{ rule.number }} destination fqdn {{ rule.destination.fqdn }}
+{% elif rule.destination.address_group is defined %}
+set firewall ipv4 name {{ ruleset.name }} rule {{ rule.number }} destination group address-group {{ rule.destination.address_group }}
+{% elif rule.destination.network_group is defined %}
+set firewall ipv4 name {{ ruleset.name }} rule {{ rule.number }} destination group network-group {{ rule.destination.network_group }}
+{% endif %}
+{% if rule.destination.port is defined %}
+set firewall ipv4 name {{ ruleset.name }} rule {{ rule.number }} destination port {{ rule.destination.port }}
+{% endif %}
+{% endif %}
+{% endfor %}
+{% endfor %}

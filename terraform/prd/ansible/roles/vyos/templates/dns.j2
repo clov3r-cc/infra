@@ -1,0 +1,7 @@
+{% for addr in dns_listen_addresses %}
+set service dns forwarding listen-address {{ addr }}
+{% endfor %}
+{% for client in dns_allow_from %}
+set service dns forwarding allow-from {{ client }}
+{% endfor %}
+set service dns forwarding system

@@ -1,0 +1,35 @@
+---
+fw_zone_policies:
+  - to_zone: LOCAL
+    from_zone: WAN
+    ruleset: WAN-TO-LOCAL
+  - to_zone: DMZ
+    from_zone: WAN
+    ruleset: WAN-TO-DMZ
+  - to_zone: WAN
+    from_zone: DMZ
+    ruleset: DMZ-TO-WAN
+  - to_zone: LOCAL
+    from_zone: DMZ
+    ruleset: DMZ-TO-LOCAL
+  - to_zone: INTERNAL
+    from_zone: DMZ
+    ruleset: DMZ-TO-INTERNAL
+  - to_zone: DMZ
+    from_zone: INTERNAL
+    ruleset: INTERNAL-TO-DMZ
+  - to_zone: LOCAL
+    from_zone: INTERNAL
+    ruleset: INTERNAL-TO-LOCAL
+  - to_zone: WAN
+    from_zone: LOCAL
+    ruleset: LOCAL-TO-WAN
+  - to_zone: DMZ
+    from_zone: LOCAL
+    ruleset: LOCAL-TO-DMZ
+  - to_zone: SERVICE
+    from_zone: LOCAL
+    ruleset: LOCAL-TO-SERVICE
+  - to_zone: INTERNAL
+    from_zone: LOCAL
+    ruleset: LOCAL-TO-INTERNAL

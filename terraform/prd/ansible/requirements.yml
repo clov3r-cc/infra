@@ -1,0 +1,4 @@
+---
+collections:
+  - name: vyos.vyos
+  - name: ansible.netcommon

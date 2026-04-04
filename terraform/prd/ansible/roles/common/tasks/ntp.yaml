@@ -1,0 +1,21 @@
+---
+- name: Create systemd-timesyncd drop-in directory
+  become: true
+  ansible.builtin.file:
+    path: /etc/systemd/timesyncd.conf.d
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Configure NTP servers
+  become: true
+  ansible.builtin.copy:
+    dest: /etc/systemd/timesyncd.conf.d/ntp.conf
+    content: |
+      [Time]
+      NTP={{ ntp_servers | join(' ') }}
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart systemd-timesyncd

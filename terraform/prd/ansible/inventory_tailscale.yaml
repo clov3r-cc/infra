@@ -1,0 +1,8 @@
+tailscale_server:
+  vars:
+      ansible_user: machine-user
+  hosts:
+    prd-tal-01:
+      ansible_host: 192.168.20.20
+    prd-tal-02:
+      ansible_host: 192.168.20.21

@@ -1,0 +1,32 @@
+---
+- name: Configure basic settings
+  vyos.vyos.vyos_config:
+    lines:
+      - set system host-name {{ inventory_hostname }}
+      - set system time-zone Asia/Tokyo
+      - set system config-management commit-revisions 20
+      - set system login max-login-session 5
+      - set system login timeout 600
+      - set system ipv6
+      - set system sysctl parameter net.ipv4.tcp_syncookies value '1'
+      - set interfaces ethernet eth0 description 'Upstream'
+      - set interfaces ethernet eth1 address {{ vyos_eth1_address }}
+      - set interfaces ethernet eth1 description 'DMZ'
+      - set interfaces ethernet eth2 address {{ vyos_eth2_address }}
+      - set interfaces ethernet eth2 description 'Service'
+      - set interfaces ethernet eth3 address {{ vyos_eth3_address }}
+      - set interfaces ethernet eth3 description 'Internal'
+      - set service ssh disable-password-authentication
+      - set system name-server {{ vyos_dns_server }}
+    save: false
+
+- name: Configure NTP
+  vyos.vyos.vyos_config:
+    lines: "{{ lookup('ansible.builtin.template', role_path + '/templates/ntp.j2').splitlines() | select | list }}"
+    save: false
+
+- name: Remove default operator-group
+  vyos.vyos.vyos_config:
+    lines:
+      - delete system login operator-group default
+    save: false

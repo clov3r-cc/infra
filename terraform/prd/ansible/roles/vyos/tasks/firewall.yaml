@@ -1,0 +1,28 @@
+---
+- name: Configure firewall global policies
+  vyos.vyos.vyos_config:
+    lines:
+      - set firewall global-options state-policy established action accept
+      - set firewall global-options state-policy related action accept
+      - set firewall global-options state-policy invalid action drop
+    save: false
+
+- name: Configure firewall address/network groups
+  vyos.vyos.vyos_config:
+    lines: "{{ lookup('ansible.builtin.template', role_path + '/templates/firewall-groups.j2').splitlines() | select | list }}"
+    save: false
+
+- name: Configure firewall zones
+  vyos.vyos.vyos_config:
+    lines: "{{ lookup('ansible.builtin.template', role_path + '/templates/firewall-zones.j2').splitlines() | select | list }}"
+    save: false
+
+- name: Configure firewall rulesets
+  vyos.vyos.vyos_config:
+    lines: "{{ lookup('ansible.builtin.template', role_path + '/templates/firewall-rules.j2').splitlines() | select | list }}"
+    save: false
+
+- name: Configure zone policies
+  vyos.vyos.vyos_config:
+    lines: "{{ lookup('ansible.builtin.template', role_path + '/templates/zone-policy.j2').splitlines() | select | list }}"
+    save: false

@@ -1,4 +1,0 @@
----
-- hosts: management_server
-  roles:
-    - common

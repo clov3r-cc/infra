@@ -1,0 +1,3 @@
+{% for policy in fw_zone_policies %}
+set firewall zone {{ policy.to_zone }} from {{ policy.from_zone }} firewall name {{ policy.ruleset }}
+{% endfor %}

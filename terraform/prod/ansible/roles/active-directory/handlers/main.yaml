@@ -1,5 +1,0 @@
----
-- name: Update group policies on domain computers
-  ansible.windows.win_command: gpupdate /force
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['domain_computer'] }}"

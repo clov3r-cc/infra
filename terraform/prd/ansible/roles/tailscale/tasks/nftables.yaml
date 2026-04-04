@@ -1,0 +1,13 @@
+---
+- name: Deploy nftables configuration
+  become: true
+  ansible.builtin.copy:
+    src: nftables.conf
+    dest: /etc/nftables.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart nftables
+
+- name: Flush handlers to apply nftables config
+  ansible.builtin.meta: flush_handlers

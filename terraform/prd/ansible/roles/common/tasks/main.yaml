@@ -1,0 +1,8 @@
+---
+- import_tasks: timezone.yaml
+- import_tasks: passwordless-sudo.yaml
+- import_tasks: ip-forwarding.yaml
+- import_tasks: disable-swap.yaml
+- import_tasks: use-nftables.yaml
+- import_tasks: qemu-guest-agent.yaml
+- import_tasks: ntp.yaml
