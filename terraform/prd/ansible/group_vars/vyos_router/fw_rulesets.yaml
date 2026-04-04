@@ -130,6 +130,15 @@ fw_rulesets:
           address_group: TAILSCALE-NODES
         destination:
           port: 3478
+      - number: 40
+        action: accept
+        description: Allow HTTPS to Alma Linux dnf repository from DNS-SERVERS
+        protocol: tcp
+        source:
+          address_group: DNS-SERVERS
+        destination:
+          fqdn: mirrors.almalinux.org
+          port: 443
 
   - name: DMZ-TO-LOCAL
     default_action: drop
