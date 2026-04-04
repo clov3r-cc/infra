@@ -60,6 +60,10 @@ jobs:
           oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
           oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
           tags: tag:gha
+      - name: Debug Tailscale connectivity
+        run: |
+          tailscale status
+          curl -v --max-time 5 https://192.168.20.2:8006/api2/json/version -k
       - name: Terraform Plan
         run: tfcmt plan -patch --config "${{ github.workspace }}/.github/tfcmt-config.yaml" -- terraform plan -input=false -no-color -lock-timeout=10m
         env:
