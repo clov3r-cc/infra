@@ -106,6 +106,15 @@ fw_rulesets:
         destination:
           address_group: PVE-NODES
           port: 8006
+      - number: 12
+        action: accept
+        description: Allow SSH (TCP 22) from TAILSCALE-NODES to PVE-NODES
+        protocol: tcp
+        source:
+          address_group: TAILSCALE-NODES
+        destination:
+          address_group: PVE-NODES
+          port: 22
       - number: 20
         action: accept
         description: Allow Tailscale WireGuard tunnel (UDP 41641)
