@@ -57,4 +57,4 @@ jobs:
       - name: Terraform Apply
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: tfcmt apply --config "${{ github.workspace }}/.github/tfcmt-config.yaml" -- terraform apply -input=false -no-color -auto-approve -lock-timeout=10m tfplan_result -replace='terraform_data.cloud_init_config__zabbix_server["01"]'
+        run: tfcmt apply --config "${{ github.workspace }}/.github/tfcmt-config.yaml" -- terraform apply -input=false -no-color -auto-approve -lock-timeout=10m tfplan_result
