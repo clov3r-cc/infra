@@ -48,9 +48,8 @@ EOT
   # DMZ network configuration
   vm_dmz_nw_bridge      = "vmbr1"
   vm_dmz_nw_subnet_cidr = "192.168.20.16/28"
-  vm_dmz_nw_subnet_mask = split("/", local.vm_service_nw_subnet_cidr)[1]
-  vm_dmz_nw_default_gw  = cidrhost(local.vm_service_nw_subnet_cidr, 17)
-  # Internal network configuration
+  vm_dmz_nw_subnet_mask = split("/", local.vm_dmz_nw_subnet_cidr)[1]
+  vm_dmz_nw_default_gw  = cidrhost(local.vm_dmz_nw_subnet_cidr, 1)
   # Service network configuration
   vm_service_nw_bridge      = "vmbr2"
   vm_service_nw_subnet_cidr = "192.168.21.0/24"
