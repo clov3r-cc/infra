@@ -60,11 +60,6 @@ resource "terraform_data" "cloud_init_config__zabbix_server" {
   }
 }
 
-moved {
-  from = null_resource.cloud_init_config__zabbix_server
-  to   = terraform_data.cloud_init_config__zabbix_server
-}
-
 resource "proxmox_vm_qemu" "zabbix_server" {
   for_each   = local.vm_settings__zabbix_server
   depends_on = [terraform_data.cloud_init_config__zabbix_server]
