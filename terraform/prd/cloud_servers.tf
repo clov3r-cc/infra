@@ -117,8 +117,9 @@ resource "oci_core_instance" "cloud_server" {
   }
 
   source_details {
-    source_type = "image"
-    source_id   = lookup(data.oci_core_images.images.images[0], "id")
+    source_type             = "image"
+    source_id               = lookup(data.oci_core_images.images.images[0], "id")
+    boot_volume_size_in_gbs = 50
   }
 
   metadata = {
