@@ -118,7 +118,7 @@ resource "proxmox_vm_qemu" "zabbix_server" {
     bridge = local.zabbix_server_heartbeat_nw_bridge
   }
 
-  ipconfig0 = "ip=${cidrhost(local.vm_internal_nw_subnet_cidr, each.value.managemt_nw_host_section)}${"/${local.vm_internal_nw_subnet_mask}"},gw=${local.vm_internal_nw_default_gw}"
+  ipconfig0 = "ip=${cidrhost(local.vm_internal_nw_subnet_cidr, each.value.internal_nw_host_section)}${"/${local.vm_internal_nw_subnet_mask}"},gw=${local.vm_internal_nw_default_gw}"
   ipconfig1 = "ip=${cidrhost(local.zabbix_server_heartbeat_nw_subnet_cidr, each.value.heartbeat_nw_host_section)}${"/${local.zabbix_server_heartbeat_nw_subnet_mask}"}"
 
   disks {
