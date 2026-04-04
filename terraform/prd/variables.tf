@@ -28,18 +28,6 @@ variable "pve_tls_insecure" {
   description = "Disable TLS verification while connecting to the Proxmox VE API server."
 }
 
-variable "pve_cf_client_id" {
-  type        = string
-  description = "Service token ID of Cloudflare Zero Trust to access to Proxmox API."
-  sensitive   = true
-}
-
-variable "pve_cf_client_secret" {
-  type        = string
-  description = "Service token secret of Cloudflare Zero Trust to access to Proxmox API."
-  sensitive   = true
-}
-
 variable "pve_user_password" {
   type        = string
   description = "The password for the Proxmox user."
