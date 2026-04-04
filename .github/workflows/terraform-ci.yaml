@@ -60,6 +60,7 @@ jobs:
           oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
           oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
           tags: tag:gha
+          args: --accept-routes
       - name: Debug Tailscale connectivity
         run: |
           tailscale status
