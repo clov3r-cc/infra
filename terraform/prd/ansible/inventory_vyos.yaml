@@ -3,6 +3,7 @@ vyos_router:
     ansible_network_os: vyos.vyos.vyos
     ansible_connection: ansible.netcommon.network_cli
     ansible_user: vyos
+    ansible_python_interpreter: python3
   hosts:
     prd-vyo-01:
       ansible_host: 192.168.20.4
