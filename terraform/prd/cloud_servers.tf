@@ -122,7 +122,7 @@ resource "oci_core_instance" "cloud_server" {
 
   metadata = {
     ssh_authorized_keys = base64decode(local.vm_ssh_public_key)
-    user_data = base64encode(templatefile("cloud-init/${local.env}-clsv_userdata.sh.tftpl", {
+    user_data = base64encode(templatefile("cloud-init/${local.env}-csv_userdata.sh.tftpl", {
       CI_MACHINEUSER_NAME       = local.machine_user,
       CI_MACHINEUSER_PASSWORD   = random_password.vm_user_password__cloud_server.result,
       CI_MACHINEUSER_SSH_PUBKEY = base64decode(local.vm_ssh_public_key),
