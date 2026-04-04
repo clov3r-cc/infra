@@ -19,6 +19,10 @@ users:
     home: /home/${CI_MACHINEUSER_NAME}
     ssh_authorized_keys:
       - ${CI_MACHINEUSER_SSH_PUBKEY}
+manage_resolv_conf: true
+resolv_conf:
+  nameservers:
+    - 192.168.20.17
 keyboard:
   layout: us
   model: pc105
