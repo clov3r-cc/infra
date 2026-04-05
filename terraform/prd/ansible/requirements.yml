@@ -2,3 +2,4 @@
 collections:
   - name: vyos.vyos
   - name: ansible.netcommon
+  - name: community.general

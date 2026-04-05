@@ -1,0 +1,23 @@
+---
+- name: Install common packages (RedHat)
+  become: true
+  when: ansible_facts['os_family'] == 'RedHat'
+  ansible.builtin.package:
+    name:
+      # 言語表示を最適化するため導入
+      - glibc-all-langpacks
+      - langpacks-en
+      # vim をデフォルトのエディタとして使用
+      - vim-enhanced
+    state: present
+
+- name: Install common packages (Debian)
+  become: true
+  when: ansible_facts['os_family'] == 'Debian'
+  ansible.builtin.package:
+    name:
+      # 言語表示を最適化するため導入
+      - locales-all
+      # vim をデフォルトのエディタとして使用
+      - vim
+    state: present
