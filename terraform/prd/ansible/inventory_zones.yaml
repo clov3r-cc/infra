@@ -1,0 +1,9 @@
+all:
+  children:
+    dmz:
+      children:
+        tailscale_server:
+        dns_server:
+    internal:
+      children:
+        zabbix_server:

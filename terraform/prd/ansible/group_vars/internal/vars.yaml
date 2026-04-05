@@ -1,0 +1,6 @@
+---
+dns_nameservers:
+  - 192.168.20.22  # AdGuardHome
+ntp_servers:
+  - 192.168.22.3   # FW-INTERNAL-VIP
+dnf_local_mirror_url: "https://prd-dsq-01.labo.clov3r.cc/repos"
