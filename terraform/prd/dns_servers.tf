@@ -8,6 +8,7 @@ locals {
       cpu_core            = 2
       memory              = 1024 * 2
       os_disk_size        = 15
+      data_disk_size      = 60
     }
   }
 }
@@ -112,6 +113,13 @@ resource "proxmox_vm_qemu" "dns_server" {
       virtio0 {
         disk {
           size     = "${each.value.os_disk_size}G"
+          storage  = local.vm_disk_storage
+          iothread = true
+        }
+      }
+      virtio1 {
+        disk {
+          size     = "${each.value.data_disk_size}G"
           storage  = local.vm_disk_storage
           iothread = true
         }
