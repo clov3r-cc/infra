@@ -1,11 +1,15 @@
+#!/bin/vbash
+source /opt/vyatta/etc/functions/script-template
+configure
 {% for ruleset in fw_rulesets %}
+delete firewall ipv4 name {{ ruleset.name }}
 set firewall ipv4 name {{ ruleset.name }} default-action {{ ruleset.default_action }}
 {% if ruleset.default_log | default(false) %}
 set firewall ipv4 name {{ ruleset.name }} default-log
 {% endif %}
 {% for rule in ruleset.rules %}
 set firewall ipv4 name {{ ruleset.name }} rule {{ rule.number }} action {{ rule.action }}
-set firewall ipv4 name {{ ruleset.name }} rule {{ rule.number }} description '{{ rule.description }}'
+set firewall ipv4 name {{ ruleset.name }} rule {{ rule.number }} description "{{ rule.description }}"
 set firewall ipv4 name {{ ruleset.name }} rule {{ rule.number }} protocol {{ rule.protocol }}
 {% if rule.source is defined %}
 {% if rule.source.network_group is defined %}
@@ -31,3 +35,5 @@ set firewall ipv4 name {{ ruleset.name }} rule {{ rule.number }} destination por
 {% endif %}
 {% endfor %}
 {% endfor %}
+commit
+exit

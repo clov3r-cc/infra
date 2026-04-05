@@ -7,20 +7,76 @@
       - set firewall global-options state-policy invalid action drop
     save: false
 
-- name: Configure firewall address/network groups
-  vyos.vyos.vyos_config:
-    lines: "{{ lookup('ansible.builtin.template', role_path + '/templates/firewall-groups.j2').splitlines() | select | list }}"
-    save: false
+- name: Check firewall groups changes
+  ansible.builtin.set_fact:
+    _fw_groups_changed: >-
+      {{ (lookup('ansible.builtin.template', role_path + '/templates/firewall-groups.j2')
+          .splitlines() | select('match', '^set ') | map('regex_replace', "[\r'\"]", '') | list | sort)
+         !=
+         (_all_config.stdout_lines[0] | select('match', '^set firewall group') | map('regex_replace', "[\r'\"]", '') | list | sort) }}
+
+- name: Deploy firewall groups script
+  ansible.builtin.template:
+    src: firewall-groups.j2
+    dest: /tmp/vyos-fw-groups.sh
+    mode: "0700"
+  changed_when: false
+  when: _fw_groups_changed
+  vars:
+    ansible_connection: ssh
+
+- name: Execute firewall groups script
+  ansible.builtin.shell: /tmp/vyos-fw-groups.sh
+  when: _fw_groups_changed
+  vars:
+    ansible_connection: ssh
+
+- name: Remove firewall groups script
+  ansible.builtin.file:
+    path: /tmp/vyos-fw-groups.sh
+    state: absent
+  changed_when: false
+  when: _fw_groups_changed
+  vars:
+    ansible_connection: ssh
 
 - name: Configure firewall zones
   vyos.vyos.vyos_config:
     lines: "{{ lookup('ansible.builtin.template', role_path + '/templates/firewall-zones.j2').splitlines() | select | list }}"
     save: false
 
-- name: Configure firewall rulesets
-  vyos.vyos.vyos_config:
-    lines: "{{ lookup('ansible.builtin.template', role_path + '/templates/firewall-rules.j2').splitlines() | select | list }}"
-    save: false
+- name: Check firewall rules changes
+  ansible.builtin.set_fact:
+    _fw_rules_changed: >-
+      {{ (lookup('ansible.builtin.template', role_path + '/templates/firewall-rules.j2')
+          .splitlines() | select('match', '^set ') | map('regex_replace', "[\r'\"]", '') | list | sort)
+         !=
+         (_all_config.stdout_lines[0] | select('match', '^set firewall ipv4 name') | map('regex_replace', "[\r'\"]", '') | list | sort) }}
+
+- name: Deploy firewall ruleset script
+  ansible.builtin.template:
+    src: firewall-rules.j2
+    dest: /tmp/vyos-fw-rules.sh
+    mode: "0700"
+  changed_when: false
+  when: _fw_rules_changed
+  vars:
+    ansible_connection: ssh
+
+- name: Execute firewall ruleset script
+  ansible.builtin.shell: /tmp/vyos-fw-rules.sh
+  when: _fw_rules_changed
+  vars:
+    ansible_connection: ssh
+
+- name: Remove firewall ruleset script
+  ansible.builtin.file:
+    path: /tmp/vyos-fw-rules.sh
+    state: absent
+  changed_when: false
+  when: _fw_rules_changed
+  vars:
+    ansible_connection: ssh
 
 - name: Configure zone policies
   vyos.vyos.vyos_config:
