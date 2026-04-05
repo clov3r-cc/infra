@@ -1,0 +1,5 @@
+---
+dnf_local_mirror_url: ""  # ミラーサーバ自身はアップストリームを使う
+nginx_cert_domain: prd-dsq-01.labo.clov3r.cc
+adguard_listen_addr: 192.168.20.22
+adguard_https_port: 9443
