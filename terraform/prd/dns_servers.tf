@@ -106,7 +106,9 @@ resource "proxmox_vm_qemu" "dns_server" {
     bridge = local.vm_dmz_nw_bridge
   }
 
-  ipconfig0 = "ip=${cidrhost(local.vm_dmz_nw_subnet_cidr, each.value.dmz_nw_host_section)}${"/${local.vm_dmz_nw_subnet_mask}"},gw=${local.vm_dmz_nw_default_gw}"
+  nameserver   = local.vm_dmz_nw_default_gw
+  searchdomain = "labo.clov3r.cc"
+  ipconfig0    = "ip=${cidrhost(local.vm_dmz_nw_subnet_cidr, each.value.dmz_nw_host_section)}${"/${local.vm_dmz_nw_subnet_mask}"},gw=${local.vm_dmz_nw_default_gw}"
 
   disks {
     virtio {

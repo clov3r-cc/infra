@@ -1,17 +1,12 @@
+#!/bin/vbash
+source /opt/vyatta/etc/functions/script-template
+configure
+delete service ntp
 {% for server in ntp_servers %}
 set service ntp server {{ server }}
 {% endfor %}
-delete service ntp server time1.vyos.net
-delete service ntp server time2.vyos.net
-delete service ntp server time3.vyos.net
-delete service ntp allow-client address 127.0.0.0/8
-delete service ntp allow-client address 169.254.0.0/16
-delete service ntp allow-client address 10.0.0.0/8
-delete service ntp allow-client address 172.16.0.0/12
-delete service ntp allow-client address 192.168.0.0/16
-delete service ntp allow-client address ::1/128
-delete service ntp allow-client address fe80::/10
-delete service ntp allow-client address fc00::/7
 {% for client in ntp_allow_clients %}
 set service ntp allow-client address {{ client }}
 {% endfor %}
+commit
+exit

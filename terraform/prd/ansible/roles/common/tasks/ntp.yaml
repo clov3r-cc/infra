@@ -1,6 +1,7 @@
 ---
 - name: Create systemd-timesyncd drop-in directory
   become: true
+  when: ansible_facts['os_family'] == 'Debian'
   ansible.builtin.file:
     path: /etc/systemd/timesyncd.conf.d
     state: directory
@@ -8,8 +9,9 @@
     group: root
     mode: '0755'
 
-- name: Configure NTP servers
+- name: Configure NTP servers (systemd-timesyncd)
   become: true
+  when: ansible_facts['os_family'] == 'Debian'
   ansible.builtin.copy:
     dest: /etc/systemd/timesyncd.conf.d/ntp.conf
     content: |
@@ -19,3 +21,22 @@
     group: root
     mode: '0644'
   notify: Restart systemd-timesyncd
+
+- name: Configure NTP servers (chrony)
+  become: true
+  when: ansible_facts['os_family'] == 'RedHat'
+  ansible.builtin.copy:
+    dest: /etc/chrony.conf
+    content: |
+      {% for server in ntp_servers %}
+      server {{ server }} iburst
+      {% endfor %}
+      driftfile /var/lib/chrony/drift
+      makestep 1.0 3
+      rtcsync
+      ntsdumpdir /var/lib/chrony
+      logdir /var/log/chrony
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart chronyd

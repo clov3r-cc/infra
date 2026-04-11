@@ -1,8 +1,32 @@
 ---
+- name: Get full configuration commands
+  vyos.vyos.vyos_command:
+    commands:
+      - show configuration commands
+  register: _all_config
+
 - ansible.builtin.import_tasks: system.yaml
 - ansible.builtin.import_tasks: dns.yaml
 - ansible.builtin.import_tasks: firewall.yaml
 - ansible.builtin.import_tasks: vrrp.yaml
+- name: Compare running vs saved configuration
+  ansible.builtin.shell: |
+    source /opt/vyatta/etc/functions/script-template
+    configure
+    compare saved
+    exit
+  args:
+    executable: /bin/vbash
+  changed_when: false
+  register: _compare_saved
+  vars:
+    ansible_connection: ssh
+
+- name: Display changes since last save
+  ansible.builtin.debug:
+    msg: "{{ _compare_saved.stdout_lines | join('\n') }}"
+  when: "'No changes' not in _compare_saved.stdout"
+
 - name: Save configuration
   vyos.vyos.vyos_config:
     save: true

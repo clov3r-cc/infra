@@ -1,4 +1,7 @@
 ---
+- import_tasks: dns.yaml
+- import_tasks: dnf-local-mirror.yaml
+- import_tasks: packages.yaml
 - import_tasks: timezone.yaml
 - import_tasks: passwordless-sudo.yaml
 - import_tasks: ip-forwarding.yaml

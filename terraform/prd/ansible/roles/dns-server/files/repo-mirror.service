@@ -1,0 +1,6 @@
+[Unit]
+Description=Sync DNF repository mirror
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/repo-sync.sh

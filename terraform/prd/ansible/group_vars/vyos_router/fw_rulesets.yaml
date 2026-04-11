@@ -139,6 +139,213 @@ fw_rulesets:
         destination:
           fqdn: mirrors.almalinux.org
           port: 443
+      - number: 41
+        action: accept
+        description: Allow HTTPS to Alma Linux repo from DNS-SERVERS
+        protocol: tcp
+        source:
+          address_group: DNS-SERVERS
+        destination:
+          fqdn: repo.almalinux.org
+          port: 443
+      - number: 42
+        action: accept
+        description: Allow HTTP to AlmaLinux mirror (ftp.udx.icscoe.jp) from DNS-SERVERS
+        protocol: tcp
+        source:
+          address_group: DNS-SERVERS
+        destination:
+          fqdn: ftp.udx.icscoe.jp
+          port: 80
+      - number: 43
+        action: accept
+        description: Allow HTTP to AlmaLinux mirror (ftp.iij.ad.jp) from DNS-SERVERS
+        protocol: tcp
+        source:
+          address_group: DNS-SERVERS
+        destination:
+          fqdn: ftp.iij.ad.jp
+          port: 80
+      - number: 44
+        action: accept
+        description: Allow HTTP to AlmaLinux mirror (ftp.jaist.ac.jp) from DNS-SERVERS
+        protocol: tcp
+        source:
+          address_group: DNS-SERVERS
+        destination:
+          fqdn: ftp.jaist.ac.jp
+          port: 80
+      - number: 45
+        action: accept
+        description: Allow HTTP to AlmaLinux mirror (ftp.sakura.ad.jp) from DNS-SERVERS
+        protocol: tcp
+        source:
+          address_group: DNS-SERVERS
+        destination:
+          fqdn: ftp.sakura.ad.jp
+          port: 80
+      - number: 46
+        action: accept
+        description: Allow HTTP to AlmaLinux mirror (ftp.riken.jp) from DNS-SERVERS
+        protocol: tcp
+        source:
+          address_group: DNS-SERVERS
+        destination:
+          fqdn: ftp.riken.jp
+          port: 80
+      - number: 47
+        action: accept
+        description: Allow HTTP to AlmaLinux mirror (ftp.yz.yamagata-u.ac.jp) from DNS-SERVERS
+        protocol: tcp
+        source:
+          address_group: DNS-SERVERS
+        destination:
+          fqdn: ftp.yz.yamagata-u.ac.jp
+          port: 80
+      - number: 48
+        action: accept
+        description: Allow HTTP to AlmaLinux mirror (mirrors.xtom.jp) from DNS-SERVERS
+        protocol: tcp
+        source:
+          address_group: DNS-SERVERS
+        destination:
+          fqdn: mirrors.xtom.jp
+          port: 80
+      - number: 49
+        action: accept
+        description: Allow HTTP to AlmaLinux mirror (alma.acidman.thelefty.org) from DNS-SERVERS
+        protocol: tcp
+        source:
+          address_group: DNS-SERVERS
+        destination:
+          fqdn: alma.acidman.thelefty.org
+          port: 80
+      - number: 50
+        action: accept
+        description: Allow HTTPS to COPR repo config from DNS-SERVERS
+        protocol: tcp
+        source:
+          address_group: DNS-SERVERS
+        destination:
+          fqdn: copr.fedorainfracloud.org
+          port: 443
+      - number: 51
+        action: accept
+        description: Allow HTTPS to COPR package download from DNS-SERVERS
+        protocol: tcp
+        source:
+          address_group: DNS-SERVERS
+        destination:
+          fqdn: download.copr.fedorainfracloud.org
+          port: 443
+      - number: 52
+        action: accept
+        description: Allow HTTPS to AdGuard update check from DNS-SERVERS
+        protocol: tcp
+        source:
+          address_group: DNS-SERVERS
+        destination:
+          fqdn: static.adtidy.org
+          port: 443
+      - number: 53
+        action: accept
+        description: Allow HTTPS to AdGuard filter list from DNS-SERVERS
+        protocol: tcp
+        source:
+          address_group: DNS-SERVERS
+        destination:
+          fqdn: adguardteam.github.io
+          port: 443
+      - number: 54
+        action: accept
+        description: Allow HTTPS to GitHub from DNS-SERVERS
+        protocol: tcp
+        source:
+          address_group: DNS-SERVERS
+        destination:
+          fqdn: github.com
+          port: 443
+      - number: 55
+        action: accept
+        description: Allow HTTPS to GitHub release assets from DNS-SERVERS
+        protocol: tcp
+        source:
+          address_group: DNS-SERVERS
+        destination:
+          fqdn: objects.githubusercontent.com
+          port: 443
+      - number: 56
+        action: accept
+        description: Allow HTTPS to Lets Encrypt ACME API from DNS-SERVERS
+        protocol: tcp
+        source:
+          address_group: DNS-SERVERS
+        destination:
+          fqdn: acme-v02.api.letsencrypt.org
+          port: 443
+      - number: 57
+        action: accept
+        description: Allow HTTPS to Cloudflare API from DNS-SERVERS
+        protocol: tcp
+        source:
+          address_group: DNS-SERVERS
+        destination:
+          fqdn: api.cloudflare.com
+          port: 443
+      - number: 58
+        action: accept
+        description: Allow DNS to public resolvers from DNS-SERVERS for SSL cert renewal DNS challenge
+        protocol: tcp_udp
+        source:
+          address_group: DNS-SERVERS
+        destination:
+          network_group: CLOUDFLARE-IPS
+          port: 53
+      - number: 59
+        action: accept
+        description: Allow HTTPS to easylist.to filter list from DNS-SERVERS
+        protocol: tcp
+        source:
+          address_group: DNS-SERVERS
+        destination:
+          fqdn: easylist.to
+          port: 443
+      - number: 60
+        action: drop
+        description: Silently drop Tailscale captive portal probe (Tokyo DERP derp7e)
+        protocol: tcp
+        source:
+          address_group: TAILSCALE-NODES
+        destination:
+          fqdn: derp7e.tailscale.com
+          port: 80
+      - number: 61
+        action: drop
+        description: Silently drop Tailscale captive portal probe (Tokyo DERP derp7f)
+        protocol: tcp
+        source:
+          address_group: TAILSCALE-NODES
+        destination:
+          fqdn: derp7f.tailscale.com
+          port: 80
+      - number: 62
+        action: drop
+        description: Silently drop Tailscale captive portal probe (Tokyo DERP derp7g)
+        protocol: tcp
+        source:
+          address_group: TAILSCALE-NODES
+        destination:
+          fqdn: derp7g.tailscale.com
+          port: 80
+      - number: 63
+        action: drop
+        description: Silently drop Tailscale captive portal probe (Tokyo DERP derp7h)
+        protocol: tcp
+        source:
+          address_group: TAILSCALE-NODES
+        destination:
+          fqdn: derp7h.tailscale.com
+          port: 80
 
   - name: DMZ-TO-LOCAL
     default_action: drop
@@ -212,6 +419,22 @@ fw_rulesets:
         protocol: "112"
         source:
           address_group: FW-DMZ-NODES
+      - number: 70
+        action: drop
+        description: Silently drop NAT-PMP from TAILSCALE-NODES
+        protocol: udp
+        source:
+          address_group: TAILSCALE-NODES
+        destination:
+          port: 5351
+      - number: 71
+        action: drop
+        description: Silently drop UPnP/SSDP from TAILSCALE-NODES
+        protocol: udp
+        source:
+          address_group: TAILSCALE-NODES
+        destination:
+          port: 1900
 
   - name: DMZ-TO-INTERNAL
     default_action: drop
@@ -234,6 +457,33 @@ fw_rulesets:
         destination:
           address_group: NAS-SERVERS
           port: 33434-33534
+      - number: 20
+        action: accept
+        description: Allow SSH from TAILSCALE-NODES to ZABBIX-SERVERS
+        protocol: tcp
+        source:
+          address_group: TAILSCALE-NODES
+        destination:
+          address_group: ZABBIX-SERVERS
+          port: 22
+      - number: 30
+        action: accept
+        description: Allow SSH from TAILSCALE-NODES to ACCESS-SWITCHES
+        protocol: tcp
+        source:
+          address_group: TAILSCALE-NODES
+        destination:
+          address_group: ACCESS-SWITCHES
+          port: 22
+      - number: 40
+        action: accept
+        description: Allow TCP/9999 from TAILSCALE-NODES to NAS-SERVERS
+        protocol: tcp
+        source:
+          address_group: TAILSCALE-NODES
+        destination:
+          address_group: NAS-SERVERS
+          port: 9999
 
   - name: INTERNAL-TO-DMZ
     default_action: drop
@@ -248,6 +498,24 @@ fw_rulesets:
         destination:
           address_group: DNS-SERVERS
           port: 53
+      - number: 11
+        action: accept
+        description: Allow DNS from NAS-SERVERS to DNS-SERVERS
+        protocol: tcp_udp
+        source:
+          address_group: NAS-SERVERS
+        destination:
+          address_group: DNS-SERVERS
+          port: 53
+      - number: 20
+        action: accept
+        description: Allow HTTP to DNS-SERVERS for repo mirror from ZABBIX-SERVERS
+        protocol: tcp
+        source:
+          address_group: ZABBIX-SERVERS
+        destination:
+          address_group: DNS-SERVERS
+          port: 80
 
   - name: INTERNAL-TO-LOCAL
     default_action: drop
@@ -262,6 +530,31 @@ fw_rulesets:
         destination:
           address_group: FW-INTERNAL-VIP
           port: 123
+      - number: 20
+        action: accept
+        description: Allow NTP from NAS-SERVERS to FW-INTERNAL-VIP
+        protocol: udp
+        source:
+          address_group: NAS-SERVERS
+        destination:
+          address_group: FW-INTERNAL-VIP
+          port: 123
+      - number: 30
+        action: drop
+        description: Silently drop NetBIOS Name Service broadcast from NAS-SERVERS
+        protocol: udp
+        source:
+          address_group: NAS-SERVERS
+        destination:
+          port: 137
+      - number: 31
+        action: drop
+        description: Silently drop NetBIOS Datagram broadcast from NAS-SERVERS
+        protocol: udp
+        source:
+          address_group: NAS-SERVERS
+        destination:
+          port: 138
 
   - name: LOCAL-TO-WAN
     default_action: drop

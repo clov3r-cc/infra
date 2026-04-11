@@ -1,3 +1,7 @@
+#!/bin/vbash
+source /opt/vyatta/etc/functions/script-template
+configure
+delete service dns forwarding
 {% for addr in dns_listen_addresses %}
 set service dns forwarding listen-address {{ addr }}
 {% endfor %}
@@ -5,3 +9,5 @@ set service dns forwarding listen-address {{ addr }}
 set service dns forwarding allow-from {{ client }}
 {% endfor %}
 set service dns forwarding system
+commit
+exit

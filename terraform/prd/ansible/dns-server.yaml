@@ -1,5 +1,6 @@
 ---
-- hosts: cloud_server
+- hosts: dns_server
   gather_facts: true
   roles:
     - common
+    - dns-server

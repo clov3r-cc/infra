@@ -1,6 +1,8 @@
 #cloud-config
 hostname: ${CI_HOSTNAME}
-prefer_fqdn_over_hostname: False
+fqdn: ${CI_HOSTNAME}.labo.clov3r.cc
+manage_etc_hosts: True
+prefer_fqdn_over_hostname: True
 # パスワードの有効期限をなしに
 chpasswd:
   expire: False
@@ -19,42 +21,25 @@ users:
     home: /home/${CI_MACHINEUSER_NAME}
     ssh_authorized_keys:
       - ${CI_MACHINEUSER_SSH_PUBKEY}
-manage_resolv_conf: true
-resolv_conf:
-  nameservers:
-    - 192.168.20.17
 keyboard:
   layout: us
   model: pc105
 locale: en_US.UTF-8
 timezone: Asia/Tokyo
-package_update: True
-packages:
-  # 言語表示を最適化するため導入
-  - glibc-all-langpacks
-  - langpacks-en
-  # vim をデフォルトのエディタとして使用
-  - vim-enhanced
-  # ファイアウォールを構成するため
-  - nftables
-  # DNS サーバを構成するため
-  - dnsmasq
-  # プロキシサーバを構成するため
-  - squid
+package_update: False
 runcmd:
   # `passwd` がうまく機能しないので、コマンドで各ユーザのパスワードを設定
   - echo 'root:${CI_ROOT_PASSWORD}' | chpasswd
   - echo '${CI_MACHINEUSER_NAME}:${CI_MACHINEUSER_PASSWORD}' | chpasswd
-  # 標準入力経由でパスワードを送信することはできないので、sudo 初回実行時の警告を無効化
+  # sudo 初回実行時の警告を無効化
   - echo '' >> /etc/sudoers.d/90-cloud-init-users
   - echo 'Defaults    lecture = "never"' >> /etc/sudoers.d/90-cloud-init-users
   # SSH サーバの設定を追加する
   - echo 'PermitRootLogin no' > /etc/ssh/sshd_config.d/90-cloud-init-custom.conf
+  - echo 'PasswordAuthentication no' >> /etc/ssh/sshd_config.d/90-cloud-init-custom.conf
   - echo 'KbdInteractiveAuthentication no' >> /etc/ssh/sshd_config.d/90-cloud-init-custom.conf
-  # 以下の設定はすでにほかファイルで設定済み
-  # `PasswordAuthentication no`
-  # -> 50-cloud-init.conf
-  # `GSSAPIAuthentication no `
-  # `X11Forwarding no`
-  # -> 50-redhat.conf
+  - echo 'GSSAPIAuthentication no' >> /etc/ssh/sshd_config.d/90-cloud-init-custom.conf
+  - echo 'X11Forwarding no' >> /etc/ssh/sshd_config.d/90-cloud-init-custom.conf
   - systemctl restart sshd
+  # dnf リポジトリのミラーサイトを日本のサイトのみにする
+  - for f in /etc/yum.repos.d/**.repo; do grep -q 'country=jp' "$f" || sed -i -e 's|\(mirrorlist=.*?\)|\1\&country=jp|' -e 's|\(mirrorlist=[^?]*\)$|\1?country=jp|' "$f"; done

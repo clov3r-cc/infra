@@ -1,0 +1,36 @@
+---
+- name: Configure DNS nameservers (NetworkManager)
+  become: true
+  when:
+    - ansible_facts['os_family'] == 'RedHat'
+    - dns_nameservers is defined
+  community.general.nmcli:
+    conn_name: "cloud-init eth0"
+    type: ethernet
+    dns4: "{{ dns_nameservers }}"
+    dns4_ignore_auto: true
+    state: present
+  notify: Reload NetworkManager connection eth0
+
+- name: Create systemd-resolved drop-in directory
+  become: true
+  when:
+    - ansible_facts['os_family'] == 'Debian'
+    - dns_nameservers is defined
+  ansible.builtin.file:
+    path: /etc/systemd/resolved.conf.d
+    state: directory
+    mode: '0755'
+
+- name: Configure DNS nameservers (systemd-resolved)
+  become: true
+  when:
+    - ansible_facts['os_family'] == 'Debian'
+    - dns_nameservers is defined
+  ansible.builtin.copy:
+    dest: /etc/systemd/resolved.conf.d/dns.conf
+    content: |
+      [Resolve]
+      DNS={{ dns_nameservers | join(' ') }}
+    mode: '0644'
+  notify: Restart systemd-resolved

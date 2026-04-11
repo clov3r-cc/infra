@@ -4,3 +4,10 @@
   ansible.builtin.file:
     path: /etc/sudoers.d/90-cloud-init-users
     state: absent
+
+- name: Install libpam-ssh-agent-auth
+  become: true
+  ansible.builtin.apt:
+    name: libpam-ssh-agent-auth
+    state: present
+    install_recommends: false
