@@ -60,7 +60,7 @@ EOT
   vm_internal_nw_subnet_cidr = "192.168.22.0/24"
   vm_internal_nw_subnet_mask = split("/", local.vm_internal_nw_subnet_cidr)[1]
   vm_internal_nw_default_gw  = cidrhost(local.vm_internal_nw_subnet_cidr, 3)
-  vm_adguard_ip = cidrhost(local.vm_dmz_nw_subnet_cidr, 6)
+  vm_adguard_ip              = cidrhost(local.vm_dmz_nw_subnet_cidr, 6)
 
   # Zabbix Server Heartbeat network configuration
   zabbix_server_heartbeat_nw_bridge      = "vmbr4"
