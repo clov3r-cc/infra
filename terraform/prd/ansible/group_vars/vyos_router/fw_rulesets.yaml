@@ -509,13 +509,13 @@ fw_rulesets:
           port: 53
       - number: 20
         action: accept
-        description: Allow HTTP to DNS-SERVERS for repo mirror from ZABBIX-SERVERS
+        description: Allow HTTPS to DNS-SERVERS for repo mirror from ZABBIX-SERVERS
         protocol: tcp
         source:
           address_group: ZABBIX-SERVERS
         destination:
           address_group: DNS-SERVERS
-          port: 80
+          port: 443
 
   - name: INTERNAL-TO-LOCAL
     default_action: drop
