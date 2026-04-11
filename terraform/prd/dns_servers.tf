@@ -8,7 +8,7 @@ locals {
       cpu_core            = 2
       memory              = 1024 * 2
       os_disk_size        = 15
-      data_disk_size      = 60
+      data_disk_size      = 30
     }
   }
 }
