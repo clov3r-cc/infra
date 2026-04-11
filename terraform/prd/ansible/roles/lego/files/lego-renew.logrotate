@@ -1,0 +1,10 @@
+/var/log/lego-renew.log {
+    monthly
+    rotate 12
+    dateext
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 0640 root root
+}

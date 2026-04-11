@@ -1,0 +1,2 @@
+---
+_lego_domain_args: "{{ lego_domains | map('regex_replace', '^(.+)$', '--domains \\1') | join(' ') }}"
