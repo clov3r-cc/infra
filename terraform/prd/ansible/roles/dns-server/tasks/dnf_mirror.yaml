@@ -1,0 +1,132 @@
+---
+- name: Enable noa/rust COPR repository
+  become: true
+  community.general.copr:
+    name: noa/rust
+    chroot: epel-10-x86_64
+    state: enabled
+
+- name: Install packages
+  become: true
+  ansible.builtin.package:
+    name:
+      - dnsmasq
+      - pam-ssh-agent
+      - nginx
+      - dnf-utils
+    state: present
+
+- name: Create partition on data disk
+  become: true
+  community.general.parted:
+    device: /dev/vdb
+    number: 1
+    state: present
+    fs_type: ext4
+
+- name: Format data disk partition
+  become: true
+  community.general.filesystem:
+    fstype: ext4
+    dev: /dev/vdb1
+
+- name: Create mount point
+  become: true
+  ansible.builtin.file:
+    path: /var/www/html/repos
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Mount data disk
+  become: true
+  ansible.posix.mount:
+    path: /var/www/html/repos
+    src: /dev/vdb1
+    fstype: ext4
+    opts: defaults
+    state: mounted
+
+- name: Deploy nginx common config
+  become: true
+  ansible.builtin.template:
+    src: nginx-common.conf.j2
+    dest: /etc/nginx/conf.d/common.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload nginx
+
+- name: Deploy nginx DNF mirror config
+  become: true
+  ansible.builtin.template:
+    src: nginx-repo.conf.j2
+    dest: /etc/nginx/conf.d/dnf.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload nginx
+
+- name: Enable and start nginx
+  become: true
+  ansible.builtin.systemd:
+    name: nginx
+    enabled: true
+    state: started
+
+- name: Restore SELinux context on repo directory
+  become: true
+  ansible.builtin.command:
+    cmd: restorecon -r /var/www/html/repos
+  changed_when: false
+
+- name: Deploy repo-mirror systemd service
+  become: true
+  ansible.builtin.copy:
+    src: repo-mirror.service
+    dest: /etc/systemd/system/repo-mirror.service
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Deploy repo-mirror systemd timer
+  become: true
+  ansible.builtin.copy:
+    src: repo-mirror.timer
+    dest: /etc/systemd/system/repo-mirror.timer
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Deploy repo-sync script
+  become: true
+  ansible.builtin.copy:
+    src: repo-sync.sh
+    dest: /usr/local/bin/repo-sync.sh
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Deploy repo-sync logrotate config
+  become: true
+  ansible.builtin.copy:
+    src: repo-sync.logrotate
+    dest: /etc/logrotate.d/repo-sync
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Enable and start repo-mirror timer
+  become: true
+  ansible.builtin.systemd:
+    name: repo-mirror.timer
+    daemon_reload: true
+    enabled: true
+    state: started
+
+- name: Run initial repository sync
+  become: true
+  ansible.builtin.command:
+    cmd: /usr/local/bin/repo-sync.sh
+  changed_when: true
