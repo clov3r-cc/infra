@@ -1,0 +1,19 @@
+[Unit]
+Description=Lego certificate renewal
+After=network-online.target
+
+[Service]
+Type=oneshot
+EnvironmentFile={{ lego_path }}/lego.env
+ExecStart=/usr/local/bin/lego \
+  --path {{ lego_path }} \
+  --email {{ lego_email }} \
+  --dns {{ lego_dns_provider }} \
+  --accept-tos \
+{% for domain in lego_domains %}
+  --domains {{ domain }} \
+{% endfor %}
+  renew \
+  --renew-hook {{ lego_renew_hook | quote }}
+StandardOutput=append:/var/log/lego-renew.log
+StandardError=append:/var/log/lego-renew.log

@@ -1,5 +1,67 @@
 ---
 dnf_local_mirror_url: ""  # ミラーサーバ自身はアップストリームを使う
 nginx_cert_domain: prd-dsq-01.labo.clov3r.cc
+
+lego_version: "4.33.0"  # 初回インストール時のバージョン
+lego_path: /etc/lego
+lego_email: me@clov3r.cc
+lego_dns_provider: cloudflare
+lego_domains:
+  - "{{ nginx_cert_domain }}"
+lego_cloudflare_api_token: "{{ vault_lego_cloudflare_api_token }}"
+lego_renew_hook: "systemctl reload nginx && systemctl restart AdGuardHome"
+
+adguard_version: "0.107.73"  # 初回インストール時のバージョン（以降はAdGuard Homeの自動更新に委ねる）
 adguard_listen_addr: 192.168.20.22
+adguard_http_port: 8080
 adguard_https_port: 9443
+adguard_admin_username: lucky
+adguard_admin_password: "{{ vault_adguard_admin_password }}"
+adguard_upstream_dns:
+  - 192.168.20.17  # FW-DMZ-VIP
+adguard_allowed_clients:
+  - 192.168.20.16/28  # DMZ
+  - 192.168.21.0/24   # Service
+  - 192.168.22.0/24   # Internal
+adguard_filters:
+  - name: AdGuard DNS filter
+    url: https://adguardteam.github.io/HostlistsRegistry/assets/filter_1.txt
+  - name: AdGuard 日本語フィルタ
+    url: https://raw.githubusercontent.com/AdguardTeam/FiltersRegistry/master/filters/filter_7_Japanese/filter.txt
+  - name: EasyList
+    url: https://easylist.to/easylist/easylist.txt
+adguard_blocked_services:
+  - betano
+  - betfair
+  - betway
+  - blaze
+  - coolapk
+  - ebay
+  - lazada
+  - mercado_libre
+  - plenty_of_fish
+  - shein
+  - shopee
+  - temu
+  - tinder
+  - wizz
+  - xiaohongshu
+adguard_rewrites:
+  - domain: prd-dsq-01.labo.clov3r.cc
+    answer: 192.168.20.22
+  - domain: prd-dsq-02.labo.clov3r.cc
+    answer: 192.168.20.23
+  - domain: prd-pve-01.labo.clov3r.cc
+    answer: 192.168.20.2
+  - domain: prd-tal-01.labo.clov3r.cc
+    answer: 192.168.20.20
+  - domain: prd-tal-02.labo.clov3r.cc
+    answer: 192.168.20.21
+  - domain: prd-vyo-01.labo.clov3r.cc
+    answer: 192.168.20.18
+  - domain: prd-vyo-02.labo.clov3r.cc
+    answer: 192.168.20.19
+  - domain: prd-zbx-01.labo.clov3r.cc
+    answer: 192.168.22.8
+  - domain: prd-acc-02.labo.clov3r.cc
+    answer: 192.168.22.1

@@ -4,3 +4,5 @@ Description=Sync DNF repository mirror
 [Service]
 Type=oneshot
 ExecStart=/usr/local/bin/repo-sync.sh
+StandardOutput=append:/var/log/repo-sync.log
+StandardError=append:/var/log/repo-sync.log

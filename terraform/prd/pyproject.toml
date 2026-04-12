@@ -1,8 +1,9 @@
 [project]
 name = "prd"
 version = "0.1.0"
-requires-python = ">=3.14,<3.15"
+requires-python = ">=3.12,<3.13"
 dependencies = [
     "ansible>=13.2.0",
     "ansible-pylibssh>=1.4.0",
+    "bcrypt>=5.0.0,<6.0.0",
 ]

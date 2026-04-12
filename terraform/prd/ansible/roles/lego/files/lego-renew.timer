@@ -1,5 +1,5 @@
 [Unit]
-Description=Run DNF mirror sync daily
+Description=Lego certificate renewal timer
 
 [Timer]
 OnCalendar=daily

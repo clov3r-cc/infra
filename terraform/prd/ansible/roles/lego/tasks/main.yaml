@@ -1,0 +1,112 @@
+---
+- name: Check if lego binary exists
+  ansible.builtin.stat:
+    path: /usr/local/bin/lego
+  register: _lego_binary
+
+- name: Install lego
+  when: not _lego_binary.stat.exists
+  block:
+    - name: Download lego archive
+      become: true
+      ansible.builtin.get_url:
+        url: "https://github.com/go-acme/lego/releases/download/v{{ lego_version }}/lego_v{{ lego_version }}_linux_amd64.tar.gz"
+        dest: /tmp/lego.tar.gz
+        mode: "0644"
+
+    - name: Extract lego binary
+      become: true
+      ansible.builtin.unarchive:
+        src: /tmp/lego.tar.gz
+        dest: /usr/local/bin
+        remote_src: true
+        include:
+          - lego
+
+    - name: Remove archive
+      become: true
+      ansible.builtin.file:
+        path: /tmp/lego.tar.gz
+        state: absent
+
+    - name: Restore SELinux context on lego binary
+      become: true
+      ansible.builtin.command:
+        cmd: restorecon -v /usr/local/bin/lego
+      changed_when: false
+
+- name: Create lego directory
+  become: true
+  ansible.builtin.file:
+    path: "{{ lego_path }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0700"
+
+- name: Deploy lego environment file
+  become: true
+  ansible.builtin.template:
+    src: lego-env.j2
+    dest: "{{ lego_path }}/lego.env"
+    owner: root
+    group: root
+    mode: "0600"
+
+- name: Check if certificate already exists
+  become: true
+  ansible.builtin.stat:
+    path: "{{ lego_path }}/certificates/{{ lego_domains | first }}.crt"
+  register: _lego_cert
+
+- name: Obtain initial certificate
+  become: true
+  ansible.builtin.shell:
+    cmd: >-
+      /usr/local/bin/lego
+      --path {{ lego_path }}
+      --email {{ lego_email }}
+      --dns {{ lego_dns_provider }}
+      --accept-tos
+      {{ _lego_domain_args }}
+      run
+    executable: /bin/bash
+  environment:
+    CF_DNS_API_TOKEN: "{{ lego_cloudflare_api_token }}"
+  when: not _lego_cert.stat.exists
+  notify: "{{ lego_renew_hook }}"
+
+- name: Deploy lego renew systemd service
+  become: true
+  ansible.builtin.template:
+    src: lego-renew.service.j2
+    dest: /etc/systemd/system/lego-renew.service
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Deploy lego renew systemd timer
+  become: true
+  ansible.builtin.copy:
+    src: lego-renew.timer
+    dest: /etc/systemd/system/lego-renew.timer
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Deploy lego-renew logrotate config
+  become: true
+  ansible.builtin.copy:
+    src: lego-renew.logrotate
+    dest: /etc/logrotate.d/lego-renew
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Enable and start lego renew timer
+  become: true
+  ansible.builtin.systemd:
+    name: lego-renew.timer
+    daemon_reload: true
+    enabled: true
+    state: started

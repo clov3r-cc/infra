@@ -5,10 +5,10 @@
       - show configuration commands
   register: _all_config
 
-- ansible.builtin.import_tasks: system.yaml
-- ansible.builtin.import_tasks: dns.yaml
-- ansible.builtin.import_tasks: firewall.yaml
-- ansible.builtin.import_tasks: vrrp.yaml
+- import_tasks: system.yaml
+- import_tasks: dns.yaml
+- import_tasks: firewall.yaml
+- import_tasks: vrrp.yaml
 - name: Compare running vs saved configuration
   ansible.builtin.shell: |
     source /opt/vyatta/etc/functions/script-template
@@ -24,7 +24,7 @@
 
 - name: Display changes since last save
   ansible.builtin.debug:
-    msg: "{{ _compare_saved.stdout_lines | join('\n') }}"
+    msg: "{{ _compare_saved.stdout_lines }}"
   when: "'No changes' not in _compare_saved.stdout"
 
 - name: Save configuration
