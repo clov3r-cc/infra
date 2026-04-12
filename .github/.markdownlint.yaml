@@ -5,5 +5,7 @@ MD013:
   code_blocks: false
   # Disable checks on a table
   tables: false
+MD024:
+  enabled: false
 MD060:
   enabled: false
