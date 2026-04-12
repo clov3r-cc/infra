@@ -1,7 +1,9 @@
 ---
-- hosts: pve_server
+- name: Upgrade PVE server packages
+  hosts: pve_server
   gather_facts: true
   tasks:
-    - ansible.builtin.include_role:
+    - name: Run pkg-upgrade role tasks
+      ansible.builtin.include_role:
         name: common
         tasks_from: pkg-upgrade.yaml

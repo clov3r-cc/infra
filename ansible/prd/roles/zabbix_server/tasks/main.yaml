@@ -26,8 +26,8 @@
   args:
     creates: /etc/corosync/authkey
   check_mode: false
-  register: generate_corosync_key
-  failed_when: ansible_check_mode == false and generate_corosync_key.rc != 0
+  register: zabbix_server_generate_corosync_key
+  failed_when: ansible_check_mode == false and zabbix_server_generate_corosync_key.rc != 0
 
 - name: Fetch authkey from first node
   when: "'zabbix_server__ha' in group_names and inventory_hostname == groups['zabbix_server__ha'][0]"

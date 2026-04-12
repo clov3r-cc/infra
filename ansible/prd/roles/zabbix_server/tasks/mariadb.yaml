@@ -5,6 +5,7 @@
   ansible.builtin.copy:
     src: files/MariaDB.repo
     dest: /etc/yum.repos.d/MariaDB.repo
+    mode: "0644"
 
 - name: Install MariaDB
   when: "'zabbix_server' in group_names or 'zabbix_server__single' in group_names"

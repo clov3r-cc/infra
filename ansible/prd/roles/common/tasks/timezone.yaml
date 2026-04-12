@@ -1,12 +1,12 @@
 ---
 - name: Check current timezone
   ansible.builtin.command: timedatectl show --property=Timezone --value
-  register: current_timezone
+  register: common_current_timezone
   changed_when: false
   check_mode: false
 
 - name: Set timezone to Asia/Tokyo
-  when: current_timezone.stdout != 'Asia/Tokyo'
+  when: common_current_timezone.stdout != 'Asia/Tokyo'
   become: true
   ansible.builtin.command: timedatectl set-timezone Asia/Tokyo
   changed_when: true

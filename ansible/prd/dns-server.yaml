@@ -1,7 +1,8 @@
 ---
-- hosts: dns_server
+- name: Configure DNS servers
+  hosts: dns_server
   gather_facts: true
   roles:
     - common
     - lego
-    - dns-server
+    - dns_server

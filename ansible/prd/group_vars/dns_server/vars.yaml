@@ -15,7 +15,6 @@ adguard_listen_addr: "{{ ansible_host }}"
 adguard_http_port: 8080
 adguard_https_port: 9443
 adguard_admin_username: lucky
-adguard_admin_password: "{{ vault_adguard_admin_password }}"
 adguard_upstream_dns:
   - 192.168.20.17  # FW-DMZ-VIP
 adguard_allowed_clients:
