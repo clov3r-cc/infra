@@ -2,5 +2,11 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "github>Lucky3028/renovate"
+  ],
+  "packageRules": [
+    {
+      "matchLanguages": ["python"],
+      "enabled": false
+    }
   ]
 }
