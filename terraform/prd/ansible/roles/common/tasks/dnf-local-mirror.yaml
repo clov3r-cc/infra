@@ -2,7 +2,7 @@
 - name: Remove local DNF mirror configuration (not applicable on this host)
   when:
     - ansible_facts['distribution'] == 'AlmaLinux'
-    - dnf_local_mirror_url | default('') | length == 0
+    - dnf_local_mirror_urls | default([]) | length == 0
   block:
     - name: Remove local mirror repo file
       become: true
@@ -27,40 +27,13 @@
 - name: Configure local DNF mirror
   when:
     - ansible_facts['distribution'] == 'AlmaLinux'
-    - dnf_local_mirror_url | default('') | length > 0
+    - dnf_local_mirror_urls | default([]) | length > 0
   block:
     - name: Deploy local mirror repo file
       become: true
-      ansible.builtin.copy:
+      ansible.builtin.template:
+        src: local-mirror.repo.j2
         dest: /etc/yum.repos.d/local-mirror.repo
-        content: |
-          [local-baseos]
-          name=Local Mirror - BaseOS
-          baseurl={{ dnf_local_mirror_url }}/baseos/
-          enabled=1
-          gpgcheck=0
-          module_hotfixes=1
-
-          [local-appstream]
-          name=Local Mirror - AppStream
-          baseurl={{ dnf_local_mirror_url }}/appstream/
-          enabled=1
-          gpgcheck=0
-          module_hotfixes=1
-
-          [local-crb]
-          name=Local Mirror - CRB
-          baseurl={{ dnf_local_mirror_url }}/crb/
-          enabled=1
-          gpgcheck=0
-          module_hotfixes=1
-
-          [local-extras]
-          name=Local Mirror - Extras
-          baseurl={{ dnf_local_mirror_url }}/extras/
-          enabled=1
-          gpgcheck=0
-          module_hotfixes=1
         owner: root
         group: root
         mode: "0644"

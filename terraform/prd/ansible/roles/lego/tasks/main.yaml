@@ -74,7 +74,9 @@
   environment:
     CF_DNS_API_TOKEN: "{{ lego_cloudflare_api_token }}"
   when: not _lego_cert.stat.exists
-  notify: "{{ lego_renew_hook }}"
+  notify:
+    - Reload nginx
+    - Restart AdGuardHome
 
 - name: Deploy lego renew systemd service
   become: true

@@ -1,0 +1,39 @@
+[local-baseos]
+name=Local Mirror - BaseOS
+{% set urls = dnf_local_mirror_urls | map('regex_replace', '$', '/baseos/') | list -%}
+baseurl={{ urls | first }}
+{% for url in urls[1:] %}    {{ url }}
+{% endfor -%}
+enabled=1
+gpgcheck=0
+module_hotfixes=1
+
+[local-appstream]
+name=Local Mirror - AppStream
+{% set urls = dnf_local_mirror_urls | map('regex_replace', '$', '/appstream/') | list -%}
+baseurl={{ urls | first }}
+{% for url in urls[1:] %}    {{ url }}
+{% endfor -%}
+enabled=1
+gpgcheck=0
+module_hotfixes=1
+
+[local-crb]
+name=Local Mirror - CRB
+{% set urls = dnf_local_mirror_urls | map('regex_replace', '$', '/crb/') | list -%}
+baseurl={{ urls | first }}
+{% for url in urls[1:] %}    {{ url }}
+{% endfor -%}
+enabled=1
+gpgcheck=0
+module_hotfixes=1
+
+[local-extras]
+name=Local Mirror - Extras
+{% set urls = dnf_local_mirror_urls | map('regex_replace', '$', '/extras/') | list -%}
+baseurl={{ urls | first }}
+{% for url in urls[1:] %}    {{ url }}
+{% endfor -%}
+enabled=1
+gpgcheck=0
+module_hotfixes=1

@@ -31,10 +31,7 @@
         dest: /opt/AdGuardHome
         remote_src: true
         extra_opts:
-          - "--strip-components=1"
-          - "--wildcards"
-          - "*/AdGuardHome"
-          - "*/AdGuardHome.sig"
+          - "--strip-components=2"
       notify: Restart AdGuardHome
 
     - name: Remove archive
@@ -114,6 +111,13 @@
     daemon_reload: true
     enabled: true
     state: started
+
+- name: Allow nginx to connect to upstream (SELinux)
+  become: true
+  ansible.posix.seboolean:
+    name: httpd_can_network_connect
+    state: true
+    persistent: true
 
 - name: Deploy nginx AdGuard Home proxy config
   become: true
