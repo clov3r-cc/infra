@@ -10,7 +10,7 @@
 - name: Install MariaDB
   when: "'zabbix_server' in group_names or 'zabbix_server__single' in group_names"
   become: true
-  ansible.builtin.dnf:
+  ansible.builtin.package:
     name:
       - MariaDB-client
       - MariaDB-server

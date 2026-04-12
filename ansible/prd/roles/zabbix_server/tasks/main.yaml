@@ -2,7 +2,7 @@
 - name: Install Pacemaker
   when: "'zabbix_server__ha' in group_names"
   become: true
-  ansible.builtin.dnf:
+  ansible.builtin.package:
     name:
       - corosync
       - corosync-qdevice

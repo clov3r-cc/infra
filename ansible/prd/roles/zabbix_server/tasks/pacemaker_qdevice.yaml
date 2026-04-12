@@ -2,7 +2,7 @@
 - name: Install Pacemaker
   when: "'pacemaker_qdevice' in group_names"
   become: true
-  ansible.builtin.dnf:
+  ansible.builtin.package:
     name:
       - corosync-qnetd
       - pcs

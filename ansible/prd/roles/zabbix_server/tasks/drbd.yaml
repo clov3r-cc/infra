@@ -23,14 +23,14 @@
 - name: Install ELRepo
   when: "'zabbix_server__ha' in group_names"
   become: true
-  ansible.builtin.dnf:
+  ansible.builtin.package:
     name: https://www.elrepo.org/elrepo-release-10.el10.elrepo.noarch.rpm
     state: present
 
 - name: Install DRBD
   when: "'zabbix_server__ha' in group_names"
   become: true
-  ansible.builtin.dnf:
+  ansible.builtin.package:
     name:
       - kmod-drbd9x
       - drbd9x-utils
