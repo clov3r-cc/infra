@@ -1,0 +1,7 @@
+---
+- hosts: pve_server
+  gather_facts: true
+  tasks:
+    - ansible.builtin.include_role:
+        name: common
+        tasks_from: pkg-upgrade.yaml
