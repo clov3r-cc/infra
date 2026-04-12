@@ -26,4 +26,5 @@ jobs:
       - name: Run ansible-lint
         uses: ansible/ansible-lint@v26.4.0
         with:
+          setup_python: "false"
           working_directory: ${{ github.workspace }}/ansible/${{ matrix.env }}
