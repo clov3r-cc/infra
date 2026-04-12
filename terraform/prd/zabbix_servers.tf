@@ -113,7 +113,7 @@ resource "proxmox_vm_qemu" "zabbix_server" {
     bridge = local.zabbix_server_heartbeat_nw_bridge
   }
 
-  nameserver   = local.vm_adguard_ip
+  nameserver   = join(" ", local.vm_adguard_ips)
   searchdomain = "labo.clov3r.cc"
   ipconfig0    = "ip=${cidrhost(local.vm_internal_nw_subnet_cidr, each.value.internal_nw_host_section)}${"/${local.vm_internal_nw_subnet_mask}"},gw=${local.vm_internal_nw_default_gw}"
   ipconfig1    = "ip=${cidrhost(local.zabbix_server_heartbeat_nw_subnet_cidr, each.value.heartbeat_nw_host_section)}${"/${local.zabbix_server_heartbeat_nw_subnet_mask}"}"
