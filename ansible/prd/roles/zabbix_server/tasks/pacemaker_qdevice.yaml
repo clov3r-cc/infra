@@ -1,6 +1,6 @@
 ---
 - name: Install Pacemaker
-  when: "'pacemaker_qdevice' in group_names"
+  when: "'zabbix_server__single' in group_names"
   become: true
   ansible.builtin.package:
     name:
@@ -10,7 +10,7 @@
     enablerepo: highavailability
 
 - name: Set hacluster user password
-  when: "'pacemaker_qdevice' in group_names"
+  when: "'zabbix_server__single' in group_names"
   become: true
   ansible.builtin.user:
     name: hacluster
