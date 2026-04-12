@@ -1,0 +1,4 @@
+---
+pkg_upgrade_calendar: "Mon *-*-* 02:00:00"
+install_qemu_guest_agent: false
+ntp_servers: []
