@@ -1,6 +1,6 @@
 ---
-dnf_local_mirror_url: ""  # ミラーサーバ自身はアップストリームを使う
-nginx_cert_domain: prd-dsq-01.labo.clov3r.cc
+dnf_local_mirror_urls: []  # ミラーサーバ自身はアップストリームを使う
+nginx_cert_domain: "{{ inventory_hostname }}.labo.clov3r.cc"
 
 lego_version: "4.33.0"  # 初回インストール時のバージョン
 lego_path: /etc/lego
@@ -9,10 +9,9 @@ lego_dns_provider: cloudflare
 lego_domains:
   - "{{ nginx_cert_domain }}"
 lego_cloudflare_api_token: "{{ vault_lego_cloudflare_api_token }}"
-lego_renew_hook: "systemctl reload nginx && systemctl restart AdGuardHome"
 
 adguard_version: "0.107.73"  # 初回インストール時のバージョン（以降はAdGuard Homeの自動更新に委ねる）
-adguard_listen_addr: 192.168.20.22
+adguard_listen_addr: "{{ ansible_host }}"
 adguard_http_port: 8080
 adguard_https_port: 9443
 adguard_admin_username: lucky
