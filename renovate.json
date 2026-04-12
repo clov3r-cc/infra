@@ -5,7 +5,9 @@
   ],
   "packageRules": [
     {
-      "matchLanguages": ["python"],
+      "matchCategories": [
+        "python"
+      ],
       "enabled": false
     }
   ]
