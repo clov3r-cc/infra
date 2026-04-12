@@ -5,7 +5,7 @@
   ],
   "packageRules": [
     {
-      "matchCategories": [
+      "matchPackageNames": [
         "python"
       ],
       "enabled": false
