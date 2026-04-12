@@ -30,4 +30,4 @@ jobs:
       - name: Run ansible-lint
         uses: ansible/ansible-lint@v26.4.0
         with:
-          working_directory: ansible/${{ matrix.env }}
+          working_directory: ${{ github.workspace }}/ansible/${{ matrix.env }}
