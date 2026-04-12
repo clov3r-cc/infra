@@ -125,8 +125,16 @@
     enabled: true
     state: started
 
+- name: Check if RPM packages exist in repos
+  become: true
+  ansible.builtin.find:
+    paths: /var/www/html/repos
+    patterns: "*.rpm"
+    recurse: true
+  register: rpm_files
+
 - name: Run initial repository sync
   become: true
   ansible.builtin.command:
     cmd: /usr/local/bin/repo-sync.sh
-  changed_when: true
+  when: rpm_files.matched == 0
