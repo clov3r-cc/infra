@@ -485,6 +485,25 @@ fw_rulesets:
           address_group: NAS-SERVERS
           port: 9999
 
+  - name: INTERNAL-TO-WAN
+    default_action: drop
+    default_log: true
+    rules:
+      - number: 10
+        action: accept
+        description: Allow ICMP to WAN from NAS-SERVERS
+        protocol: icmp
+        source:
+          address_group: NAS-SERVERS
+      - number: 200
+        action: accept
+        description: Allow HTTPS to api-aar.ugnas.com from NAS-SERVERS
+        protocol: tcp
+        source:
+          address_group: NAS-SERVERS
+        destination:
+          port: 443
+
   - name: INTERNAL-TO-DMZ
     default_action: drop
     default_log: true
