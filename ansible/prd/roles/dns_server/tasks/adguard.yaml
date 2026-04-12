@@ -3,10 +3,10 @@
   become: true
   ansible.builtin.stat:
     path: /opt/AdGuardHome/AdGuardHome
-  register: _adguard_binary
+  register: dns_server_adguard_binary
 
 - name: Install AdGuard Home binary
-  when: not _adguard_binary.stat.exists
+  when: not dns_server_adguard_binary.stat.exists
   block:
     - name: Download AdGuard Home archive
       become: true
@@ -63,7 +63,7 @@
           print(config['users'][0]['password'])
         except Exception:
           print('')
-  register: _adguard_existing_hash
+  register: dns_server_adguard_existing_hash
   changed_when: false
   failed_when: false
   no_log: true
@@ -82,8 +82,8 @@
           print(existing.decode())
         else:
           print(bcrypt.hashpw(pw, bcrypt.gensalt()).decode())
-    stdin: "{{ {'password': adguard_admin_password, 'existing': _adguard_existing_hash.stdout} | to_json }}"
-  register: adguard_password_hash
+    stdin: "{{ {'password': adguard_admin_password, 'existing': dns_server_adguard_existing_hash.stdout} | to_json }}"
+  register: dns_server_adguard_password_hash
   changed_when: false
   delegate_to: localhost
   no_log: true

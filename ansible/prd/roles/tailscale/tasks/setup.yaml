@@ -1,6 +1,13 @@
 ---
+- name: Download Tailscale install script
+  become: true
+  ansible.builtin.get_url:
+    url: https://tailscale.com/install.sh
+    dest: /tmp/tailscale-install.sh
+    mode: "0700"
+
 - name: Install Tailscale
   become: true
-  ansible.builtin.shell: curl -fsSL https://tailscale.com/install.sh | sh
+  ansible.builtin.command: /tmp/tailscale-install.sh
   args:
     creates: /usr/bin/tailscale

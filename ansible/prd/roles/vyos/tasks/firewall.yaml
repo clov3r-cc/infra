@@ -9,11 +9,11 @@
 
 - name: Check firewall groups changes
   ansible.builtin.set_fact:
-    _fw_groups_changed: >-
+    vyos_fw_groups_changed: >-
       {{ (lookup('ansible.builtin.template', role_path + '/templates/firewall-groups.j2')
           .splitlines() | select('match', '^set ') | map('regex_replace', "[\r'\"]", '') | list | sort)
          !=
-         (_all_config.stdout_lines[0] | select('match', '^set firewall group') | map('regex_replace', "[\r'\"]", '') | list | sort) }}
+         (vyos_all_config.stdout_lines[0] | select('match', '^set firewall group') | map('regex_replace', "[\r'\"]", '') | list | sort) }}
 
 - name: Deploy firewall groups script
   ansible.builtin.template:
@@ -21,13 +21,14 @@
     dest: /tmp/vyos-fw-groups.sh
     mode: "0700"
   changed_when: false
-  when: _fw_groups_changed
+  when: vyos_fw_groups_changed
   vars:
     ansible_connection: ssh
 
 - name: Execute firewall groups script
-  ansible.builtin.shell: /tmp/vyos-fw-groups.sh
-  when: _fw_groups_changed
+  ansible.builtin.command: /tmp/vyos-fw-groups.sh
+  when: vyos_fw_groups_changed
+  changed_when: true
   vars:
     ansible_connection: ssh
 
@@ -36,7 +37,7 @@
     path: /tmp/vyos-fw-groups.sh
     state: absent
   changed_when: false
-  when: _fw_groups_changed
+  when: vyos_fw_groups_changed
   vars:
     ansible_connection: ssh
 
@@ -47,11 +48,11 @@
 
 - name: Check firewall rules changes
   ansible.builtin.set_fact:
-    _fw_rules_changed: >-
+    vyos_fw_rules_changed: >-
       {{ (lookup('ansible.builtin.template', role_path + '/templates/firewall-rules.j2')
           .splitlines() | select('match', '^set ') | map('regex_replace', "[\r'\"]", '') | list | sort)
          !=
-         (_all_config.stdout_lines[0] | select('match', '^set firewall ipv4 name') | map('regex_replace', "[\r'\"]", '') | list | sort) }}
+         (vyos_all_config.stdout_lines[0] | select('match', '^set firewall ipv4 name') | map('regex_replace', "[\r'\"]", '') | list | sort) }}
 
 - name: Deploy firewall ruleset script
   ansible.builtin.template:
@@ -59,13 +60,14 @@
     dest: /tmp/vyos-fw-rules.sh
     mode: "0700"
   changed_when: false
-  when: _fw_rules_changed
+  when: vyos_fw_rules_changed
   vars:
     ansible_connection: ssh
 
 - name: Execute firewall ruleset script
-  ansible.builtin.shell: /tmp/vyos-fw-rules.sh
-  when: _fw_rules_changed
+  ansible.builtin.command: /tmp/vyos-fw-rules.sh
+  when: vyos_fw_rules_changed
+  changed_when: true
   vars:
     ansible_connection: ssh
 
@@ -74,7 +76,7 @@
     path: /tmp/vyos-fw-rules.sh
     state: absent
   changed_when: false
-  when: _fw_rules_changed
+  when: vyos_fw_rules_changed
   vars:
     ansible_connection: ssh
 

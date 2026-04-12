@@ -6,7 +6,7 @@ http:
   session_ttl: 720h
 users:
   - name: {{ adguard_admin_username }}
-    password: {{ adguard_password_hash.stdout }}
+    password: {{ dns_server_adguard_password_hash.stdout }}
 auth_attempts: 5
 block_auth_min: 15
 http_proxy: ""

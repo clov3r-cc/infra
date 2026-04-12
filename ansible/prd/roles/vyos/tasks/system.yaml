@@ -22,11 +22,11 @@
 
 - name: Check NTP changes
   ansible.builtin.set_fact:
-    _ntp_changed: >-
+    vyos_ntp_changed: >-
       {{ (lookup('ansible.builtin.template', role_path + '/templates/ntp.j2')
           .splitlines() | select('match', '^set ') | map('regex_replace', "[\r'\"]", '') | list | sort)
          !=
-         (_all_config.stdout_lines[0] | select('match', '^set service ntp') | map('regex_replace', "[\r'\"]", '') | list | sort) }}
+         (vyos_all_config.stdout_lines[0] | select('match', '^set service ntp') | map('regex_replace', "[\r'\"]", '') | list | sort) }}
 
 - name: Deploy NTP script
   ansible.builtin.template:
@@ -34,13 +34,14 @@
     dest: /tmp/vyos-ntp.sh
     mode: "0700"
   changed_when: false
-  when: _ntp_changed
+  when: vyos_ntp_changed
   vars:
     ansible_connection: ssh
 
 - name: Execute NTP script
-  ansible.builtin.shell: /tmp/vyos-ntp.sh
-  when: _ntp_changed
+  ansible.builtin.command: /tmp/vyos-ntp.sh
+  when: vyos_ntp_changed
+  changed_when: true
   vars:
     ansible_connection: ssh
 
@@ -49,7 +50,7 @@
     path: /tmp/vyos-ntp.sh
     state: absent
   changed_when: false
-  when: _ntp_changed
+  when: vyos_ntp_changed
   vars:
     ansible_connection: ssh
 

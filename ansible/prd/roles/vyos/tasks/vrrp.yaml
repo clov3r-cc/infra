@@ -22,7 +22,7 @@
   vyos.vyos.vyos_command:
     commands:
       - show vrrp
-  register: vrrp_result
+  register: vyos_vrrp_result
 
 # - name: Assert VRRP state is {{ vyos_vrrp_expected_state }}
 #   ansible.builtin.assert:

@@ -1,12 +1,23 @@
 ---
-- import_tasks: dns.yaml
-- import_tasks: dnf-local-mirror.yaml
-- import_tasks: packages.yaml
-- import_tasks: pkg-upgrade.yaml
-- import_tasks: timezone.yaml
-- import_tasks: passwordless-sudo.yaml
-- import_tasks: ip-forwarding.yaml
-- import_tasks: disable-swap.yaml
-- import_tasks: use-nftables.yaml
-- import_tasks: qemu-guest-agent.yaml
-- import_tasks: ntp.yaml
+- name: Configure DNS
+  ansible.builtin.import_tasks: dns.yaml
+- name: Configure DNF local mirror
+  ansible.builtin.import_tasks: dnf-local-mirror.yaml
+- name: Install packages
+  ansible.builtin.import_tasks: packages.yaml
+- name: Setup package upgrade
+  ansible.builtin.import_tasks: pkg-upgrade.yaml
+- name: Configure timezone
+  ansible.builtin.import_tasks: timezone.yaml
+- name: Configure passwordless sudo
+  ansible.builtin.import_tasks: passwordless-sudo.yaml
+- name: Configure IP forwarding
+  ansible.builtin.import_tasks: ip-forwarding.yaml
+- name: Disable swap
+  ansible.builtin.import_tasks: disable-swap.yaml
+- name: Configure nftables
+  ansible.builtin.import_tasks: use-nftables.yaml
+- name: Install QEMU guest agent
+  ansible.builtin.import_tasks: qemu-guest-agent.yaml
+- name: Configure NTP
+  ansible.builtin.import_tasks: ntp.yaml

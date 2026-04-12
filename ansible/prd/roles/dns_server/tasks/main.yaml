@@ -1,0 +1,5 @@
+---
+- name: Configure DNF mirror
+  ansible.builtin.import_tasks: dnf_mirror.yaml
+- name: Configure AdGuard Home
+  ansible.builtin.import_tasks: adguard.yaml

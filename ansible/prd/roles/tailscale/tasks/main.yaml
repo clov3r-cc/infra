@@ -1,4 +1,7 @@
 ---
-- import_tasks: hardening.yaml
-- import_tasks: nftables.yaml
-- import_tasks: setup.yaml
+- name: Apply hardening
+  ansible.builtin.import_tasks: hardening.yaml
+- name: Configure nftables
+  ansible.builtin.import_tasks: nftables.yaml
+- name: Install and configure Tailscale
+  ansible.builtin.import_tasks: setup.yaml

@@ -1,5 +1,6 @@
 ---
-- hosts: tailscale_server
+- name: Configure Tailscale servers
+  hosts: tailscale_server
   gather_facts: true
   roles:
     - common

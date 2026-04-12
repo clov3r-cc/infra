@@ -10,7 +10,7 @@
 
     - name: Configure dnf-automatic to apply upgrades
       become: true
-      ansible.builtin.ini_file:
+      community.general.ini_file:
         path: /etc/dnf/automatic.conf
         section: commands
         option: apply_updates
@@ -19,7 +19,7 @@
 
     - name: Configure dnf-automatic to reboot when needed
       become: true
-      ansible.builtin.ini_file:
+      community.general.ini_file:
         path: /etc/dnf/automatic.conf
         section: reboot
         option: reboot

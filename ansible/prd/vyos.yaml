@@ -1,5 +1,6 @@
 ---
-- hosts: vyos_router
+- name: Configure VyOS routers
+  hosts: vyos_router
   gather_facts: false
   roles:
     - vyos

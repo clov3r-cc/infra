@@ -74,6 +74,7 @@
   environment:
     CF_DNS_API_TOKEN: "{{ lego_cloudflare_api_token }}"
   when: not _lego_cert.stat.exists
+  changed_when: true
   notify:
     - Reload nginx
     - Restart AdGuardHome

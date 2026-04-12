@@ -1,6 +1,7 @@
 ---
-- hosts: zabbix_server
+- name: Configure Zabbix servers
+  hosts: zabbix_server
   gather_facts: true
   roles:
     - common
-    # - zabbix-server
+    # - zabbix_server
