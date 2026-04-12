@@ -4,6 +4,7 @@
   ansible.builtin.package:
     name: qemu-guest-agent
     state: present
+  when: install_qemu_guest_agent | default(true)
 
 - name: Start and enable qemu-guest-agent
   become: true
@@ -11,3 +12,4 @@
     name: qemu-guest-agent
     state: started
     enabled: true
+  when: install_qemu_guest_agent | default(true)

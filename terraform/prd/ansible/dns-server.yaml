@@ -2,6 +2,6 @@
 - hosts: dns_server
   gather_facts: true
   roles:
-    # - common
+    - common
     - lego
     - dns-server

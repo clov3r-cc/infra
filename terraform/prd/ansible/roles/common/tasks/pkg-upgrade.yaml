@@ -1,0 +1,124 @@
+---
+- name: Setup automatic upgrade (RedHat)
+  when: ansible_facts['os_family'] == 'RedHat'
+  block:
+    - name: Install dnf-automatic
+      become: true
+      ansible.builtin.package:
+        name: dnf-automatic
+        state: present
+
+    - name: Configure dnf-automatic to apply upgrades
+      become: true
+      ansible.builtin.ini_file:
+        path: /etc/dnf/automatic.conf
+        section: commands
+        option: apply_updates
+        value: "yes"
+        mode: "0644"
+
+    - name: Configure dnf-automatic to reboot when needed
+      become: true
+      ansible.builtin.ini_file:
+        path: /etc/dnf/automatic.conf
+        section: reboot
+        option: reboot
+        value: when-needed
+        mode: "0644"
+
+    - name: Deploy dnf-automatic timer
+      become: true
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/dnf-automatic.timer
+        owner: root
+        group: root
+        mode: "0644"
+        content: |
+          [Unit]
+          Description=dnf-automatic timer
+
+          [Timer]
+          OnCalendar={{ pkg_upgrade_calendar }}
+          RandomizedDelaySec=0
+          Persistent=true
+
+          [Install]
+          WantedBy=timers.target
+
+    - name: Enable and start dnf-automatic timer
+      become: true
+      ansible.builtin.systemd:
+        name: dnf-automatic.timer
+        daemon_reload: true
+        enabled: true
+        state: started
+
+- name: Setup automatic upgrade (Debian)
+  when: ansible_facts['os_family'] == 'Debian'
+  block:
+    - name: Install unattended-upgrades
+      become: true
+      ansible.builtin.package:
+        name: unattended-upgrades
+        state: present
+
+    - name: Enable unattended-upgrades
+      become: true
+      ansible.builtin.debconf:
+        name: unattended-upgrades
+        question: unattended-upgrades/enable_auto_updates
+        value: "true"
+        vtype: boolean
+
+    - name: Configure apt::periodic for weekly upgrades
+      become: true
+      ansible.builtin.copy:
+        dest: /etc/apt/apt.conf.d/20auto-upgrades
+        owner: root
+        group: root
+        mode: "0644"
+        content: |
+          APT::Periodic::Update-Package-Lists "1";
+          APT::Periodic::Unattended-Upgrade "1";
+
+    - name: Deploy systemd override for unattended-upgrades timer
+      become: true
+      ansible.builtin.file:
+        path: /etc/systemd/system/apt-daily-upgrade.timer.d
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Override apt-daily-upgrade timer schedule
+      become: true
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/apt-daily-upgrade.timer.d/override.conf
+        owner: root
+        group: root
+        mode: "0644"
+        content: |
+          [Timer]
+          # 既存のスケジュールをリセット
+          OnCalendar=
+          OnCalendar={{ pkg_upgrade_calendar }}
+          RandomizedDelaySec=0
+
+    - name: Configure unattended-upgrades to reboot when needed
+      become: true
+      ansible.builtin.copy:
+        dest: /etc/apt/apt.conf.d/99auto-reboot
+        owner: root
+        group: root
+        mode: "0644"
+        content: |
+          Unattended-Upgrade::Automatic-Reboot "true";
+          Unattended-Upgrade::Automatic-Reboot-WithUsers "false";
+
+    - name: Enable and start apt-daily-upgrade timer
+      become: true
+      ansible.builtin.systemd:
+        name: apt-daily-upgrade.timer
+        daemon_reload: true
+        enabled: true
+        state: started
