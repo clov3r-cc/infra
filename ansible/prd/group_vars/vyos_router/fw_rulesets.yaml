@@ -6,13 +6,10 @@ fw_rulesets:
     rules:
       - number: 10
         action: accept
-        description: Allow SSH from HOME-CLIENTS to FW-WAN-NODES
-        protocol: tcp
+        description: Allow VRRP from FW-WAN-NODES
+        protocol: "112"
         source:
-          network_group: HOME-CLIENTS
-        destination:
           address_group: FW-WAN-NODES
-          port: 22
       - number: 20
         action: accept
         description: Allow ICMP from HOME-CLIENTS to FW-WAN-NODES
@@ -21,7 +18,15 @@ fw_rulesets:
           network_group: HOME-CLIENTS
         destination:
           address_group: FW-WAN-NODES
-      - number: 25
+      - number: 21
+        action: accept
+        description: Allow ICMP from HOME-CLIENTS to FW-WAN-VIP
+        protocol: icmp
+        source:
+          network_group: HOME-CLIENTS
+        destination:
+          address_group: FW-WAN-VIP
+      - number: 30
         action: accept
         description: Allow UDP traceroute from HOME-CLIENTS to FW-WAN-NODES
         protocol: udp
@@ -30,15 +35,7 @@ fw_rulesets:
         destination:
           address_group: FW-WAN-NODES
           port: 33434-33534
-      - number: 30
-        action: accept
-        description: Allow ICMP from HOME-CLIENTS to FW-WAN-VIP
-        protocol: icmp
-        source:
-          network_group: HOME-CLIENTS
-        destination:
-          address_group: FW-WAN-VIP
-      - number: 35
+      - number: 31
         action: accept
         description: Allow UDP traceroute from HOME-CLIENTS to FW-WAN-VIP
         protocol: udp
@@ -47,12 +44,15 @@ fw_rulesets:
         destination:
           address_group: FW-WAN-VIP
           port: 33434-33534
-      - number: 40
+      - number: 100
         action: accept
-        description: Allow VRRP from FW-WAN-NODES
-        protocol: "112"
+        description: Allow SSH from HOME-CLIENTS to FW-WAN-NODES
+        protocol: tcp
         source:
+          network_group: HOME-CLIENTS
+        destination:
           address_group: FW-WAN-NODES
+          port: 22
 
   - name: WAN-TO-DMZ
     default_action: drop
@@ -60,22 +60,13 @@ fw_rulesets:
     rules:
       - number: 10
         action: accept
-        description: Allow SSH from HOME-CLIENTS to TAILSCALE-NODES
-        protocol: tcp
-        source:
-          network_group: HOME-CLIENTS
-        destination:
-          address_group: TAILSCALE-NODES
-          port: 22
-      - number: 20
-        action: accept
         description: Allow ICMP from HOME-CLIENTS to TAILSCALE-NODES
         protocol: icmp
         source:
           network_group: HOME-CLIENTS
         destination:
           address_group: TAILSCALE-NODES
-      - number: 25
+      - number: 20
         action: accept
         description: Allow UDP traceroute from HOME-CLIENTS to TAILSCALE-NODES
         protocol: udp
@@ -84,6 +75,15 @@ fw_rulesets:
         destination:
           address_group: TAILSCALE-NODES
           port: 33434-33534
+      - number: 100
+        action: accept
+        description: Allow SSH from HOME-CLIENTS to TAILSCALE-NODES
+        protocol: tcp
+        source:
+          network_group: HOME-CLIENTS
+        destination:
+          address_group: TAILSCALE-NODES
+          port: 22
 
   - name: DMZ-TO-WAN
     default_action: drop
@@ -310,7 +310,7 @@ fw_rulesets:
         destination:
           fqdn: easylist.to
           port: 443
-      - number: 60
+      - number: 950
         action: drop
         description: Silently drop Tailscale captive portal probe (Tokyo DERP derp7e)
         protocol: tcp
@@ -319,7 +319,7 @@ fw_rulesets:
         destination:
           fqdn: derp7e.tailscale.com
           port: 80
-      - number: 61
+      - number: 951
         action: drop
         description: Silently drop Tailscale captive portal probe (Tokyo DERP derp7f)
         protocol: tcp
@@ -328,7 +328,7 @@ fw_rulesets:
         destination:
           fqdn: derp7f.tailscale.com
           port: 80
-      - number: 62
+      - number: 952
         action: drop
         description: Silently drop Tailscale captive portal probe (Tokyo DERP derp7g)
         protocol: tcp
@@ -337,7 +337,7 @@ fw_rulesets:
         destination:
           fqdn: derp7g.tailscale.com
           port: 80
-      - number: 63
+      - number: 953
         action: drop
         description: Silently drop Tailscale captive portal probe (Tokyo DERP derp7h)
         protocol: tcp
@@ -353,50 +353,11 @@ fw_rulesets:
     rules:
       - number: 10
         action: accept
-        description: Allow SSH from TAILSCALE-NODES to FW-DMZ-NODES
-        protocol: tcp
+        description: Allow VRRP from FW-DMZ-NODES
+        protocol: "112"
         source:
-          address_group: TAILSCALE-NODES
-        destination:
           address_group: FW-DMZ-NODES
-          port: 22
       - number: 20
-        action: accept
-        description: Allow NTP from TAILSCALE-NODES to FW-DMZ-VIP
-        protocol: udp
-        source:
-          address_group: TAILSCALE-NODES
-        destination:
-          address_group: FW-DMZ-VIP
-          port: 123
-      - number: 25
-        action: accept
-        description: Allow DNS from TAILSCALE-NODES to FW-DMZ-VIP
-        protocol: tcp_udp
-        source:
-          address_group: TAILSCALE-NODES
-        destination:
-          address_group: FW-DMZ-VIP
-          port: 53
-      - number: 30
-        action: accept
-        description: Allow DNS from DNS-SERVERS to FW-DMZ-VIP
-        protocol: tcp_udp
-        source:
-          address_group: DNS-SERVERS
-        destination:
-          address_group: FW-DMZ-VIP
-          port: 53
-      - number: 40
-        action: accept
-        description: Allow NTP from DNS-SERVERS to FW-DMZ-VIP
-        protocol: udp
-        source:
-          address_group: DNS-SERVERS
-        destination:
-          address_group: FW-DMZ-VIP
-          port: 123
-      - number: 50
         action: accept
         description: Allow ICMP from TAILSCALE-NODES to FW-DMZ-NODES
         protocol: icmp
@@ -404,7 +365,7 @@ fw_rulesets:
           address_group: TAILSCALE-NODES
         destination:
           address_group: FW-DMZ-NODES
-      - number: 55
+      - number: 30
         action: accept
         description: Allow UDP traceroute from TAILSCALE-NODES to FW-DMZ-NODES
         protocol: udp
@@ -413,13 +374,52 @@ fw_rulesets:
         destination:
           address_group: FW-DMZ-NODES
           port: 33434-33534
-      - number: 60
+      - number: 100
         action: accept
-        description: Allow VRRP from FW-DMZ-NODES
-        protocol: "112"
+        description: Allow SSH from TAILSCALE-NODES to FW-DMZ-NODES
+        protocol: tcp
         source:
+          address_group: TAILSCALE-NODES
+        destination:
           address_group: FW-DMZ-NODES
-      - number: 70
+          port: 22
+      - number: 200
+        action: accept
+        description: Allow NTP from TAILSCALE-NODES to FW-DMZ-VIP
+        protocol: udp
+        source:
+          address_group: TAILSCALE-NODES
+        destination:
+          address_group: FW-DMZ-VIP
+          port: 123
+      - number: 201
+        action: accept
+        description: Allow NTP from DNS-SERVERS to FW-DMZ-VIP
+        protocol: udp
+        source:
+          address_group: DNS-SERVERS
+        destination:
+          address_group: FW-DMZ-VIP
+          port: 123
+      - number: 210
+        action: accept
+        description: Allow DNS from TAILSCALE-NODES to FW-DMZ-VIP
+        protocol: tcp_udp
+        source:
+          address_group: TAILSCALE-NODES
+        destination:
+          address_group: FW-DMZ-VIP
+          port: 53
+      - number: 211
+        action: accept
+        description: Allow DNS from DNS-SERVERS to FW-DMZ-VIP
+        protocol: tcp_udp
+        source:
+          address_group: DNS-SERVERS
+        destination:
+          address_group: FW-DMZ-VIP
+          port: 53
+      - number: 950
         action: drop
         description: Silently drop NAT-PMP from TAILSCALE-NODES
         protocol: udp
@@ -427,7 +427,7 @@ fw_rulesets:
           address_group: TAILSCALE-NODES
         destination:
           port: 5351
-      - number: 71
+      - number: 951
         action: drop
         description: Silently drop UPnP/SSDP from TAILSCALE-NODES
         protocol: udp
@@ -539,7 +539,7 @@ fw_rulesets:
         destination:
           address_group: FW-INTERNAL-VIP
           port: 123
-      - number: 30
+      - number: 950
         action: drop
         description: Silently drop NetBIOS Name Service broadcast from NAS-SERVERS
         protocol: udp
@@ -547,7 +547,7 @@ fw_rulesets:
           address_group: NAS-SERVERS
         destination:
           port: 137
-      - number: 31
+      - number: 951
         action: drop
         description: Silently drop NetBIOS Datagram broadcast from NAS-SERVERS
         protocol: udp
