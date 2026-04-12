@@ -9,3 +9,6 @@ arg "<playbook>" help="Which playbook do you want to play?"
 
 [tasks.ping]
 run = "uv run ansible -i inventory_src.yaml -m ping all"
+
+[tasks.lint]
+run = "uv run ansible-lint"
