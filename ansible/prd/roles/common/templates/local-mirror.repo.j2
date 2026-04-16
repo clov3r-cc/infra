@@ -1,39 +1,29 @@
-[local-baseos]
-name=Local Mirror - BaseOS
-{% set urls = dnf_local_mirror_urls | map('regex_replace', '$', '/baseos/') | list -%}
+{% set repos = [
+  {'id': 'baseos',           'name': 'BaseOS',           'path': 'baseos',           'gpgkey': 'file:///etc/pki/rpm-gpg/RPM-GPG-KEY-AlmaLinux-10'},
+  {'id': 'appstream',        'name': 'AppStream',        'path': 'appstream',        'gpgkey': 'file:///etc/pki/rpm-gpg/RPM-GPG-KEY-AlmaLinux-10'},
+  {'id': 'crb',              'name': 'CRB',              'path': 'crb',              'gpgkey': 'file:///etc/pki/rpm-gpg/RPM-GPG-KEY-AlmaLinux-10'},
+  {'id': 'extras',           'name': 'Extras',           'path': 'extras',           'gpgkey': 'file:///etc/pki/rpm-gpg/RPM-GPG-KEY-AlmaLinux-10'},
+  {'id': 'highavailability', 'name': 'HighAvailability', 'path': 'highavailability', 'gpgkey': 'file:///etc/pki/rpm-gpg/RPM-GPG-KEY-AlmaLinux-10'},
+  {'id': 'elrepo',           'name': 'ELRepo',           'path': 'elrepo',           'gpgkey_path': 'keys/RPM-GPG-KEY-v2-elrepo.org'},
+  {'id': 'mariadb',          'name': 'MariaDB',          'path': 'mariadb',          'gpgkey_path': 'keys/RPM-GPG-KEY-MariaDB'},
+] -%}
+{% for repo in repos -%}
+[local-{{ repo.id }}]
+name=Local Mirror - {{ repo.name }}
+{% set urls = dnf_local_mirror_urls | map('regex_replace', '$', '/' + repo.path + '/') | list -%}
 baseurl={{ urls | first }}
 {% for url in urls[1:] %}    {{ url }}
 {% endfor -%}
 enabled=1
-gpgcheck=0
+gpgcheck=1
+{% if 'gpgkey' in repo -%}
+gpgkey={{ repo.gpgkey }}
+{% else -%}
+{% set key_urls = dnf_local_mirror_urls | map('regex_replace', '$', '/' + repo.gpgkey_path) | list -%}
+gpgkey={{ key_urls | first }}
+{% for url in key_urls[1:] %}    {{ url }}
+{% endfor -%}
+{% endif -%}
 module_hotfixes=1
 
-[local-appstream]
-name=Local Mirror - AppStream
-{% set urls = dnf_local_mirror_urls | map('regex_replace', '$', '/appstream/') | list -%}
-baseurl={{ urls | first }}
-{% for url in urls[1:] %}    {{ url }}
-{% endfor -%}
-enabled=1
-gpgcheck=0
-module_hotfixes=1
-
-[local-crb]
-name=Local Mirror - CRB
-{% set urls = dnf_local_mirror_urls | map('regex_replace', '$', '/crb/') | list -%}
-baseurl={{ urls | first }}
-{% for url in urls[1:] %}    {{ url }}
-{% endfor -%}
-enabled=1
-gpgcheck=0
-module_hotfixes=1
-
-[local-extras]
-name=Local Mirror - Extras
-{% set urls = dnf_local_mirror_urls | map('regex_replace', '$', '/extras/') | list -%}
-baseurl={{ urls | first }}
-{% for url in urls[1:] %}    {{ url }}
-{% endfor -%}
-enabled=1
-gpgcheck=0
-module_hotfixes=1
+{% endfor %}

@@ -9,7 +9,6 @@
       - pacemaker
       - pcs
     state: present
-    enablerepo: highavailability
 
 - name: Set hacluster user password
   when: "'zabbix_server__ha' in group_names"
