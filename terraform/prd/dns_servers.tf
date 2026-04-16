@@ -8,7 +8,6 @@ locals {
       cpu_core            = 2
       memory              = 1024 * 2
       os_disk_size        = 15
-      data_disk_size      = 30
     }
     "02" = {
       host_name           = local.pve_hosts["prd-pve-01"]["host_name"]
@@ -18,9 +17,9 @@ locals {
       cpu_core            = 2
       memory              = 1024 * 2
       os_disk_size        = 15
-      data_disk_size      = 30
     }
   }
+  vm_data_disk_size__dns_server = 30
 }
 
 resource "random_password" "vm_root_password__dns_server" {
@@ -131,7 +130,7 @@ resource "proxmox_vm_qemu" "dns_server" {
       }
       virtio1 {
         disk {
-          size     = "${each.value.data_disk_size}G"
+          size     = "${local.vm_data_disk_size__dns_server}G"
           storage  = local.vm_disk_storage
           iothread = true
         }
