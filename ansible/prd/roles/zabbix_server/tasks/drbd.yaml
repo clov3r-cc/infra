@@ -117,7 +117,7 @@
   changed_when: false
   until: zabbix_server_drbd_dstate_synced.stdout == 'UpToDate/UpToDate'
   retries: 3
-  delay: 100
+  delay: 200
 
 - name: Check if 1st node is primary
   when: "'zabbix_server__ha' in group_names and inventory_hostname == groups['zabbix_server__ha'][0]"
@@ -125,7 +125,7 @@
   ansible.builtin.command: drbdadm role drbd1
   register: zabbix_server_drbd_role__1st
   check_mode: false
-  failed_when: zabbix_server_drbd_role__1st.stdout == 'Primary'
+  failed_when: zabbix_server_drbd_role__1st.stdout != 'Primary'
   changed_when: false
 
 - name: Check if other nodes is secondary
@@ -134,7 +134,7 @@
   ansible.builtin.command: drbdadm role drbd1
   register: zabbix_server_drbd_role__others
   check_mode: false
-  failed_when: zabbix_server_drbd_role__others.stdout == 'Secondary'
+  failed_when: zabbix_server_drbd_role__others.stdout != 'Secondary'
   changed_when: false
 
 - name: Create a new ext4 primary partition
