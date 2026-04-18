@@ -1,0 +1,188 @@
+---
+- name: Install Pacemaker
+  when: "'zabbix_server__ha' in group_names"
+  become: true
+  ansible.builtin.package:
+    name:
+      - corosync
+      - corosync-qdevice
+      - pacemaker
+      - pcs
+    state: present
+
+- name: Get latest fence_pve release info from GitHub
+  when: "'zabbix_server__ha' in group_names"
+  delegate_to: localhost
+  ansible.builtin.uri:
+    url: https://api.github.com/repos/clov3r-cc/fence-agents/releases/latest
+  register: zabbix_server_fence_pve_release
+
+- name: Read installed fence_pve version
+  when: "'zabbix_server__ha' in group_names"
+  become: true
+  ansible.builtin.slurp:
+    src: /usr/local/share/fence_pve_version
+  register: zabbix_server_fence_pve_version
+  ignore_errors: true
+
+- name: Install fence_pve binary
+  when: >-
+    'zabbix_server__ha' in group_names and
+    (zabbix_server_fence_pve_version.failed or
+     (zabbix_server_fence_pve_version.content | b64decode | trim) != zabbix_server_fence_pve_release.json.tag_name)
+  vars:
+    _fence_pve_zip_url: "{{ (zabbix_server_fence_pve_release.json.assets | selectattr('name', 'search', '\\.zip$') | first).browser_download_url }}"
+    _fence_pve_local_zip: "/tmp/fence_pve_{{ zabbix_server_fence_pve_release.json.tag_name }}.zip"
+    _fence_pve_local_dir: "/tmp/fence_pve_{{ zabbix_server_fence_pve_release.json.tag_name }}"
+  block:
+    - name: Download fence_pve zip to controller
+      delegate_to: localhost
+      ansible.builtin.get_url:
+        url: "{{ _fence_pve_zip_url }}"
+        dest: "{{ _fence_pve_local_zip }}"
+        mode: "0644"
+
+    - name: Create extraction directory on controller
+      delegate_to: localhost
+      ansible.builtin.file:
+        path: "{{ _fence_pve_local_dir }}"
+        state: directory
+        mode: "0755"
+
+    - name: Extract fence_pve on controller
+      delegate_to: localhost
+      ansible.builtin.unarchive:
+        src: "{{ _fence_pve_local_zip }}"
+        dest: "{{ _fence_pve_local_dir }}"
+        include:
+          - fence_pve
+
+    - name: Copy fence_pve to server
+      become: true
+      ansible.builtin.copy:
+        src: "{{ _fence_pve_local_dir }}/fence_pve"
+        dest: /usr/sbin/fence_pve
+        mode: "0755"
+        owner: root
+        group: root
+      notify: Restart pacemaker
+
+    - name: Record installed fence_pve version
+      become: true
+      ansible.builtin.copy:
+        content: "{{ zabbix_server_fence_pve_release.json.tag_name }}"
+        dest: /usr/local/share/fence_pve_version
+        mode: "0644"
+
+- name: Set hacluster user password
+  when: "'zabbix_server__ha' in group_names"
+  become: true
+  ansible.builtin.user:
+    name: hacluster
+    password: "{{ hacluster_password | password_hash('sha512') }}"
+  changed_when: false
+
+- name: Generate corosync authkey on first node
+  when: "'zabbix_server__ha' in group_names and inventory_hostname == groups['zabbix_server__ha'][0]"
+  become: true
+  ansible.builtin.shell: test {{ ansible_check_mode | lower }} = false && corosync-keygen
+  args:
+    creates: /etc/corosync/authkey
+  check_mode: false
+  register: zabbix_server_generate_corosync_key
+  failed_when: ansible_check_mode == false and zabbix_server_generate_corosync_key.rc != 0
+
+- name: Fetch authkey from first node
+  when: "'zabbix_server__ha' in group_names and inventory_hostname == groups['zabbix_server__ha'][0]"
+  become: true
+  ansible.builtin.fetch:
+    src: /etc/corosync/authkey
+    dest: /tmp/corosync-authkey
+    flat: true
+
+- name: Distribute authkey to all nodes
+  when: "'zabbix_server__ha' in group_names and inventory_hostname != groups['zabbix_server__ha'][0]"
+  become: true
+  ansible.builtin.copy:
+    src: /tmp/corosync-authkey
+    dest: /etc/corosync/authkey
+    owner: root
+    group: root
+    mode: '0400'
+  notify:
+    - Restart corosync
+    - Restart pacemaker
+
+- name: Deploy corosync configuration
+  when: "'zabbix_server__ha' in group_names"
+  become: true
+  ansible.builtin.template:
+    src: corosync.conf.j2
+    dest: /etc/corosync/corosync.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify:
+    - Restart corosync
+    - Restart pacemaker
+
+- name: Enable and start corosync
+  when: "'zabbix_server__ha' in group_names"
+  become: true
+  ansible.builtin.systemd_service:
+    name: corosync
+    state: started
+    enabled: true
+
+- name: Enable and start pacemaker
+  when: "'zabbix_server__ha' in group_names"
+  become: true
+  ansible.builtin.systemd_service:
+    name: pacemaker
+    state: started
+    enabled: true
+
+# pcsd は使用しない
+- name: Disable, stop and mask pcsd
+  when: "'zabbix_server__ha' in group_names"
+  become: true
+  ansible.builtin.systemd_service:
+    name: pcsd
+    state: stopped
+    enabled: false
+    masked: true
+
+- name: Configure STONITH resource
+  when: "'zabbix_server__ha' in group_names"
+  become: true
+  pcs_resource:
+    name: "fence-{{ item }}"
+    resource_class: stonith
+    resource_type: fence_pve
+    options: >-
+      ip="{{ pve_stonith_ipaddr }}"
+      username="root@pam"
+      pve_api_token="{{ pve_stonith_api_token }}"
+      pve_api_token_secret="{{ pve_stonith_api_token_secret }}"
+      pve_node_auto="true"
+      plug="{{ hostvars[item]['vm_id'] }}"
+      vmtype="qemu"
+      ssl_insecure="true"
+      pcmk_reboot_action="reboot"
+      delay="15"
+      op monitor interval="60s" timeout="30s"
+      meta target-role="Started" is-managed="true"
+  loop: "{{ groups['zabbix_server__ha'] }}"
+  run_once: true
+
+# STONITH must not run on its own node
+- name: Add location constraint
+  when: "'zabbix_server__ha' in group_names"
+  become: true
+  pcs_constraint_location:
+    resource: "fence-{{ item }}"
+    node_name: "{{ item }}"
+    score: "-INFINITY"
+    constraint_id: "loc-fence-{{ item }}"
+  loop: "{{ groups['zabbix_server__ha'] }}"
+  run_once: true

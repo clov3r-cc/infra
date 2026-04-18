@@ -2,4 +2,9 @@
 collections:
   - name: vyos.vyos
   - name: ansible.netcommon
+  - name: ansible.posix
   - name: community.general
+
+roles:
+  - name: ondrejhome.pcs-modules-2
+    src: https://github.com/OndrejHome/ansible.pcs-modules-2

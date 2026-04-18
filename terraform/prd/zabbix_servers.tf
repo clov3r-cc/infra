@@ -191,5 +191,6 @@ resource "ansible_host" "zabbix_server" {
     ansible_host    = each.value.ssh_host
     heartbeat_nw_ip = split("/", split("ip=", each.value.ipconfig1)[1])[0]
     host_index      = tonumber(each.key)
+    vm_id           = local.vm_settings__zabbix_server[each.key].vm_id
   }
 }
