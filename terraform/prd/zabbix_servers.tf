@@ -10,6 +10,16 @@ locals {
       memory                    = 1024 * 3
       os_disk_size              = 15
     }
+    "02" = {
+      host_name                 = local.pve_hosts["prd-pve-01"]["host_name"]
+      vm_id                     = 402
+      internal_nw_host_section  = 9
+      heartbeat_nw_host_section = 2
+      cpu_socket                = 1
+      cpu_core                  = 2
+      memory                    = 1024 * 3
+      os_disk_size              = 15
+    }
   }
   vm_data_disk_size__zabbix_server = 40
 }
