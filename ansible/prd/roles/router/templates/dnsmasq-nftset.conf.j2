@@ -1,0 +1,6 @@
+# Managed by Ansible – do not edit manually.
+# Populates nftables sets on DNS resolution.
+
+{% for group in fw_domain_groups | default([]) %}
+nftset=/{{ group.domains | join('/') }}/4#ip#filter#{{ group.name }}
+{% endfor %}

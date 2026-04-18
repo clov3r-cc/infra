@@ -1,0 +1,27 @@
+---
+dns_nameservers:
+  - 192.168.20.1
+ntp_servers:
+  - 192.168.20.1
+keepalived_password: "{{ vault_keepalived_password }}"
+keepalived_vrrp_instances:
+  - name: WAN
+    interface: eth0
+    virtual_router_id: 19
+    virtual_ipaddresses:
+      - 192.168.20.3/29
+  - name: DMZ
+    interface: eth1
+    virtual_router_id: 20
+    virtual_ipaddresses:
+      - 192.168.20.17/28
+  - name: SERVICE
+    interface: eth2
+    virtual_router_id: 21
+    virtual_ipaddresses:
+      - 192.168.21.3/24
+  - name: INTERNAL
+    interface: eth3
+    virtual_router_id: 22
+    virtual_ipaddresses:
+      - 192.168.22.3/24

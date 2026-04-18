@@ -1,0 +1,32 @@
+---
+- name: Install keepalived
+  become: true
+  ansible.builtin.package:
+    name: keepalived
+    state: present
+
+- name: Deploy nftset warmup script
+  become: true
+  ansible.builtin.template:
+    src: nftset-warmup.sh.j2
+    dest: /usr/local/sbin/nftset-warmup
+    owner: root
+    group: root
+    mode: "0700"
+
+- name: Deploy keepalived configuration
+  become: true
+  ansible.builtin.template:
+    src: keepalived.conf.j2
+    dest: /etc/keepalived/keepalived.conf
+    owner: root
+    group: root
+    mode: "0600"
+  notify: Restart keepalived
+
+- name: Enable and start keepalived
+  become: true
+  ansible.builtin.systemd_service:
+    name: keepalived
+    state: started
+    enabled: true

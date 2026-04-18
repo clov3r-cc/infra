@@ -1,0 +1,43 @@
+#!/bin/bash
+# Resolves all domain groups and loads them into nftables sets.
+# Called by keepalived notify_master on VRRP master transition.
+# Managed by Ansible – do not edit manually.
+
+set -euo pipefail
+
+TABLE="ip filter"
+TIMEOUT="1h"
+
+{% raw %}
+resolve_and_load() {
+    local set_name="$1"
+    shift
+    local domains=("$@")
+    local addrs=()
+
+    for domain in "${domains[@]}"; do
+        while IFS= read -r addr; do
+            [[ -n "$addr" ]] && addrs+=("$addr")
+        done < <(getent ahostsv4 "$domain" 2>/dev/null | awk '{print $1}' | sort -u)
+    done
+
+    if [[ ${#addrs[@]} -eq 0 ]]; then
+        return
+    fi
+
+    local elements
+    elements=$(printf '%s timeout '"$TIMEOUT"', ' "${addrs[@]}")
+    elements="${elements%, }"
+
+    nft flush set $TABLE "$set_name" 2>/dev/null || true
+    nft add element $TABLE "$set_name" "{ $elements }"
+}
+{% endraw %}
+
+{% for group in fw_domain_groups | default([]) %}
+resolve_and_load "{{ group.name }}" \
+{% for domain in group.domains %}
+    "{{ domain }}"{{ "" if loop.last else " \\" }}
+{% endfor %}
+
+{% endfor %}

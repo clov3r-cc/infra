@@ -1,0 +1,11 @@
+router:
+  vars:
+    ansible_user: machine-user
+    ansible_python_interpreter: python3
+  hosts:
+    prd-nft-01:
+      ansible_host: 192.168.20.4
+      host_index: 1
+    prd-nft-02:
+      ansible_host: 192.168.20.5
+      host_index: 2

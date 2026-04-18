@@ -1,0 +1,7 @@
+---
+- name: Configure routers
+  hosts: router
+  gather_facts: true
+  roles:
+    - common
+    - router
