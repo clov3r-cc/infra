@@ -15,6 +15,9 @@ fw_zone_policies:
   - to_zone: INTERNAL
     from_zone: DMZ
     ruleset: DMZ-TO-INTERNAL
+  - to_zone: WAN
+    from_zone: INTERNAL
+    ruleset: INTERNAL-TO-WAN
   - to_zone: DMZ
     from_zone: INTERNAL
     ruleset: INTERNAL-TO-DMZ
