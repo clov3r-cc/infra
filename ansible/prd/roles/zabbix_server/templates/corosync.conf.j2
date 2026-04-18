@@ -38,9 +38,8 @@ logging {
 }
 
 quorum {
-  # Enable and configure quorum subsystem (default: off)
-  # see also corosync.conf.5 and votequorum.5
-  #provider: corosync_votequorum
+  provider: corosync_votequorum
+  two_node: 1
 }
 
 nodelist {
