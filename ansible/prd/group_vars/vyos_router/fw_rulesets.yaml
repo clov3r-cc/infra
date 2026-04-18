@@ -310,6 +310,69 @@ fw_rulesets:
         destination:
           fqdn: easylist.to
           port: 443
+      - number: 60
+        action: accept
+        description: Allow HTTPS to ELRepo from DNS-SERVERS
+        protocol: tcp
+        source:
+          address_group: DNS-SERVERS
+        destination:
+          fqdn: www.elrepo.org
+          port: 443
+      - number: 61
+        action: accept
+        description: Allow HTTP to ELRepo baseurl from DNS-SERVERS
+        protocol: tcp
+        source:
+          address_group: DNS-SERVERS
+        destination:
+          fqdn: elrepo.org
+          port: 80
+      - number: 62
+        action: accept
+        description: Allow HTTP to ELRepo mirrorlist from DNS-SERVERS
+        protocol: tcp
+        source:
+          address_group: DNS-SERVERS
+        destination:
+          fqdn: mirrors.elrepo.org
+          port: 80
+      - number: 63
+        action: accept
+        description: Allow HTTP to ELRepo mirror (mirrors.coreix.net) from DNS-SERVERS
+        protocol: tcp
+        source:
+          address_group: DNS-SERVERS
+        destination:
+          fqdn: mirrors.coreix.net
+          port: 80
+      - number: 64
+        action: accept
+        description: Allow HTTP to ELRepo mirror (mirror.rackspace.com) from DNS-SERVERS
+        protocol: tcp
+        source:
+          address_group: DNS-SERVERS
+        destination:
+          fqdn: mirror.rackspace.com
+          port: 80
+      - number: 65
+        action: accept
+        description: Allow HTTP to ELRepo mirror (linux-mirrors.fnal.gov) from DNS-SERVERS
+        protocol: tcp
+        source:
+          address_group: DNS-SERVERS
+        destination:
+          fqdn: linux-mirrors.fnal.gov
+          port: 80
+      - number: 66
+        action: accept
+        description: Allow HTTPS to MariaDB repository (ftp.yz.yamagata-u.ac.jp) from DNS-SERVERS
+        protocol: tcp
+        source:
+          address_group: DNS-SERVERS
+        destination:
+          fqdn: ftp.yz.yamagata-u.ac.jp
+          port: 443
       - number: 950
         action: drop
         description: Silently drop Tailscale captive portal probe (Tokyo DERP derp7e)
