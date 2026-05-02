@@ -213,11 +213,12 @@ fw_rulesets:
           port: 53
       - number: 950
         action: drop
-        description: Silently drop Tailscale captive portal probe from TAILSCALE_NODES
+        description: Silently drop Tailscale captive portal probe (TCP 80) to DERP domains
         protocol: tcp
         source:
           address_group: TAILSCALE_NODES
         destination:
+          domain_group: TAILSCALE_DERP_CAPTIVE
           port: 80
 
   - name: DMZ-TO-LOCAL

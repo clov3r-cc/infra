@@ -45,6 +45,12 @@ fw_domain_groups:
     domains:
       - deb.debian.org
       - security.debian.org
+  - name: TAILSCALE_DERP_CAPTIVE
+    domains:
+      - derp7e.tailscale.com
+      - derp7f.tailscale.com
+      - derp7g.tailscale.com
+      - derp7h.tailscale.com
 
 fw_network_groups:
   - name: HOME_CLIENTS
