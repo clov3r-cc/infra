@@ -250,8 +250,6 @@ Tailscale の通信要件: [What firewall ports should I open to use Tailscale?]
 |  20   |   -    |    ICMP    |      -       |       any        | ICMP       |
 |  25   |   -    |    UDP     | 33434-33534  |       any        | traceroute |
 
-> **Note**: VRRP（Proto 112）はマルチキャスト（224.0.0.18）を使った双方向独立送信のため、セッション追跡ができません。そのため DMZ-TO-LOCAL（受信側）と LOCAL-TO-DMZ（送信側）の両方向に明示的なルールが必要です。
-
 ### 6.12. LOCAL → SERVICE
 
 | Rule  | 送信元 | プロトコル | 送信先ポート |  送信先アドレス  |    目的    |
@@ -267,3 +265,5 @@ Tailscale の通信要件: [What firewall ports should I open to use Tailscale?]
 |  10   |   -    | Proto 112  |      -       | `VRRP-MULTICAST` | VRRP       |
 |  20   |   -    |    ICMP    |      -       |       any        | ICMP       |
 |  25   |   -    |    UDP     | 33434-33534  |       any        | traceroute |
+
+> **Note**: VRRP（Proto 112）はマルチキャスト（224.0.0.18）を使った双方向独立送信のため、セッション追跡ができません。そのため 各ゾーン発着それぞれ両方向に明示的なルールが必要です。
