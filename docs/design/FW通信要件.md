@@ -207,10 +207,10 @@ Tailscale の通信要件: [What firewall ports should I open to use Tailscale?]
 
 ### 6.7. INTERNAL → WAN
 
-| Rule  |    送信元     | プロトコル | 送信先ポート | 送信先アドレス |      目的       |
-| :---: | :-----------: | :--------: | :----------: | :------------: | --------------- |
-|  10   | `NAS-SERVERS` |    ICMP    |      -       |      any       | 接続確認 (ICMP) |
-|  200  | `NAS-SERVERS` |    TCP     |     443      |      any       | NAS HTTPS API   |
+| Rule  |    送信元     | プロトコル | 送信先ポート | 送信先アドレス |     目的      |
+| :---: | :-----------: | :--------: | :----------: | :------------: | ------------- |
+|  10   | `NAS-SERVERS` |    ICMP    |      -       |      any       | ICMP          |
+|  200  | `NAS-SERVERS` |    TCP     |     443      |      any       | NAS HTTPS API |
 
 ### 6.8. INTERNAL → DMZ
 
