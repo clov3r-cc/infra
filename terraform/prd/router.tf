@@ -36,6 +36,7 @@ resource "ansible_host" "router" {
   groups = [ansible_group.router.name]
   variables = {
     ansible_host        = each.value.dmz_nw_ip
+    host_index          = tonumber(each.key)
     eth0_address        = each.value.eth0_address
     eth1_address        = each.value.eth1_address
     eth2_address        = each.value.eth2_address
