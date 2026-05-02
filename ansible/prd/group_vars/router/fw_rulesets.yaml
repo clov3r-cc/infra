@@ -415,6 +415,12 @@ fw_rulesets:
     rules:
       - number: 10
         action: accept
+        description: Allow VRRP from FW_INTERNAL_NODES
+        protocol: "112"
+        source:
+          address_group: FW_INTERNAL_NODES
+      - number: 20
+        action: accept
         description: Allow NTP from ZABBIX_SERVERS to FW_INTERNAL_VIP
         protocol: udp
         source:
@@ -422,7 +428,7 @@ fw_rulesets:
         destination:
           address_group: FW_INTERNAL_VIP
           port: 123
-      - number: 20
+      - number: 30
         action: accept
         description: Allow NTP from NAS_SERVERS to FW_INTERNAL_VIP
         protocol: udp
@@ -557,3 +563,14 @@ fw_rulesets:
         protocol: udp
         destination:
           port: 33434-33534
+
+  - name: SERVICE-TO-LOCAL
+    default_action: drop
+    default_log: true
+    rules:
+      - number: 10
+        action: accept
+        description: Allow VRRP from FW_SERVICE_NODES
+        protocol: "112"
+        source:
+          address_group: FW_SERVICE_NODES
