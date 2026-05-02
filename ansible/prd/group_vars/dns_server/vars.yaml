@@ -16,7 +16,8 @@ adguard_http_port: 8080
 adguard_https_port: 9443
 adguard_admin_username: lucky
 adguard_upstream_dns:
-  - 192.168.20.17  # FW-DMZ-VIP
+  - 192.168.20.18  # FW-DMZ-NODE-01
+  - 192.168.20.19  # FW-DMZ-NODE-02
 adguard_allowed_clients:
   - 192.168.20.16/28  # DMZ
   - 192.168.21.0/24   # Service
@@ -55,9 +56,9 @@ adguard_rewrites:
     answer: 192.168.20.20
   - domain: prd-tal-02.labo.clov3r.cc
     answer: 192.168.20.21
-  - domain: prd-vyo-01.labo.clov3r.cc
+  - domain: prd-nft-01.labo.clov3r.cc
     answer: 192.168.20.18
-  - domain: prd-vyo-02.labo.clov3r.cc
+  - domain: prd-nft-02.labo.clov3r.cc
     answer: 192.168.20.19
   - domain: prd-zbx-01.labo.clov3r.cc
     answer: 192.168.22.8

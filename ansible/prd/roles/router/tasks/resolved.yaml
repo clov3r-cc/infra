@@ -1,0 +1,58 @@
+---
+- name: Deploy systemd-resolved stub listener drop-in
+  become: true
+  ansible.builtin.template:
+    src: resolved-stub-extra.conf.j2
+    dest: /etc/systemd/resolved.conf.d/stub-extra.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart systemd-resolved
+
+- name: Create systemd-networkd DNS drop-in directories for non-WAN interfaces
+  become: true
+  ansible.builtin.file:
+    path: "/etc/systemd/network/10-netplan-{{ item }}.network.d"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop:
+    - eth1
+    - eth2
+    - eth3
+
+- name: Disable DNS scope on non-WAN interfaces
+  become: true
+  ansible.builtin.copy:
+    content: |
+      # Managed by Ansible – do not edit manually.
+      [Network]
+      DNS=
+      Domains=
+    dest: "/etc/systemd/network/10-netplan-{{ item }}.network.d/dns.conf"
+    owner: root
+    group: root
+    mode: "0644"
+  loop:
+    - eth1
+    - eth2
+    - eth3
+  notify:
+    - Reload systemd-networkd
+    - Restart systemd-resolved
+
+- name: Enable and start systemd-resolved
+  become: true
+  ansible.builtin.systemd_service:
+    name: systemd-resolved
+    state: started
+    enabled: true
+
+- name: Restore /etc/resolv.conf as systemd-resolved stub symlink
+  become: true
+  ansible.builtin.file:
+    src: /run/systemd/resolve/stub-resolv.conf
+    dest: /etc/resolv.conf
+    state: link
+    force: true

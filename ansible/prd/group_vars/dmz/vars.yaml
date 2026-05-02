@@ -1,5 +1,6 @@
 ---
 dns_nameservers:
-  - 192.168.20.17  # FW-DMZ-VIP
+  - 192.168.20.18  # FW-DMZ-NODE-01
+  - 192.168.20.19  # FW-DMZ-NODE-02
 ntp_servers:
-  - 192.168.20.17
+  - 192.168.20.1
