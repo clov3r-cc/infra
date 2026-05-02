@@ -1,4 +1,4 @@
-# VyOS ファイアウォール通信要件
+# ファイアウォール通信要件
 
 <!-- @import "[TOC]" {cmd="toc" depthFrom=2 depthTo=6 orderedList=false} -->
 
@@ -34,9 +34,9 @@
 
 ## 1. 概要
 
-`prd-vyo` に設定するゾーンベースファイアウォールの通信要件を定義します。
+`prd-nft` に設定するゾーンベースファイアウォールの通信要件を定義します。
 
-VyOS を使用し、IPv4 ゾーンベースファイアウォールで実装します。
+nftables を使用し、IPv4 ゾーンベースファイアウォールで実装します。
 
 ## 2. ゾーン定義
 
@@ -184,8 +184,8 @@ Tailscale の通信要件: [What firewall ports should I open to use Tailscale?]
 |  100  | `TAILSCALE-NODES` |   accept   |    TCP     |      22      | `FW-DMZ-NODES` | SSH                  |
 |  200  | `TAILSCALE-NODES` |   accept   |    UDP     |     123      |  `FW-DMZ-VIP`  | NTP                  |
 |  201  |   `DNS-SERVERS`   |   accept   |    UDP     |     123      |  `FW-DMZ-VIP`  | NTP                  |
-|  210  | `TAILSCALE-NODES` |   accept   |  UDP/TCP   |      53      |  `FW-DMZ-VIP`  | DNS                  |
-|  211  |   `DNS-SERVERS`   |   accept   |  UDP/TCP   |      53      |  `FW-DMZ-VIP`  | DNS                  |
+|  210  | `TAILSCALE-NODES` |   accept   |  UDP/TCP   |      53      | `FW-DMZ-NODES` | DNS                  |
+|  211  |   `DNS-SERVERS`   |   accept   |  UDP/TCP   |      53      | `FW-DMZ-NODES` | DNS                  |
 |  950  | `TAILSCALE-NODES` |    drop    |    UDP     |     5351     |       -        | NAT-PMP (ログ抑制)   |
 |  951  | `TAILSCALE-NODES` |    drop    |    UDP     |     1900     |       -        | UPnP/SSDP (ログ抑制) |
 

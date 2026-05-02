@@ -32,7 +32,7 @@ resource "ansible_group" "router" {
 resource "ansible_host" "router" {
   for_each = local.router_settings
 
-  name   = "prd-vyo-${each.key}"
+  name   = "prd-nft-${each.key}"
   groups = [ansible_group.router.name]
   variables = {
     ansible_host        = each.value.dmz_nw_ip

@@ -1,6 +1,5 @@
 ---
 collections:
-  - name: vyos.vyos
   - name: ansible.netcommon
   - name: ansible.posix
   - name: community.general
