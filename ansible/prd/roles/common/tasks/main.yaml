@@ -13,6 +13,8 @@
   ansible.builtin.import_tasks: passwordless-sudo.yaml
 - name: Configure IP forwarding
   ansible.builtin.import_tasks: ip-forwarding.yaml
+- name: Disable IPv6
+  ansible.builtin.import_tasks: disable-ipv6.yaml
 - name: Disable swap
   ansible.builtin.import_tasks: disable-swap.yaml
 - name: Configure nftables
