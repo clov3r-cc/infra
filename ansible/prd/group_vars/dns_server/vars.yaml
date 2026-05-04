@@ -62,5 +62,7 @@ adguard_rewrites:
     answer: 192.168.20.19
   - domain: prd-zbx-01.labo.clov3r.cc
     answer: 192.168.22.8
+  - domain: prd-zbx-02.labo.clov3r.cc
+    answer: 192.168.22.9
   - domain: prd-acc-02.labo.clov3r.cc
     answer: 192.168.22.1
