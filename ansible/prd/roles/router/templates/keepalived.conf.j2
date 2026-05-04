@@ -1,0 +1,23 @@
+global_defs {
+  router_id {{ inventory_hostname }}
+}
+
+{% for instance in keepalived_vrrp_instances %}
+vrrp_instance {{ instance.name }} {
+  interface {{ instance.interface }}
+  state {{ "MASTER" if host_index == 1 else "BACKUP" }}
+  virtual_router_id {{ instance.virtual_router_id }}
+  priority {{ 150 if host_index == 1 else 100 }}
+  advert_int 1
+  authentication {
+    auth_type PASS
+    auth_pass {{ keepalived_password }}
+  }
+  virtual_ipaddress {
+{% for vip in instance.virtual_ipaddresses %}
+    {{ vip }}
+{% endfor %}
+  }
+  notify_master "/usr/local/sbin/nftset-warmup"
+}
+{% endfor %}

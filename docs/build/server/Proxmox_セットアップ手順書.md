@@ -15,15 +15,16 @@
   - [4.3. パスワードレス sudo 認証を有効にする](#43-パスワードレス-sudo-認証を有効にする)
   - [4.4. 作業用ユーザを追加する](#44-作業用ユーザを追加する)
   - [4.5. CI/CD用ユーザを追加する](#45-cicd用ユーザを追加する)
-  - [4.6. SSHサーバの設定をする](#46-sshサーバの設定をする)
-  - [4.7. cloud-init の準備をする](#47-cloud-init-の準備をする)
-    - [4.7.1. Debian の VM テンプレートを作成する](#471-debian-の-vm-テンプレートを作成する)
-    - [4.7.1. Alma Linux の VM テンプレートを作成する](#471-alma-linux-の-vm-テンプレートを作成する)
-  - [4.8. ネットワークブリッジを作成する](#48-ネットワークブリッジを作成する)
-    - [4.8.1. Linux Bond を追加する](#481-linux-bond-を追加する)
-    - [4.8.2. 内部通信に用いる NW を追加する](#482-内部通信に用いる-nw-を追加する)
-    - [4.8.3. Zabbix Server のハートビートに用いる NW を追加する](#483-zabbix-server-のハートビートに用いる-nw-を追加する)
-  - [4.9. イーサネットポートを有効にする](#49-イーサネットポートを有効にする)
+  - [4.6. VMのフェンシング用ユーザを追加する](#46-vmのフェンシング用ユーザを追加する)
+  - [4.7. SSHサーバの設定をする](#47-sshサーバの設定をする)
+  - [4.8. cloud-init の準備をする](#48-cloud-init-の準備をする)
+    - [4.8.1. Debian の VM テンプレートを作成する](#481-debian-の-vm-テンプレートを作成する)
+    - [4.8.2. Alma Linux の VM テンプレートを作成する](#482-alma-linux-の-vm-テンプレートを作成する)
+  - [4.9. ネットワークブリッジを作成する](#49-ネットワークブリッジを作成する)
+    - [4.9.1. Linux Bond を追加する](#491-linux-bond-を追加する)
+    - [4.9.2. 内部通信に用いる NW を追加する](#492-内部通信に用いる-nw-を追加する)
+    - [4.9.3. Zabbix Server のハートビートに用いる NW を追加する](#493-zabbix-server-のハートビートに用いる-nw-を追加する)
+  - [4.10. イーサネットポートを有効にする](#410-イーサネットポートを有効にする)
 - [5. 完了条件](#5-完了条件)
 
 <!-- /code_chunk_output -->
@@ -373,7 +374,83 @@
     └─────────┴─────────┴────────┴─────────┘
     ```
 
-### 4.6. SSHサーバの設定をする
+### 4.6. VMのフェンシング用ユーザを追加する
+
+1. ユーザに割り当てるロールを作成する
+
+    |     権限     |             説明              |
+    | ------------ | ----------------------------- |
+    | VM.Audit     | VM の参照                     |
+    | VM.PowerMgmt | VM の起動・停止など電源の管理 |
+
+    ```shell
+    STONITHAGENTUSER_ROLE='StonithAgent'
+
+    # ロールが存在しないことを確認する。何も出力されなければ OK
+    pveum role list | grep "$STONITHAGENTUSER_ROLE"
+
+    pveum role add "$STONITHAGENTUSER_ROLE" -privs "VM.PowerMgmt,VM.Audit"
+    # 何も出力されなければ OK
+
+    # ロールが存在することを確認する。追加したロールと権限が表示されれば OK
+    pveum role list | grep "$STONITHAGENTUSER_ROLE"
+    ```
+
+2. Proxmox上のユーザを作成する
+
+    ```shell
+    # @pve でレルムに Proxmox VE authentication server を指定する
+    STONITHAGENTUSER_USERNAME='stonith@pve'
+
+    # ユーザが存在しないことを確認する。何も出力されなければ OK
+    pveum user list | grep "$STONITHAGENTUSER_USERNAME"
+
+    pveum user add "$STONITHAGENTUSER_USERNAME"
+    # 何も出力されなければ OK
+
+    # ユーザが存在することを確認する。出力があれば OK
+    pveum user list | grep "$STONITHAGENTUSER_USERNAME"
+    ```
+
+3. ユーザにロールを紐づける
+
+    ```shell
+    ZABBIX_SERVER_VM_ID_LIST=(401 402)
+    for id in "${ZABBIX_SERVER_VM_ID_LIST[@]}" ; do
+      pveum acl modify "/vms/$id" -user "$STONITHAGENTUSER_USERNAME" -role "$STONITHAGENTUSER_ROLE"
+    done
+    # 何も出力されなければ OK
+    ```
+
+4. API トークンを作成する
+
+    ```shell
+    # トークンが存在しないことを確認する。何も出力されなければ OK
+    $ pveum user token list "$STONITHAGENTUSER_USERNAME"
+
+    # zabbix-stonith はトークンの ID
+    # -privsep 0 で、トークンの権限をユーザの権限と共通化（権限分離をしない）
+    $ pveum user token add "$STONITHAGENTUSER_USERNAME" zabbix-stonith -privsep 0
+    # トークンのシークレット値が出力されるので、メモしておく
+    ┌──────────────┬──────────────────────────────────────┐
+    │ key          │ value                                │
+    ╞══════════════╪══════════════════════════════════════╡
+    │ full-tokenid │ stonith@pve!zabbix-stonith           │
+    ├──────────────┼──────────────────────────────────────┤
+    │ info         │ {"privsep":"0"}                      │
+    ├──────────────┼──────────────────────────────────────┤
+    │ value        │ (シークレット値)                      │
+    └──────────────┴──────────────────────────────────────┘
+
+    # トークンが存在することを確認する。作成したトークンが出力されば OK
+    $ pveum user token list "$STONITHAGENTUSER_USERNAME"
+    ┌────────────────┬─────────┬────────┬─────────┐
+    │ tokenid        │ comment │ expire │ privsep │
+    ╞════════════════╪═════════╪════════╪═════════╡
+    │ zabbix-stonith │         │      0 │ 0       │
+    └────────────────┴─────────┴────────┴─────────┘    ```
+
+### 4.7. SSHサーバの設定をする
 
 1. sshdの設定を変更する
 
@@ -416,7 +493,7 @@
     ssh root@192.168.20.2 # will fail
     ```
 
-### 4.7. cloud-init の準備をする
+### 4.8. cloud-init の準備をする
 
 1. snippets を有効化する
 
@@ -434,7 +511,7 @@
     dump  images  snippets  template
     ```
 
-#### 4.7.1. Debian の VM テンプレートを作成する
+#### 4.8.1. Debian の VM テンプレートを作成する
 
 ここでは、Debian 13 (x86_64) の Generic Cloud イメージ をダウンロードすることします。
 
@@ -450,8 +527,8 @@
     curl -o "$QCOW_NAME" "https://cloud.debian.org/images/cloud/$MAJOR_VER_CODENAME/latest/$QCOW_NAME"    # エラーが出力されなければ OK
 
     # チェックサムを照合
-    DOWNLOADED_CHECKSUM=$(curl -sS "https://cloud.debian.org/images/cloud/$MAJOR_VER_CODENAME/latest/SHA512SUMS" | grep "$QCOW_NAME" | awk '{print $1}')
-    FILE_CHECKSUM=$(sha512sum "$QCOW_NAME" | awk '{print $1}')
+    | DOWNLOADED_CHECKSUM=$(curl -sS "https://cloud.debian.org/images/cloud/$MAJOR_VER_CODENAME/latest/SHA512SUMS" | grep "$QCOW_NAME" | awk '{print $1}') |
+    | FILE_CHECKSUM=$(sha512sum "$QCOW_NAME"                                                                       | awk '{print $1}') |                   |
     if [ "$DOWNLOADED_CHECKSUM" = "$FILE_CHECKSUM" ]; then echo 'OK.'; else echo 'CHECKSUM UNMATCHED!!'; fi
     # OK. と出力されればよい
     ```
@@ -492,7 +569,7 @@
     sudo qm template $VM_TMPL_ID
     ```
 
-#### 4.7.1. Alma Linux の VM テンプレートを作成する
+#### 4.8.2. Alma Linux の VM テンプレートを作成する
 
 ここでは、Alma Linux 10.0 (x86_64) の Generic Cloud イメージ をダウンロードすることします。
 
@@ -509,8 +586,8 @@
     # エラーが出力されなければ OK
 
     # チェックサムを照合
-    DOWNLOADED_CHECKSUM=$(curl -sS "https://repo.almalinux.org/almalinux/${MAJOR_VER}/cloud/x86_64/images/CHECKSUM" | grep "GenericCloud-$VER" | awk '{print $1}')
-    FILE_CHECKSUM=$(sha256sum "$QCOW_NAME" | awk '{print $1}')
+    | DOWNLOADED_CHECKSUM=$(curl -sS "https://repo.almalinux.org/almalinux/${MAJOR_VER}/cloud/x86_64/images/CHECKSUM" | grep "GenericCloud-$VER" | awk '{print $1}') |
+    | FILE_CHECKSUM=$(sha256sum "$QCOW_NAME"                                                                          | awk '{print $1}')        |                   |
     if [ "$DOWNLOADED_CHECKSUM" = "$FILE_CHECKSUM" ]; then echo 'OK.'; else echo 'CHECKSUM UNMATCHED!!'; fi
     # OK. と出力されればよい
     ```
@@ -544,9 +621,9 @@
     # という警告は無視できる
     ```
 
-### 4.8. ネットワークブリッジを作成する
+### 4.9. ネットワークブリッジを作成する
 
-#### 4.8.1. Linux Bond を追加する
+#### 4.9.1. Linux Bond を追加する
 
 1. Proxmox Web UI にログインする
 
@@ -601,7 +678,7 @@
     - `bond0` が表示されていること
     - `vmbr0` のブリッジポートが `bond0` であること
 
-#### 4.8.2. 内部通信に用いる NW を追加する
+#### 4.9.2. 内部通信に用いる NW を追加する
 
 1. Proxmox Web UI にログインする
 
@@ -633,7 +710,7 @@
 
     ネットワーク設定画面で `vmbr1` が表示されていることを確認する
 
-#### 4.8.3. Zabbix Server のハートビートに用いる NW を追加する
+#### 4.9.3. Zabbix Server のハートビートに用いる NW を追加する
 
 1. Proxmox Web UI にログインする
 
@@ -665,7 +742,7 @@
 
     ネットワーク設定画面で `vmbr2` が表示されていることを確認する
 
-### 4.9. イーサネットポートを有効にする
+### 4.10. イーサネットポートを有効にする
 
 1. 現在のイーサネットポートの状態を確認する
 

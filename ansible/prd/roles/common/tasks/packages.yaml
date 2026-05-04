@@ -9,6 +9,8 @@
       - langpacks-en
       # vim をデフォルトのエディタとして使用
       - vim-enhanced
+      # zip ファイルの展開に使用
+      - unzip
     state: present
 
 - name: Install common packages (Debian)
@@ -20,4 +22,6 @@
       - locales-all
       # vim をデフォルトのエディタとして使用
       - vim
+      # zip ファイルの展開に使用
+      - unzip
     state: present

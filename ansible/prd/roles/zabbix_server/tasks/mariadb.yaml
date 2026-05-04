@@ -7,3 +7,13 @@
       - MariaDB-client
       - MariaDB-server
     state: present
+
+# systemd に mariadb を操作させない
+- name: Stop, disable and mask mariadb
+  when: "'zabbix_server__ha' in group_names"
+  become: true
+  ansible.builtin.systemd_service:
+    name: mariadb
+    state: stopped
+    enabled: false
+    masked: true

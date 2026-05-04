@@ -24,6 +24,9 @@ fw_zone_policies:
   - to_zone: LOCAL
     from_zone: INTERNAL
     ruleset: INTERNAL-TO-LOCAL
+  - to_zone: LOCAL
+    from_zone: SERVICE
+    ruleset: SERVICE-TO-LOCAL
   - to_zone: WAN
     from_zone: LOCAL
     ruleset: LOCAL-TO-WAN

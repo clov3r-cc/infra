@@ -6,10 +6,10 @@
 
 ### インベントリ
 
-|       ファイル        |                                                                    説明                                                                    |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `inventory_src.yaml`  | `cloud.terraform.terraform_provider` プラグインを使い、[`terraform/prd`](../../terraform/prd/) の State からホスト情報を動的に取得します。 |
-| `inventory_vyos.yaml` | VyOS ルーターのインベントリです。                                                                                                          |
+|        ファイル         |                                                                    説明                                                                    |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `inventory_src.yaml`    | `cloud.terraform.terraform_provider` プラグインを使い、[`terraform/prd`](../../terraform/prd/) の State からホスト情報を動的に取得します。 |
+| `inventory_router.yaml` | ルーターのインベントリです。                                                                                                               |
 
 ### プレイブック
 
@@ -18,8 +18,8 @@
 | `cloud-server.yaml`     | `cloud_server`     |
 | `dns-server.yaml`       | `dns_server`       |
 | `pve-server.yaml`       | `pve_server`       |
+| `router.yaml`           | `router`           |
 | `tailscale-server.yaml` | `tailscale_server` |
-| `vyos.yaml`             | `vyos_router`      |
 | `zabbix-server.yaml`    | `zabbix_server`    |
 
 ## 実行方法
@@ -55,4 +55,4 @@ mise run ping
 ## Vault
 
 機密情報は [Ansible Vault](https://docs.ansible.com/ansible/latest/vault_guide/index.html) で暗号化しています。
-パスワードは `files/get_vault_password.sh` から取得します（`ansible.cfg` に設定済み）。
+パスワードは [get_vault_password.sh](files/get_vault_password.sh) から取得します（`ansible.cfg` に設定済み）。

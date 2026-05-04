@@ -4,4 +4,5 @@
   gather_facts: true
   roles:
     - common
+    - ondrejhome.pcs-modules-2
     - zabbix_server

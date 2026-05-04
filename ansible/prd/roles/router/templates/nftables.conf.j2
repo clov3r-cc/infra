@@ -1,0 +1,204 @@
+#!/usr/sbin/nft -f
+
+{# ------------------------------------------------------------------ #}
+{# Macros                                                              #}
+{# ------------------------------------------------------------------ #}
+
+{%- macro port_expr(port) -%}
+{%- set s = port | string -%}
+{%- if ',' in s -%}
+{ {{ s.split(',') | map('trim') | join(', ') }} }
+{%- else -%}
+{{ s }}
+{%- endif -%}
+{%- endmacro -%}
+
+{%- macro fqdn_set_name(fqdn) -%}
+FQDN__{{ fqdn | replace('.', '_') | replace('-', '_') }}
+{%- endmacro -%}
+
+{%- macro nft_rule(rule) -%}
+{%- set proto = rule.protocol | string -%}
+{%- set has_src_port = rule.source is defined and rule.source.port is defined -%}
+{%- set has_dst_port = rule.destination is defined and rule.destination.port is defined -%}
+{%- set has_ports = has_src_port or has_dst_port -%}
+{%- set parts = [] -%}
+{# --- protocol ---
+     For tcp/udp with ports: port keywords (e.g. "tcp dport X") imply the protocol.
+     For tcp/udp without ports: use "ip protocol tcp/udp" explicitly.
+     For icmp: "ip protocol icmp".
+     For VRRP (112) and tcp_udp: use meta l4proto. #}
+{%- if proto == "112" -%}
+{%-   set _ = parts.append("meta l4proto 112") -%}
+{%- elif proto == "icmp" -%}
+{%-   set _ = parts.append("ip protocol icmp") -%}
+{%- elif proto == "tcp_udp" -%}
+{%-   set _ = parts.append("meta l4proto { tcp, udp }") -%}
+{%- elif not has_ports -%}
+{%-   set _ = parts.append("ip protocol " + proto) -%}
+{%- endif -%}
+{# --- source address --- #}
+{%- if rule.source is defined -%}
+{%-   if rule.source.network_group is defined -%}
+{%-     set _ = parts.append("ip saddr @" + rule.source.network_group) -%}
+{%-   elif rule.source.address_group is defined -%}
+{%-     set _ = parts.append("ip saddr @" + rule.source.address_group) -%}
+{%-   endif -%}
+{%-   if has_src_port -%}
+{%-     if proto == "tcp_udp" -%}
+{%-       set _ = parts.append("th sport " + port_expr(rule.source.port)) -%}
+{%-     else -%}
+{%-       set _ = parts.append(proto + " sport " + port_expr(rule.source.port)) -%}
+{%-     endif -%}
+{%-   endif -%}
+{%- endif -%}
+{# --- destination address --- #}
+{%- if rule.destination is defined -%}
+{%-   if rule.destination.network_group is defined -%}
+{%-     set _ = parts.append("ip daddr @" + rule.destination.network_group) -%}
+{%-   elif rule.destination.address_group is defined -%}
+{%-     set _ = parts.append("ip daddr @" + rule.destination.address_group) -%}
+{%-   elif rule.destination.domain_group is defined -%}
+{%-     set _ = parts.append("ip daddr @" + rule.destination.domain_group) -%}
+{%-   elif rule.destination.fqdn is defined -%}
+{%-     set _ = parts.append("ip daddr @" + fqdn_set_name(rule.destination.fqdn)) -%}
+{%-   endif -%}
+{%-   if has_dst_port -%}
+{%-     if proto == "tcp_udp" -%}
+{%-       set _ = parts.append("th dport " + port_expr(rule.destination.port)) -%}
+{%-     else -%}
+{%-       set _ = parts.append(proto + " dport " + port_expr(rule.destination.port)) -%}
+{%-     endif -%}
+{%-   endif -%}
+{%- endif -%}
+{# --- action --- #}
+{%- set _ = parts.append(rule.action) -%}
+{{ parts | join(" ") }}
+{%- endmacro -%}
+
+{# ------------------------------------------------------------------ #}
+{# Collect unique FQDNs from all rulesets                              #}
+{# ------------------------------------------------------------------ #}
+
+{%- set fqdn_ns = namespace(items=[]) -%}
+{%- for ruleset in fw_rulesets -%}
+{%-   for rule in ruleset.rules -%}
+{%-     if rule.destination is defined and rule.destination.fqdn is defined -%}
+{%-       if rule.destination.fqdn not in fqdn_ns.items -%}
+{%-         set fqdn_ns.items = fqdn_ns.items + [rule.destination.fqdn] -%}
+{%-       endif -%}
+{%-     endif -%}
+{%-   endfor -%}
+{%- endfor -%}
+
+flush ruleset
+
+table ip filter {
+
+    # ---------------------------------------------------------------- #
+    # Network groups                                                    #
+    # ---------------------------------------------------------------- #
+{% for group in fw_network_groups %}
+    set {{ group.name }} {
+        type ipv4_addr
+        flags interval
+        elements = { {{ group.networks | join(", ") }} }
+    }
+{% endfor %}
+
+    # ---------------------------------------------------------------- #
+    # Address groups                                                    #
+    # ---------------------------------------------------------------- #
+{% for group in fw_address_groups %}
+    set {{ group.name }} {
+        type ipv4_addr
+        elements = { {{ group.addresses | join(", ") }} }
+    }
+{% endfor %}
+
+    # ---------------------------------------------------------------- #
+    # Domain group sets  (populated by dnsmasq nftset)                 #
+    # ---------------------------------------------------------------- #
+{% for group in fw_domain_groups | default([]) %}
+    set {{ group.name }} {
+        type ipv4_addr
+        flags interval, timeout
+    }
+{% endfor %}
+
+    # ---------------------------------------------------------------- #
+    # FQDN sets  (populated by dnsmasq nftset)                         #
+    # ---------------------------------------------------------------- #
+{% for fqdn in fqdn_ns.items %}
+    set {{ fqdn_set_name(fqdn) }} {
+        type ipv4_addr
+        flags interval, timeout
+        comment "{{ fqdn }}"
+    }
+{% endfor %}
+
+    # ---------------------------------------------------------------- #
+    # Ruleset chains                                                    #
+    # ---------------------------------------------------------------- #
+{% for ruleset in fw_rulesets %}
+    chain {{ ruleset.name }} {
+{% for rule in ruleset.rules %}
+        # {{ rule.number }}: {{ rule.description }}
+        {{ nft_rule(rule) }}
+{% endfor %}
+{% if ruleset.default_log | default(false) %}
+        log prefix "[DROP {{ ruleset.name }}] "
+{% endif %}
+        {{ ruleset.default_action }}
+    }
+
+{% endfor %}
+
+    # ---------------------------------------------------------------- #
+    # Base chains                                                       #
+    # ---------------------------------------------------------------- #
+    chain input {
+        type filter hook input priority 0; policy drop;
+        iif "lo" accept
+        ct state established,related accept
+        ct state invalid drop
+{% for policy in fw_zone_policies %}
+{%   if policy.to_zone == "LOCAL" %}
+{%     set src_zone = fw_zones | selectattr('name', 'equalto', policy.from_zone) | first | default({}) %}
+{%     if src_zone.interface is defined %}
+        iif "{{ src_zone.interface }}" jump {{ policy.ruleset }}
+{%     endif %}
+{%   endif %}
+{% endfor %}
+    }
+
+    chain forward {
+        type filter hook forward priority 0; policy drop;
+        ct state established,related accept
+        ct state invalid drop
+{% for policy in fw_zone_policies %}
+{%   if policy.from_zone != "LOCAL" and policy.to_zone != "LOCAL" %}
+{%     set src_zone = fw_zones | selectattr('name', 'equalto', policy.from_zone) | first | default({}) %}
+{%     set dst_zone = fw_zones | selectattr('name', 'equalto', policy.to_zone) | first | default({}) %}
+{%     if src_zone.interface is defined and dst_zone.interface is defined %}
+        iif "{{ src_zone.interface }}" oif "{{ dst_zone.interface }}" jump {{ policy.ruleset }}
+{%     endif %}
+{%   endif %}
+{% endfor %}
+    }
+
+    chain output {
+        type filter hook output priority 0; policy drop;
+        oif "lo" accept
+        ct state established,related accept
+        ct state invalid drop
+{% for policy in fw_zone_policies %}
+{%   if policy.from_zone == "LOCAL" %}
+{%     set dst_zone = fw_zones | selectattr('name', 'equalto', policy.to_zone) | first | default({}) %}
+{%     if dst_zone.interface is defined %}
+        oif "{{ dst_zone.interface }}" jump {{ policy.ruleset }}
+{%     endif %}
+{%   endif %}
+{% endfor %}
+    }
+}

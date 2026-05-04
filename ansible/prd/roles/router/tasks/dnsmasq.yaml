@@ -1,0 +1,50 @@
+---
+- name: Install dnsmasq
+  become: true
+  ansible.builtin.package:
+    name: dnsmasq
+    state: present
+
+- name: Stop and disable systemd-resolved
+  become: true
+  ansible.builtin.systemd_service:
+    name: systemd-resolved
+    state: stopped
+    enabled: false
+
+- name: Replace systemd-resolved stub resolv.conf with static file
+  become: true
+  ansible.builtin.copy:
+    dest: /etc/resolv.conf
+    content: "nameserver 127.0.0.1\n"
+    owner: root
+    group: root
+    mode: "0644"
+    force: true
+
+- name: Deploy dnsmasq router configuration
+  become: true
+  ansible.builtin.template:
+    src: dnsmasq-router.conf.j2
+    dest: /etc/dnsmasq.d/router.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart dnsmasq
+
+- name: Deploy dnsmasq nftset configuration
+  become: true
+  ansible.builtin.template:
+    src: dnsmasq-nftset.conf.j2
+    dest: /etc/dnsmasq.d/nftset.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart dnsmasq
+
+- name: Enable and start dnsmasq
+  become: true
+  ansible.builtin.systemd_service:
+    name: dnsmasq
+    state: started
+    enabled: true

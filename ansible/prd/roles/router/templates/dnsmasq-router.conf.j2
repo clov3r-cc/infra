@@ -1,0 +1,13 @@
+# Managed by Ansible – do not edit manually.
+
+# Do not use /etc/resolv.conf
+no-resolv
+
+# Forward to upstream DNS
+{% for server in dns_nameservers %}
+server={{ server }}
+{% endfor %}
+
+# Listen on internal interfaces only (not WAN)
+{% set wan_iface = fw_zones | selectattr('name', 'equalto', 'WAN') | map(attribute='interface') | first %}
+except-interface={{ wan_iface }}
