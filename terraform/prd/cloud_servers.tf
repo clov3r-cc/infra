@@ -106,7 +106,7 @@ resource "oci_core_instance" "cloud_server" {
 
   shape_config {
     ocpus         = 2
-    memory_in_gbs = 4
+    memory_in_gbs = 12
   }
 
   create_vnic_details {
