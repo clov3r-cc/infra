@@ -5,15 +5,6 @@
     name: keepalived
     state: present
 
-- name: Deploy nftset warmup script
-  become: true
-  ansible.builtin.template:
-    src: nftset-warmup.sh.j2
-    dest: /usr/local/sbin/nftset-warmup
-    owner: root
-    group: root
-    mode: "0700"
-
 - name: Deploy keepalived configuration
   become: true
   ansible.builtin.template:

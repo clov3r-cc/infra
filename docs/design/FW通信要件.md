@@ -172,6 +172,8 @@ Tailscale の通信要件: [What firewall ports should I open to use Tailscale?]
 |  46   |   `DNS-SERVERS`   |   accept   |    TCP     |     any      |     443      |     `CLOUDFLARE-API`     | Cloudflare API (DNS-01 チャレンジ)              |
 |  47   |   `DNS-SERVERS`   |   accept   |    TCP     |     any      |     443      |        `EASYLIST`        | AdGuardHome フィルタリストダウンロード          |
 |  50   |   `DNS-SERVERS`   |   accept   | TCP / UDP  |     any      |      53      |     `CLOUDFLARE-IPS`     | SSL 証明書更新に伴う DNS チャレンジ             |
+|  200  | `TAILSCALE-NODES` |   accept   |    UDP     |     any      |     123      |      `WAN-GATEWAY`       | NTP                                             |
+|  201  |   `DNS-SERVERS`   |   accept   |    UDP     |     any      |     123      |      `WAN-GATEWAY`       | NTP                                             |
 |  950  | `TAILSCALE-NODES` |    drop    |    TCP     |     any      |      80      | `TAILSCALE-DERP-CAPTIVE` | Tailscale キャプティブポータル検出 (ログ抑制)   |
 
 ### 6.4. DMZ → LOCAL
@@ -182,8 +184,6 @@ Tailscale の通信要件: [What firewall ports should I open to use Tailscale?]
 |  20   | `TAILSCALE-NODES` |   accept   |    ICMP    |      -       | `FW-DMZ-NODES` | ICMP                 |
 |  30   | `TAILSCALE-NODES` |   accept   |    UDP     | 33434-33534  | `FW-DMZ-NODES` | traceroute           |
 |  100  | `TAILSCALE-NODES` |   accept   |    TCP     |      22      | `FW-DMZ-NODES` | SSH                  |
-|  200  | `TAILSCALE-NODES` |   accept   |    UDP     |     123      |  `FW-DMZ-VIP`  | NTP                  |
-|  201  |   `DNS-SERVERS`   |   accept   |    UDP     |     123      |  `FW-DMZ-VIP`  | NTP                  |
 |  210  | `TAILSCALE-NODES` |   accept   |  UDP/TCP   |      53      | `FW-DMZ-NODES` | DNS                  |
 |  211  |   `DNS-SERVERS`   |   accept   |  UDP/TCP   |      53      | `FW-DMZ-NODES` | DNS                  |
 |  950  | `TAILSCALE-NODES` |    drop    |    UDP     |     5351     |       -        | NAT-PMP (ログ抑制)   |
@@ -207,10 +207,12 @@ Tailscale の通信要件: [What firewall ports should I open to use Tailscale?]
 
 ### 6.7. INTERNAL → WAN
 
-| Rule  |    送信元     | プロトコル | 送信先ポート | 送信先アドレス |     目的      |
-| :---: | :-----------: | :--------: | :----------: | :------------: | ------------- |
-|  10   | `NAS-SERVERS` |    ICMP    |      -       |      any       | ICMP          |
-|  200  | `NAS-SERVERS` |    TCP     |     443      |      any       | NAS HTTPS API |
+| Rule  |      送信元      | プロトコル | 送信先ポート | 送信先アドレス |     目的      |
+| :---: | :--------------: | :--------: | :----------: | :------------: | ------------- |
+|  10   |  `NAS-SERVERS`   |    ICMP    |      -       |      any       | ICMP          |
+|  200  |  `NAS-SERVERS`   |    TCP     |     443      |      any       | NAS HTTPS API |
+|  210  | `ZABBIX-SERVERS` |    UDP     |     123      | `WAN-GATEWAY`  | NTP           |
+|  211  |  `NAS-SERVERS`   |    UDP     |     123      | `WAN-GATEWAY`  | NTP           |
 
 ### 6.8. INTERNAL → DMZ
 
@@ -222,13 +224,11 @@ Tailscale の通信要件: [What firewall ports should I open to use Tailscale?]
 
 ### 6.9. INTERNAL → LOCAL
 
-| Rule  |       送信元        | アクション | プロトコル | 送信先ポート |  送信先アドレス   |              目的               |
-| :---: | :-----------------: | :--------: | :--------: | :----------: | :---------------: | ------------------------------- |
-|  10   | `FW-INTERNAL-NODES` |   accept   | Proto 112  |      -       |         -         | VRRP                            |
-|  20   |  `ZABBIX-SERVERS`   |   accept   |    UDP     |     123      | `FW-INTERNAL-VIP` | NTP                             |
-|  30   |    `NAS-SERVERS`    |   accept   |    UDP     |     123      | `FW-INTERNAL-VIP` | NTP                             |
-|  950  |    `NAS-SERVERS`    |    drop    |    UDP     |     137      | ブロードキャスト  | NetBIOS Name Service (ログ抑制) |
-|  951  |    `NAS-SERVERS`    |    drop    |    UDP     |     138      | ブロードキャスト  | NetBIOS Datagram (ログ抑制)     |
+| Rule  |       送信元        | アクション | プロトコル | 送信先ポート |  送信先アドレス  |              目的               |
+| :---: | :-----------------: | :--------: | :--------: | :----------: | :--------------: | ------------------------------- |
+|  10   | `FW-INTERNAL-NODES` |   accept   | Proto 112  |      -       |        -         | VRRP                            |
+|  950  |    `NAS-SERVERS`    |    drop    |    UDP     |     137      | ブロードキャスト | NetBIOS Name Service (ログ抑制) |
+|  951  |    `NAS-SERVERS`    |    drop    |    UDP     |     138      | ブロードキャスト | NetBIOS Datagram (ログ抑制)     |
 
 ### 6.10. LOCAL → WAN
 

@@ -45,6 +45,7 @@ fw_domain_groups:
     domains:
       - deb.debian.org
       - security.debian.org
+      - debian.map.fastly.net
   - name: TAILSCALE_DERP_CAPTIVE
     domains:
       - derp7e.tailscale.com

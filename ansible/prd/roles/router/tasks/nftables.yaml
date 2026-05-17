@@ -9,3 +9,54 @@
     mode: "0600"
     validate: nft -c -f %s
   notify: Reload nftables
+
+- name: Deploy nftset warmup script
+  become: true
+  ansible.builtin.template:
+    src: nftset-warmup.sh.j2
+    dest: /usr/local/sbin/nftset-warmup
+    owner: root
+    group: root
+    mode: "0700"
+
+- name: Deploy nftset-warmup systemd service
+  become: true
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/nftset-warmup.service
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      [Unit]
+      Description=Refresh nftables domain group sets
+
+      [Service]
+      Type=oneshot
+      ExecStart=/usr/local/sbin/nftset-warmup
+  notify: Reload systemd daemon
+
+- name: Deploy nftset-warmup systemd timer
+  become: true
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/nftset-warmup.timer
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      [Unit]
+      Description=Periodically refresh nftables domain group sets
+
+      [Timer]
+      OnBootSec=1min
+      OnUnitActiveSec=30min
+
+      [Install]
+      WantedBy=timers.target
+  notify: Reload systemd daemon
+
+- name: Enable and start nftset-warmup timer
+  become: true
+  ansible.builtin.systemd_service:
+    name: nftset-warmup.timer
+    state: started
+    enabled: true

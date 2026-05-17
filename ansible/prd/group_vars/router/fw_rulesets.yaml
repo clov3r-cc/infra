@@ -211,6 +211,24 @@ fw_rulesets:
         destination:
           network_group: CLOUDFLARE_IPS
           port: 53
+      - number: 200
+        action: accept
+        description: Allow NTP from TAILSCALE_NODES to WAN_GATEWAY
+        protocol: udp
+        source:
+          address_group: TAILSCALE_NODES
+        destination:
+          address_group: WAN_GATEWAY
+          port: 123
+      - number: 201
+        action: accept
+        description: Allow NTP from DNS_SERVERS to WAN_GATEWAY
+        protocol: udp
+        source:
+          address_group: DNS_SERVERS
+        destination:
+          address_group: WAN_GATEWAY
+          port: 123
       - number: 950
         action: drop
         description: Silently drop Tailscale captive portal probe (TCP 80) to DERP domains
@@ -257,41 +275,23 @@ fw_rulesets:
         destination:
           address_group: FW_DMZ_NODES
           port: 22
-      - number: 200
-        action: accept
-        description: Allow NTP from TAILSCALE_NODES to FW_DMZ_VIP
-        protocol: udp
-        source:
-          address_group: TAILSCALE_NODES
-        destination:
-          address_group: FW_DMZ_VIP
-          port: 123
-      - number: 201
-        action: accept
-        description: Allow NTP from DNS_SERVERS to FW_DMZ_VIP
-        protocol: udp
-        source:
-          address_group: DNS_SERVERS
-        destination:
-          address_group: FW_DMZ_VIP
-          port: 123
       - number: 210
         action: accept
-        description: Allow DNS from TAILSCALE_NODES to FW_DMZ_VIP
+        description: Allow DNS from TAILSCALE_NODES to FW_DMZ_NODES
         protocol: tcp_udp
         source:
           address_group: TAILSCALE_NODES
         destination:
-          address_group: FW_DMZ_VIP
+          address_group: FW_DMZ_NODES
           port: 53
       - number: 211
         action: accept
-        description: Allow DNS from DNS_SERVERS to FW_DMZ_VIP
+        description: Allow DNS from DNS_SERVERS to FW_DMZ_NODES
         protocol: tcp_udp
         source:
           address_group: DNS_SERVERS
         destination:
-          address_group: FW_DMZ_VIP
+          address_group: FW_DMZ_NODES
           port: 53
       - number: 950
         action: drop
@@ -377,6 +377,24 @@ fw_rulesets:
           address_group: NAS_SERVERS
         destination:
           port: 443
+      - number: 210
+        action: accept
+        description: Allow NTP from ZABBIX_SERVERS to WAN_GATEWAY
+        protocol: udp
+        source:
+          address_group: ZABBIX_SERVERS
+        destination:
+          address_group: WAN_GATEWAY
+          port: 123
+      - number: 211
+        action: accept
+        description: Allow NTP from NAS_SERVERS to WAN_GATEWAY
+        protocol: udp
+        source:
+          address_group: NAS_SERVERS
+        destination:
+          address_group: WAN_GATEWAY
+          port: 123
   - name: INTERNAL-TO-DMZ
     default_action: drop
     default_log: true
@@ -419,24 +437,6 @@ fw_rulesets:
         protocol: "112"
         source:
           address_group: FW_INTERNAL_NODES
-      - number: 20
-        action: accept
-        description: Allow NTP from ZABBIX_SERVERS to FW_INTERNAL_VIP
-        protocol: udp
-        source:
-          address_group: ZABBIX_SERVERS
-        destination:
-          address_group: FW_INTERNAL_VIP
-          port: 123
-      - number: 30
-        action: accept
-        description: Allow NTP from NAS_SERVERS to FW_INTERNAL_VIP
-        protocol: udp
-        source:
-          address_group: NAS_SERVERS
-        destination:
-          address_group: FW_INTERNAL_VIP
-          port: 123
       - number: 950
         action: drop
         description: Silently drop NetBIOS Name Service broadcast from NAS_SERVERS

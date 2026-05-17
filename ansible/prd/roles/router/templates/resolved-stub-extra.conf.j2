@@ -1,0 +1,4 @@
+# Managed by Ansible – do not edit manually.
+{% set dmz_nodes = fw_address_groups | selectattr('name', 'equalto', 'FW_DMZ_NODES') | map(attribute='addresses') | first %}
+[Resolve]
+DNSStubListenerExtra={{ dmz_nodes[host_index - 1] }}
