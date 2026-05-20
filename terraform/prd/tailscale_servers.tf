@@ -17,7 +17,7 @@ resource "ansible_host" "tailscale_server" {
   for_each = local.tailscale_servers
 
   name   = "${local.env}-tal-${each.key}"
-  groups = [ansible_group.tailscale_server.name]
+  groups = [ansible_group.dmz.name, ansible_group.tailscale_server.name]
   variables = {
     ansible_host = each.value.ip
     host_index   = tonumber(each.key)

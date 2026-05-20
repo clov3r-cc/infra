@@ -173,7 +173,7 @@ resource "ansible_host" "dns_server" {
   for_each = proxmox_vm_qemu.dns_server
 
   name   = each.value.name
-  groups = [ansible_group.dns_server.name]
+  groups = [ansible_group.dmz.name, ansible_group.dns_server.name]
   variables = {
     ansible_host = each.value.ssh_host
     host_index   = tonumber(each.key)
