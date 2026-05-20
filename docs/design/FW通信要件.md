@@ -69,24 +69,25 @@ nftables を使用し、IPv4 ゾーンベースファイアウォールで実装
 
 ### 4.2. address-group
 
-|     グループ名      |           メンバー           |        説明         |
-| ------------------- | ---------------------------- | ------------------- |
-| `WAN-GATEWAY`       | 192.168.20.1                 | 上流ルーター        |
-| `PVE-NODES`         | 192.168.20.2                 | Proxmox ノード      |
-| `FW-WAN-VIP`        | 192.168.20.3                 | FW (WAN VIP)        |
-| `FW-WAN-NODES`      | 192.168.20.4, 192.168.20.5   | FW 01/02 (WAN)      |
-| `FW-DMZ-VIP`        | 192.168.20.17                | FW (DMZ VIP)        |
-| `FW-DMZ-NODES`      | 192.168.20.18, 192.168.20.19 | FW 01/02 (DMZ)      |
-| `TAILSCALE-NODES`   | 192.168.20.20, 192.168.20.21 | Tailscale ノード    |
-| `DNS-SERVERS`       | 192.168.20.22, 192.168.20.23 | DNS/Proxy サーバ    |
-| `FW-SERVICE-VIP`    | 192.168.21.3                 | FW (SERVICE VIP)    |
-| `FW-SERVICE-NODES`  | 192.168.21.4, 192.168.21.5   | FW 01/02 (SERVICE)  |
-| `ACCESS-SWITCHES`   | 192.168.22.1                 | L2 スイッチ         |
-| `FW-INTERNAL-VIP`   | 192.168.22.3                 | FW (INTERNAL VIP)   |
-| `FW-INTERNAL-NODES` | 192.168.22.4, 192.168.22.5   | FW 01/02 (INTERNAL) |
-| `NAS-SERVERS`       | 192.168.22.6                 | NAS サーバ          |
-| `ZABBIX-SERVERS`    | 192.168.22.8, 192.168.22.9   | Zabbix サーバ       |
-| `VRRP-MULTICAST`    | 224.0.0.18                   | VRRP マルチキャスト |
+|     グループ名      |           メンバー           |            説明            |
+| ------------------- | ---------------------------- | -------------------------- |
+| `WAN-GATEWAY`       | 192.168.20.1                 | 上流ルーター               |
+| `PVE-NODES`         | 192.168.20.2                 | Proxmox ノード             |
+| `FW-WAN-VIP`        | 192.168.20.3                 | FW (WAN VIP)               |
+| `FW-WAN-NODES`      | 192.168.20.4, 192.168.20.5   | FW 01/02 (WAN)             |
+| `FW-DMZ-VIP`        | 192.168.20.17                | FW (DMZ VIP)               |
+| `FW-DMZ-NODES`      | 192.168.20.18, 192.168.20.19 | FW 01/02 (DMZ)             |
+| `TAILSCALE-NODES`   | 192.168.20.20, 192.168.20.21 | Tailscale ノード           |
+| `DNS-SERVERS`       | 192.168.20.22, 192.168.20.23 | DNS/Proxy サーバ           |
+| `FW-SERVICE-VIP`    | 192.168.21.3                 | FW (SERVICE VIP)           |
+| `FW-SERVICE-NODES`  | 192.168.21.4, 192.168.21.5   | FW 01/02 (SERVICE)         |
+| `ACCESS-SWITCHES`   | 192.168.22.1                 | L2 スイッチ                |
+| `FW-INTERNAL-VIP`   | 192.168.22.3                 | FW (INTERNAL VIP)          |
+| `FW-INTERNAL-NODES` | 192.168.22.4, 192.168.22.5   | FW 01/02 (INTERNAL)        |
+| `NAS-SERVERS`       | 192.168.22.6                 | NAS サーバ                 |
+| `ZABBIX-SERVERS`    | 192.168.22.8, 192.168.22.9   | Zabbix サーバ              |
+| `INTERNAL-DESKTOP`  | 192.168.22.10                | 内部で使用するデスクトップ |
+| `VRRP-MULTICAST`    | 224.0.0.18                   | VRRP マルチキャスト        |
 
 ### 4.3. domain-group
 
@@ -96,10 +97,12 @@ nftables を使用し、IPv4 ゾーンベースファイアウォールで実装
 | `ELREPO-MIRRORS`         | `www.elrepo.org, elrepo.org, mirrors.elrepo.org, mirrors.coreix.net, mirror.rackspace.com, linux-mirrors.fnal.gov`                                                                                  | ELRepo パッケージミラー                            |
 | `COPR`                   | `copr.fedorainfracloud.org, download.copr.fedorainfracloud.org`                                                                                                                                     | COPR パッケージリポジトリ                          |
 | `ADGUARD`                | `static.adtidy.org, adguardteam.github.io`                                                                                                                                                          | AdGuardHome アップデート・フィルタリスト           |
-| `GITHUB`                 | `github.com, objects.githubusercontent.com`                                                                                                                                                         | GitHub                                             |
+| `GITHUB`                 | `github.com, objects.githubusercontent.com`                                                                                                                                                         | GitHub (バイナリDL等)                              |
+| `GITHUB_COM`             | `github.com`                                                                                                                                                                                        | GitHub (HTTPS アクセスのみ)                        |
 | `LETSENCRYPT`            | `acme-v02.api.letsencrypt.org`                                                                                                                                                                      | Let's Encrypt ACME                                 |
 | `CLOUDFLARE-API`         | `api.cloudflare.com`                                                                                                                                                                                | Cloudflare API                                     |
 | `EASYLIST`               | `easylist.to`                                                                                                                                                                                       | AdGuardHome フィルタリスト                         |
+| `ZABBIX-MIRRORS`         | `repo.zabbix.com`                                                                                                                                                                                    | Zabbix パッケージミラー                            |
 | `DEBIAN-MIRRORS`         | `deb.debian.org, security.debian.org`                                                                                                                                                               | Debian パッケージミラー                            |
 | `TAILSCALE-DERP-CAPTIVE` | `derp7e.tailscale.com, derp7f.tailscale.com, derp7g.tailscale.com, derp7h.tailscale.com`                                                                                                            | Tailscale キャプティブポータル検出用 DERP ドメイン |
 
@@ -171,6 +174,7 @@ Tailscale の通信要件: [What firewall ports should I open to use Tailscale?]
 |  45   |   `DNS-SERVERS`   |   accept   |    TCP     |     any      |     443      |      `LETSENCRYPT`       | Let's Encrypt ACME API                          |
 |  46   |   `DNS-SERVERS`   |   accept   |    TCP     |     any      |     443      |     `CLOUDFLARE-API`     | Cloudflare API (DNS-01 チャレンジ)              |
 |  47   |   `DNS-SERVERS`   |   accept   |    TCP     |     any      |     443      |        `EASYLIST`        | AdGuardHome フィルタリストダウンロード          |
+|  48   |   `DNS-SERVERS`   |   accept   |    TCP     |     any      |     443      |    `ZABBIX-MIRRORS`      | Zabbix パッケージ取得                           |
 |  50   |   `DNS-SERVERS`   |   accept   | TCP / UDP  |     any      |      53      |     `CLOUDFLARE-IPS`     | SSL 証明書更新に伴う DNS チャレンジ             |
 |  200  | `TAILSCALE-NODES` |   accept   |    UDP     |     any      |     123      |      `WAN-GATEWAY`       | NTP                                             |
 |  201  |   `DNS-SERVERS`   |   accept   |    UDP     |     any      |     123      |      `WAN-GATEWAY`       | NTP                                             |
@@ -191,13 +195,14 @@ Tailscale の通信要件: [What firewall ports should I open to use Tailscale?]
 
 ### 6.5. DMZ → INTERNAL
 
-| Rule  |      送信元       | プロトコル | 送信先ポート |  送信先アドレス   |     目的     |
-| :---: | :---------------: | :--------: | :----------: | :---------------: | ------------ |
-|  10   | `TAILSCALE-NODES` |    ICMP    |      -       |   `NAS-SERVERS`   | ICMP         |
-|  15   | `TAILSCALE-NODES` |    UDP     | 33434-33534  |   `NAS-SERVERS`   | traceroute   |
-|  20   | `TAILSCALE-NODES` |    TCP     |      22      | `ZABBIX-SERVERS`  | SSH          |
-|  30   | `TAILSCALE-NODES` |    TCP     |      22      | `ACCESS-SWITCHES` | SSH          |
-|  40   | `TAILSCALE-NODES` |    TCP     |     9999     |   `NAS-SERVERS`   | NAS サービス |
+| Rule  |      送信元       | プロトコル | 送信先ポート |   送信先アドレス   |     目的     |
+| :---: | :---------------: | :--------: | :----------: | :----------------: | ------------ |
+|  10   | `TAILSCALE-NODES` |    ICMP    |      -       |   `NAS-SERVERS`    | ICMP         |
+|  15   | `TAILSCALE-NODES` |    UDP     | 33434-33534  |   `NAS-SERVERS`    | traceroute   |
+|  20   | `TAILSCALE-NODES` |    TCP     |      22      |  `ZABBIX-SERVERS`  | SSH          |
+|  30   | `TAILSCALE-NODES` |    TCP     |      22      | `ACCESS-SWITCHES`  | SSH          |
+|  35   | `TAILSCALE-NODES` |    TCP     |      22      | `INTERNAL-DESKTOP` | SSH          |
+|  40   | `TAILSCALE-NODES` |    TCP     |     9999     |   `NAS-SERVERS`    | NAS サービス |
 
 ### 6.6. SERVICE → LOCAL
 
@@ -207,20 +212,24 @@ Tailscale の通信要件: [What firewall ports should I open to use Tailscale?]
 
 ### 6.7. INTERNAL → WAN
 
-| Rule  |      送信元      | プロトコル | 送信先ポート | 送信先アドレス |     目的      |
-| :---: | :--------------: | :--------: | :----------: | :------------: | ------------- |
-|  10   |  `NAS-SERVERS`   |    ICMP    |      -       |      any       | ICMP          |
-|  200  |  `NAS-SERVERS`   |    TCP     |     443      |      any       | NAS HTTPS API |
-|  210  | `ZABBIX-SERVERS` |    UDP     |     123      | `WAN-GATEWAY`  | NTP           |
-|  211  |  `NAS-SERVERS`   |    UDP     |     123      | `WAN-GATEWAY`  | NTP           |
+| Rule  |       送信元       | プロトコル | 送信先ポート | 送信先アドレス |      目的       |
+| :---: | :----------------: | :--------: | :----------: | :------------: | --------------- |
+|  10   |   `NAS-SERVERS`    |    ICMP    |      -       |      any       | ICMP            |
+|  200  |   `NAS-SERVERS`    |    TCP     |     443      |      any       | NAS HTTPS API   |
+|  205  | `INTERNAL-DESKTOP` |    TCP     |     443      |  `GITHUB_COM`  | GitHub アクセス |
+|  210  |  `ZABBIX-SERVERS`  |    UDP     |     123      | `WAN-GATEWAY`  | NTP             |
+|  211  |   `NAS-SERVERS`    |    UDP     |     123      | `WAN-GATEWAY`  | NTP             |
+|  212  | `INTERNAL-DESKTOP` |    UDP     |     123      | `WAN-GATEWAY`  | NTP             |
 
 ### 6.8. INTERNAL → DMZ
 
-| Rule  |      送信元      | プロトコル | 送信先ポート | 送信先アドレス |       目的       |
-| :---: | :--------------: | :--------: | :----------: | :------------: | ---------------- |
-|  10   | `ZABBIX-SERVERS` |  UDP/TCP   |      53      | `DNS-SERVERS`  | DNS              |
-|  11   |  `NAS-SERVERS`   |  UDP/TCP   |      53      | `DNS-SERVERS`  | DNS              |
-|  20   | `ZABBIX-SERVERS` |    TCP     |     443      | `DNS-SERVERS`  | リポジトリミラー |
+| Rule  |       送信元       | プロトコル | 送信先ポート | 送信先アドレス |         目的         |
+| :---: | :----------------: | :--------: | :----------: | :------------: | -------------------- |
+|  10   |  `ZABBIX-SERVERS`  |  UDP/TCP   |      53      | `DNS-SERVERS`  | DNS                  |
+|  11   |   `NAS-SERVERS`    |  UDP/TCP   |      53      | `DNS-SERVERS`  | DNS                  |
+|  12   | `INTERNAL-DESKTOP` |  UDP/TCP   |      53      | `DNS-SERVERS`  | DNS                  |
+|  20   |  `ZABBIX-SERVERS`  |    TCP     |     443      | `DNS-SERVERS`  | リポジトリミラー     |
+|  21   | `INTERNAL-DESKTOP` |    TCP     |     443      | `DNS-SERVERS`  | AdGuardHome 管理画面 |
 
 ### 6.9. INTERNAL → LOCAL
 

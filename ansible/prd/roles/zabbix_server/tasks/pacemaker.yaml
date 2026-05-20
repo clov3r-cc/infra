@@ -5,7 +5,6 @@
   ansible.builtin.package:
     name:
       - corosync
-      - corosync-qdevice
       - pacemaker
       - pcs
     state: present
@@ -142,18 +141,35 @@
     state: started
     enabled: true
 
-# pcsd は使用しない
-- name: Disable, stop and mask pcsd
+- name: Enable and start pcsd
   when: "'zabbix_server__ha' in group_names"
   become: true
   ansible.builtin.systemd_service:
     name: pcsd
-    state: stopped
-    enabled: false
-    masked: true
+    state: started
+    enabled: true
+
+- name: Authenticate pcs hosts
+  delegate_to: "{{ groups['zabbix_server__ha'][0] }}"
+  become: true
+  pcs_auth:
+    node_name: "{{ item }}"
+    username: hacluster
+    password: "{{ hacluster_password }}"
+  loop: "{{ groups['zabbix_server__ha'] }}"
+  run_once: true
+
+- name: Authenticate qdevice host
+  delegate_to: "{{ groups['zabbix_server__ha'][0] }}"
+  become: true
+  pcs_auth:
+    node_name: "{{ hostvars[groups['zabbix_server__qdevice'][0]]['heartbeat_nw_ip'] }}"
+    username: hacluster
+    password: "{{ hacluster_password }}"
+  run_once: true
 
 - name: Configure STONITH resource
-  when: "'zabbix_server__ha' in group_names"
+  delegate_to: "{{ groups['zabbix_server__ha'][0] }}"
   become: true
   pcs_resource:
     name: "fence-{{ item }}"
@@ -172,17 +188,5 @@
       delay="15"
       op monitor interval="60s" timeout="30s"
       meta target-role="Started" is-managed="true"
-  loop: "{{ groups['zabbix_server__ha'] }}"
-  run_once: true
-
-# STONITH must not run on its own node
-- name: Add location constraint
-  when: "'zabbix_server__ha' in group_names"
-  become: true
-  pcs_constraint_location:
-    resource: "fence-{{ item }}"
-    node_name: "{{ item }}"
-    score: "-INFINITY"
-    constraint_id: "loc-fence-{{ item }}"
   loop: "{{ groups['zabbix_server__ha'] }}"
   run_once: true

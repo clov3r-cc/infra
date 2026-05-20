@@ -3,7 +3,7 @@ resource drbd1 {
   disk /dev/vdb1;
   meta-disk internal;
 
-{% for host in groups['zabbix_server'] %}
+{% for host in groups['zabbix_server__ha'] %}
   on {{ host }} {
     node-id {{ hostvars[host]['host_index'] }};
     address {{ hostvars[host]['heartbeat_nw_ip'] }}:7789;

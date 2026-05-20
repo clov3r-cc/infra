@@ -202,6 +202,15 @@ fw_rulesets:
         destination:
           domain_group: EASYLIST
           port: 443
+      - number: 48
+        action: accept
+        description: Allow HTTPS to Zabbix repo from DNS_SERVERS
+        protocol: tcp
+        source:
+          address_group: DNS_SERVERS
+        destination:
+          domain_group: ZABBIX_MIRRORS
+          port: 443
       - number: 50
         action: accept
         description: Allow DNS from DNS_SERVERS to Cloudflare for SSL cert renewal DNS challenge
@@ -349,6 +358,15 @@ fw_rulesets:
         destination:
           address_group: ACCESS_SWITCHES
           port: 22
+      - number: 35
+        action: accept
+        description: Allow SSH from TAILSCALE_NODES to INTERNAL_DESKTOP
+        protocol: tcp
+        source:
+          address_group: TAILSCALE_NODES
+        destination:
+          address_group: INTERNAL_DESKTOP
+          port: 22
       - number: 40
         action: accept
         description: Allow TCP/9999 from TAILSCALE_NODES to NAS_SERVERS
@@ -377,6 +395,15 @@ fw_rulesets:
           address_group: NAS_SERVERS
         destination:
           port: 443
+      - number: 205
+        action: accept
+        description: Allow HTTPS to GitHub from INTERNAL_DESKTOP
+        protocol: tcp
+        source:
+          address_group: INTERNAL_DESKTOP
+        destination:
+          domain_group: GITHUB_COM
+          port: 443
       - number: 210
         action: accept
         description: Allow NTP from ZABBIX_SERVERS to WAN_GATEWAY
@@ -392,6 +419,15 @@ fw_rulesets:
         protocol: udp
         source:
           address_group: NAS_SERVERS
+        destination:
+          address_group: WAN_GATEWAY
+          port: 123
+      - number: 212
+        action: accept
+        description: Allow NTP from INTERNAL_DESKTOP to WAN_GATEWAY
+        protocol: udp
+        source:
+          address_group: INTERNAL_DESKTOP
         destination:
           address_group: WAN_GATEWAY
           port: 123
@@ -417,12 +453,30 @@ fw_rulesets:
         destination:
           address_group: DNS_SERVERS
           port: 53
+      - number: 12
+        action: accept
+        description: Allow DNS from INTERNAL_DESKTOP to DNS_SERVERS
+        protocol: tcp_udp
+        source:
+          address_group: INTERNAL_DESKTOP
+        destination:
+          address_group: DNS_SERVERS
+          port: 53
       - number: 20
         action: accept
         description: Allow HTTPS to DNS_SERVERS for repo mirror from ZABBIX_SERVERS
         protocol: tcp
         source:
           address_group: ZABBIX_SERVERS
+        destination:
+          address_group: DNS_SERVERS
+          port: 443
+      - number: 21
+        action: accept
+        description: Allow HTTPS to DNS_SERVERS for AdGuardHome admin UI from INTERNAL_DESKTOP
+        protocol: tcp
+        source:
+          address_group: INTERNAL_DESKTOP
         destination:
           address_group: DNS_SERVERS
           port: 443

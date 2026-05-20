@@ -2,6 +2,7 @@
 totem {
   version: 2
 
+  # Set name of the cluster
   cluster_name: zabbix-server
 
   # crypto_cipher and crypto_hash: Used for mutual node authentication.
@@ -38,15 +39,29 @@ logging {
 }
 
 quorum {
+  # Enable and configure quorum subsystem (default: off)
+  # see also corosync.conf.5 and votequorum.5
   provider: corosync_votequorum
-  two_node: 1
+
+  device {
+    votes: 1
+    model: net
+    net {
+      tls: on
+      host: {{ hostvars[groups['zabbix_server__qdevice'][0]]['heartbeat_nw_ip'] }}
+      algorithm: ffsplit
+    }
+  }
 }
 
 nodelist {
-{% for host in groups['zabbix_server'] %}
+{% for host in groups['zabbix_server__ha'] %}
   node {
+    # Hostname of the node
     name: {{ host }}
+    # Cluster membership node identifier
     nodeid: {{ hostvars[host]['host_index'] }}
+    # Address of first link
     ring0_addr: {{ hostvars[host]['heartbeat_nw_ip'] }}
   }
 {% endfor %}

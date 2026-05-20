@@ -14,6 +14,7 @@
       - pam-ssh-agent
       - nginx
       - dnf-utils
+      - createrepo_c
     state: present
 
 - name: Create partition on data disk

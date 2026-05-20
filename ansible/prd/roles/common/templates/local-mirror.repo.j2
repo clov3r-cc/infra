@@ -6,6 +6,7 @@
   {'id': 'highavailability', 'name': 'HighAvailability', 'path': 'highavailability', 'gpgkey': 'file:///etc/pki/rpm-gpg/RPM-GPG-KEY-AlmaLinux-10'},
   {'id': 'elrepo',           'name': 'ELRepo',           'path': 'elrepo',           'gpgkey_path': 'keys/RPM-GPG-KEY-v2-elrepo.org'},
   {'id': 'mariadb',          'name': 'MariaDB',          'path': 'mariadb',          'gpgkey_path': 'keys/RPM-GPG-KEY-MariaDB'},
+  {'id': 'zabbix',           'name': 'Zabbix',           'path': 'zabbix',           'gpgkey_path': 'keys/RPM-GPG-KEY-ZABBIX-A14FE591'},
 ] -%}
 {% for repo in repos -%}
 [local-{{ repo.id }}]

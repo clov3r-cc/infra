@@ -7,7 +7,63 @@
       - corosync-qnetd
       - pcs
     state: present
-    enablerepo: highavailability
+
+- name: Enable and start corosync-qnetd
+  when: "'zabbix_server__qdevice' in group_names"
+  become: true
+  ansible.builtin.systemd_service:
+    name: corosync-qnetd
+    state: started
+    enabled: true
+
+- name: Generate QNetd CA certificate
+  when: "'zabbix_server__qdevice' in group_names"
+  become: true
+  ansible.builtin.command:
+    cmd: corosync-qdevice-net-certutil -Q -n zabbix-server
+    creates: /etc/corosync/qnetd/nssdb/qnetd-cacert.crt
+
+- name: Fetch QNetd CA certificate to controller
+  when: "'zabbix_server__qdevice' in group_names"
+  become: true
+  ansible.builtin.fetch:
+    src: /etc/corosync/qnetd/nssdb/qnetd-cacert.crt
+    dest: /tmp/corosync-qnetd-cacert.crt
+    flat: true
+
+- name: Install corosync-qdevice on HA nodes
+  when: "'zabbix_server__ha' in group_names"
+  become: true
+  ansible.builtin.package:
+    name: corosync-qdevice
+    state: present
+
+- name: Create QDevice NSS directory on HA nodes
+  when: "'zabbix_server__ha' in group_names"
+  become: true
+  ansible.builtin.file:
+    path: /etc/corosync/qdevice/net/nssdb
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Distribute QNetd CA certificate to HA nodes
+  when: "'zabbix_server__ha' in group_names"
+  become: true
+  ansible.builtin.copy:
+    src: /tmp/corosync-qnetd-cacert.crt
+    dest: /etc/corosync/qdevice/net/nssdb/qnetd-cacert.crt
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Generate QDevice client certificate on HA nodes
+  when: "'zabbix_server__ha' in group_names"
+  become: true
+  ansible.builtin.command:
+    cmd: corosync-qdevice-net-certutil -c /etc/corosync/qdevice/net/nssdb/qnetd-cacert.crt -n zabbix-server
+    creates: /etc/corosync/qdevice/net/nssdb/qdevice-net-node.crq
 
 - name: Set hacluster user password
   when: "'zabbix_server__qdevice' in group_names"
@@ -16,3 +72,19 @@
     name: hacluster
     password: "{{ hacluster_password | password_hash('sha512') }}"
   changed_when: false
+
+- name: Enable and start pcsd on qdevice
+  when: "'zabbix_server__qdevice' in group_names"
+  become: true
+  ansible.builtin.systemd_service:
+    name: pcsd
+    state: started
+    enabled: true
+
+- name: Enable and start corosync-qdevice
+  when: "'zabbix_server__ha' in group_names"
+  become: true
+  ansible.builtin.systemd_service:
+    name: corosync-qdevice
+    state: started
+    enabled: true

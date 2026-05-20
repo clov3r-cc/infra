@@ -21,3 +21,18 @@
     src: files/MariaDB.repo
     dest: /etc/yum.repos.d/MariaDB.repo
     mode: "0644"
+
+### Zabbix ###
+
+- name: Import Zabbix repo key
+  become: true
+  ansible.builtin.rpm_key:
+    key: https://repo.zabbix.com/RPM-GPG-KEY-ZABBIX-A14FE591
+    state: present
+
+- name: Install Zabbix repo
+  become: true
+  ansible.builtin.dnf:
+    name: https://repo.zabbix.com/zabbix/7.0/alma/10/x86_64/zabbix-release-latest-7.0.el10.noarch.rpm
+    state: present
+    disable_gpg_check: true

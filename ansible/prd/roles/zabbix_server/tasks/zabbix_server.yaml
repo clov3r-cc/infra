@@ -1,0 +1,13 @@
+---
+- name: Install Zabbix Server
+  when: "'zabbix_server__ha' in group_names"
+  become: true
+  ansible.builtin.package:
+    name:
+      - zabbix-server-mysql
+      - zabbix-web-mysql
+      - zabbix-nginx-conf
+      - zabbix-sql-scripts
+      - zabbix-selinux-policy
+      - zabbix-agent2
+    state: present
