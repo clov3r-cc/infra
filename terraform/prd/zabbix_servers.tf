@@ -190,7 +190,7 @@ resource "ansible_host" "zabbix_server" {
   for_each = proxmox_vm_qemu.zabbix_server
 
   name   = each.value.name
-  groups = [ansible_group.zabbix_server.name, ansible_group.zabbix_server__ha.name]
+  groups = [ansible_group.internal.name, ansible_group.zabbix_server.name, ansible_group.zabbix_server__ha.name]
   variables = {
     ansible_host    = each.value.ssh_host
     heartbeat_nw_ip = split("/", split("ip=", each.value.ipconfig1)[1])[0]
