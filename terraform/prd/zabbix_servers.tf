@@ -182,6 +182,10 @@ resource "ansible_group" "zabbix_server__ha" {
   name = "zabbix_server__ha"
 }
 
+resource "ansible_group" "zabbix_server__qdevice" {
+  name = "zabbix_server__qdevice"
+}
+
 resource "ansible_host" "zabbix_server" {
   for_each = proxmox_vm_qemu.zabbix_server
 
