@@ -24,7 +24,7 @@ terraform {
     }
     oci = {
       source  = "oracle/oci"
-      version = "8.14.0"
+      version = "8.15.0"
     }
     ansible = {
       source  = "ansible/ansible"
