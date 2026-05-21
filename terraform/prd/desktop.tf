@@ -1,5 +1,12 @@
 resource "ansible_group" "desktop" {
   name = "desktop"
+  variables = {
+    ansible_user = "lucky"
+  }
+}
+
+resource "ansible_group" "zabbix_server__qdevice" {
+  name = "zabbix_server__qdevice"
 }
 
 resource "ansible_host" "desktop" {
