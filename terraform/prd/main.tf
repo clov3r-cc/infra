@@ -77,6 +77,8 @@ EOT
   #region Oracle Cloud
 
   oracle_cloud_tenancy_id = "ocid1.tenancy.oc1..aaaaaaaa3vcsovo36fpa7kf42sljmsypxgwrp37lowwl27g5n7pgy765krba"
+  # Oracle-Linux-10.1-aarch64-2026.05.28-0
+  oracle_cloud_vm_image_id = "ocid1.image.oc1.ap-osaka-1.aaaaaaaaqy46tkhf54avftir3d3vk54vzcrd5rl43s6wrzhuuu67yngenuka"
 
   #endregion
 }
