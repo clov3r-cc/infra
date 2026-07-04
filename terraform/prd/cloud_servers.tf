@@ -80,16 +80,6 @@ resource "oci_core_network_security_group_security_rule" "my_vcn_nw_sg__ingress_
   protocol                  = "1" # ICMP
 }
 
-# NOTE: https://docs.oracle.com/en-us/iaas/images/
-data "oci_core_images" "images" {
-  compartment_id           = local.oracle_cloud_tenancy_id
-  operating_system         = "Oracle Linux"
-  operating_system_version = "10"
-  shape                    = local.oracle_cloud_vm_instance_shape
-  sort_by                  = "TIMECREATED"
-  sort_order               = "DESC"
-}
-
 resource "random_password" "vm_user_password__cloud_server" {
   length      = 30
   min_lower   = 3
@@ -118,7 +108,7 @@ resource "oci_core_instance" "cloud_server" {
 
   source_details {
     source_type             = "image"
-    source_id               = lookup(data.oci_core_images.images.images[0], "id")
+    source_id               = local.oracle_cloud_vm_image_id
     boot_volume_size_in_gbs = 50
   }
 
