@@ -33,8 +33,8 @@ jobs:
     # https://zenn.dev/thaim/articles/2022-04-allow-dependabot-access-secrets
     # https://engineering.mobalab.net/2021/04/30/make-secrets-available-in-pull-request-opened-by-dependabot/
     if: |
-      (github.event_name == 'pull_request_target' && github.actor == 'dependabot[bot]') ||
-      (github.event_name != 'pull_request_target' && github.actor != 'dependabot[bot]')
+      (github.event_name == 'pull_request_target' && github.event.pull_request.user.login == 'dependabot[bot]') ||
+      (github.event_name != 'pull_request_target' && github.event.pull_request.user.login != 'dependabot[bot]')
     needs: [ find_envs ]
     strategy:
       fail-fast: false
@@ -68,6 +68,7 @@ jobs:
           oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
           tags: tag:gha
       - name: Terraform Plan
-        run: tfcmt plan -patch --config "${{ github.workspace }}/.github/tfcmt-config.yaml" -- terraform plan -input=false -no-color -lock-timeout=10m
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TFCMT_CONFIG: ${{ github.workspace }}/.github/tfcmt-config.yaml
+        run: tfcmt plan -patch --config "$TFCMT_CONFIG" -- terraform plan -input=false -no-color -lock-timeout=10m

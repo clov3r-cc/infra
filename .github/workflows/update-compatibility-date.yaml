@@ -67,9 +67,10 @@ jobs:
       - name: Check if any updates are needed
         id: check_update
         if: steps.get_date.outputs.is_future == 'false' && steps.find_dates.outputs.found == 'true'
+        env:
+          LATEST: ${{ steps.get_date.outputs.latest_date }}
+          CURRENT_DATES: ${{ steps.find_dates.outputs.dates }}
         run: |
-          LATEST="${{ steps.get_date.outputs.latest_date }}"
-          CURRENT_DATES="${{ steps.find_dates.outputs.dates }}"
           echo "Latest compatibility_date: $LATEST"
           echo "Current compatibility_dates in repository: $CURRENT_DATES"
           if echo "$CURRENT_DATES" | grep -q "$LATEST"; then
@@ -86,9 +87,10 @@ jobs:
           fi
       - name: Update all Terraform files
         if: steps.get_date.outputs.is_future == 'false' && steps.find_dates.outputs.found == 'true' && steps.check_update.outputs.needs_update == 'true'
+        env:
+          LATEST: ${{ steps.get_date.outputs.latest_date }}
+          CURRENT_DATES: ${{ steps.find_dates.outputs.dates }}
         run: |
-          LATEST="${{ steps.get_date.outputs.latest_date }}"
-          CURRENT_DATES="${{ steps.find_dates.outputs.dates }}"
           echo "Updating all compatibility_date to: $LATEST"
           for OLD_DATE in $CURRENT_DATES; do
             if [ "$OLD_DATE" != "$LATEST" ]; then
@@ -135,11 +137,12 @@ jobs:
             dependencies
       - name: Enable Pull Request Automerge
         if: steps.get_date.outputs.is_future == 'false' && steps.find_dates.outputs.found == 'true' && steps.check_update.outputs.needs_update == 'true'
-        run: |
-          gh pr checkout ${{ steps.cpr.outputs.pull-request-number }}
-          gh pr merge -m --auto
         env:
           GH_TOKEN: ${{ secrets.RUN_ACTION_PAT }}
+          PR_NUMBER: ${{ steps.cpr.outputs.pull-request-number }}
+        run: |
+          gh pr checkout "$PR_NUMBER"
+          gh pr merge -m --auto
   terraform-fmt:
     name: Run terraform fmt
     permissions:

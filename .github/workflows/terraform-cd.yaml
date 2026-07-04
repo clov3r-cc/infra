@@ -64,4 +64,5 @@ jobs:
       - name: Terraform Apply
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: tfcmt apply --config "${{ github.workspace }}/.github/tfcmt-config.yaml" -- terraform apply -input=false -no-color -auto-approve -lock-timeout=10m tfplan_result
+          TFCMT_CONFIG: ${{ github.workspace }}/.github/tfcmt-config.yaml
+        run: tfcmt apply --config "$TFCMT_CONFIG" -- terraform apply -input=false -no-color -auto-approve -lock-timeout=10m tfplan_result
