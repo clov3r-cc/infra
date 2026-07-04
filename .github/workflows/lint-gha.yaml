@@ -15,16 +15,12 @@ jobs:
     timeout-minutes: 5
     runs-on: ubuntu-24.04
     permissions:
-      checks: write
       pull-requests: write
       contents: read
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
-      - uses: reviewdog/action-setup@d8edfce3dd5e1ec6978745e801f9c50b5ef80252 # v1.4.0
-        with:
-          reviewdog_version: latest
       - uses: koki-develop/setup-ghasec@dcd08c7ea5af04eb641f695c8169e3efb0c22b32 # v1.0.1
         with:
           version: latest
@@ -33,14 +29,40 @@ jobs:
           GHASEC_DISABLE_OFFLINE_WARNING: "true"
           GHASEC_DISABLE_UPDATE_CHECK: "true"
         run: ghasec || true
-      - name: Run ghasec (SARIF output for reviewdog)
+      - name: Run ghasec (markdown output for PR comment)
         if: github.event_name == 'pull_request'
         env:
           GHASEC_DISABLE_OFFLINE_WARNING: "true"
           GHASEC_DISABLE_UPDATE_CHECK: "true"
-        run: ghasec --format sarif > /tmp/ghasec.sarif || true
-      - name: Run reviewdog
+        run: |
+          {
+            echo '<!-- ghasec -->'
+            result=$(ghasec --format markdown 2>&1) || true
+            if [ -z "$result" ]; then
+              echo '## :white_check_mark: ghasec — no issues found'
+            else
+              finding_count=$(echo "$result" | grep -c '^## \[' || true)
+              echo "## :warning: ghasec — ${finding_count} issue(s) found"
+              echo
+              echo '---'
+              echo
+              echo "$result"
+            fi
+          } | tee /tmp/ghasec-result.md
+      - name: Find existing comment
         if: github.event_name == 'pull_request'
-        env:
-          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: reviewdog -f=sarif -reporter=github-pr-check -filter-mode=nofilter < /tmp/ghasec.sarif
+        id: fc
+        uses: peter-evans/find-comment@b30e6a3c0ed37e7c023ccd3f1db5c6c0b0c23aad # v4.0.0
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: "github-actions[bot]"
+          body-includes: "<!-- ghasec -->"
+      - name: Create or update comment
+        if: github.event_name == 'pull_request'
+        uses: peter-evans/create-or-update-comment@e8674b075228eee787fea43ef493e45ece1004c9 # v5.0.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          comment-id: ${{ steps.fc.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body-path: /tmp/ghasec-result.md
+          edit-mode: replace
