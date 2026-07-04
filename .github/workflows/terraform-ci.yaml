@@ -67,6 +67,18 @@ jobs:
           oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
           oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
           tags: tag:gha
+      - run: |
+          terraform destroy \
+            -target='proxmox_vm_qemu.dns_server["01"]' \
+            -target='proxmox_vm_qemu.dns_server["02"]' \
+            -target='terraform_data.cloud_init_config__dns_server["01"]' \
+            -target='terraform_data.cloud_init_config__dns_server["02"]' \
+            -target='random_password.vm_root_password__dns_server["01"]' \
+            -target='random_password.vm_root_password__dns_server["02"]' \
+            -target='random_password.vm_user_password__dns_server["01"]' \
+            -target='random_password.vm_user_password__dns_server["02"]' \
+            -target='ansible_host.dns_server["01"]' \
+            -target='ansible_host.dns_server["02"]'
       - name: Terraform Plan
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
