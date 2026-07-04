@@ -40,7 +40,7 @@ jobs:
           {
             echo '<!-- ghasec -->'
             result=$(ghasec --format markdown 2>&1) || true
-            if [ -z "$result" ]; then
+            if ! echo "$result" | grep -qE '^(## \[|Rule: )'; then
               echo '## :white_check_mark: ghasec — no issues found'
             else
               summary=$(echo "$result" | tail -1)
