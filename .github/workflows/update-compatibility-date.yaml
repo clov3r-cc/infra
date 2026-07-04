@@ -5,19 +5,23 @@ on:
     # https://crontab.guru/#0_15_*_*_6
     - cron: '0 15 * * 6'
   workflow_dispatch:
-permissions:
-  contents: write
-  pull-requests: write
+permissions: {}
 jobs:
   update-compatibility-date:
     name: Update Compatibility Date
+    permissions:
+      contents: write
+      pull-requests: write
+    timeout-minutes: 15
     runs-on: ubuntu-24.04
     outputs:
       pull-request-number: ${{ steps.cpr.outputs.pull-request-number }}
       branch: ${{ steps.cpr.outputs.pull-request-branch }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
       - name: Get latest compatibility_date
         id: get_date
         run: |
@@ -63,9 +67,10 @@ jobs:
       - name: Check if any updates are needed
         id: check_update
         if: steps.get_date.outputs.is_future == 'false' && steps.find_dates.outputs.found == 'true'
+        env:
+          LATEST: ${{ steps.get_date.outputs.latest_date }}
+          CURRENT_DATES: ${{ steps.find_dates.outputs.dates }}
         run: |
-          LATEST="${{ steps.get_date.outputs.latest_date }}"
-          CURRENT_DATES="${{ steps.find_dates.outputs.dates }}"
           echo "Latest compatibility_date: $LATEST"
           echo "Current compatibility_dates in repository: $CURRENT_DATES"
           if echo "$CURRENT_DATES" | grep -q "$LATEST"; then
@@ -82,9 +87,10 @@ jobs:
           fi
       - name: Update all Terraform files
         if: steps.get_date.outputs.is_future == 'false' && steps.find_dates.outputs.found == 'true' && steps.check_update.outputs.needs_update == 'true'
+        env:
+          LATEST: ${{ steps.get_date.outputs.latest_date }}
+          CURRENT_DATES: ${{ steps.find_dates.outputs.dates }}
         run: |
-          LATEST="${{ steps.get_date.outputs.latest_date }}"
-          CURRENT_DATES="${{ steps.find_dates.outputs.dates }}"
           echo "Updating all compatibility_date to: $LATEST"
           for OLD_DATE in $CURRENT_DATES; do
             if [ "$OLD_DATE" != "$LATEST" ]; then
@@ -104,7 +110,7 @@ jobs:
           fi
       - name: Create Pull Request
         if: steps.get_date.outputs.is_future == 'false' && steps.find_dates.outputs.found == 'true' && steps.check_update.outputs.needs_update == 'true'
-        uses: peter-evans/create-pull-request@v8
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         id: cpr
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -131,23 +137,28 @@ jobs:
             dependencies
       - name: Enable Pull Request Automerge
         if: steps.get_date.outputs.is_future == 'false' && steps.find_dates.outputs.found == 'true' && steps.check_update.outputs.needs_update == 'true'
-        run: |
-          gh pr checkout ${{ steps.cpr.outputs.pull-request-number }}
-          gh pr merge -m --auto
         env:
           GH_TOKEN: ${{ secrets.RUN_ACTION_PAT }}
+          PR_NUMBER: ${{ steps.cpr.outputs.pull-request-number }}
+        run: |
+          gh pr checkout "$PR_NUMBER"
+          gh pr merge -m --auto
   terraform-fmt:
     name: Run terraform fmt
+    permissions:
+      contents: write
+    timeout-minutes: 10
     runs-on: ubuntu-24.04
     needs: update-compatibility-date
     if: needs.update-compatibility-date.outputs.pull-request-number != ''
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
+          persist-credentials: false
           ref: ${{ needs.update-compatibility-date.outputs.branch }}
           token: ${{ secrets.RUN_ACTION_PAT }}
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v4
+        uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
       - name: Run terraform fmt
         run: |
           for dir in terraform/*/; do
