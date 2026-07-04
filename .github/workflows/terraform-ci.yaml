@@ -68,7 +68,7 @@ jobs:
           oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
           tags: tag:gha
       - run: |
-          terraform destroy \
+          terraform destroy -auto-approve \
             -target='proxmox_vm_qemu.dns_server["01"]' \
             -target='proxmox_vm_qemu.dns_server["02"]' \
             -target='terraform_data.cloud_init_config__dns_server["01"]' \
