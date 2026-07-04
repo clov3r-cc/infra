@@ -17,7 +17,7 @@ jobs:
       branch: ${{ steps.cpr.outputs.pull-request-branch }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - name: Get latest compatibility_date
         id: get_date
         run: |
@@ -104,7 +104,7 @@ jobs:
           fi
       - name: Create Pull Request
         if: steps.get_date.outputs.is_future == 'false' && steps.find_dates.outputs.found == 'true' && steps.check_update.outputs.needs_update == 'true'
-        uses: peter-evans/create-pull-request@v8
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         id: cpr
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -142,12 +142,12 @@ jobs:
     needs: update-compatibility-date
     if: needs.update-compatibility-date.outputs.pull-request-number != ''
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           ref: ${{ needs.update-compatibility-date.outputs.branch }}
           token: ${{ secrets.RUN_ACTION_PAT }}
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v4
+        uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
       - name: Run terraform fmt
         run: |
           for dir in terraform/*/; do
