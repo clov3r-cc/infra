@@ -41,12 +41,13 @@ jobs:
             if [ -z "$result" ]; then
               echo '## :white_check_mark: ghasec — no issues found'
             else
-              finding_count=$(echo "$result" | grep -c '^## \[' || true)
-              echo "## :warning: ghasec — ${finding_count} issue(s) found"
+              summary=$(echo "$result" | tail -1)
+              body=$(echo "$result" | head -n -1)
+              echo "## :warning: ghasec — ${summary}"
               echo
               echo '---'
               echo
-              echo "$result"
+              echo "$body"
             fi
           } | tee /tmp/ghasec-result.md
       - name: Find existing comment
