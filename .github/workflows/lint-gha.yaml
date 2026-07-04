@@ -21,7 +21,7 @@ jobs:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
-      - uses: reviewdog/action-setup@33fcb41d80a48261d0696752dfad05eb721242a0 # v1.4.1
+      - uses: reviewdog/action-setup@d8edfce3dd5e1ec6978745e801f9c50b5ef80252 # v1.4.0
         with:
           reviewdog_version: latest
       - uses: koki-develop/setup-ghasec@dcd08c7ea5af04eb641f695c8169e3efb0c22b32 # v1.0.1
