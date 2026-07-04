@@ -6,8 +6,7 @@ on:
   pull_request_target:
     branches:
       - main
-permissions:
-  pull-requests: write
+permissions: {}
 jobs:
   find_envs:
     name: Find environments
@@ -21,6 +20,8 @@ jobs:
           echo "matrix=$(find ./terraform -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | jq -R -s -c 'split("\n") | map(select(length > 0)) | {env: .}')" >> $GITHUB_OUTPUT
   tf_plan:
     name: Plan Terraform
+    permissions:
+      pull-requests: write
     runs-on: ubuntu-24.04
     #  pull_request は Dependabot 以外のユーザーのみ、pull_request_target は Dependabot のみが実行できる
     # pull_request_target でないと、Dependabot の作成した PR において、secrets にあるトークンを読み取れず、Terraform CLI が失敗する

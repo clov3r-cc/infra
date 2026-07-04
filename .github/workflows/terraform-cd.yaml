@@ -3,8 +3,7 @@ on:
   push:
     branches:
       - main
-permissions:
-  pull-requests: write
+permissions: {}
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
@@ -21,6 +20,9 @@ jobs:
           echo "matrix=$(find ./terraform -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | jq -R -s -c 'split("\n") | map(select(length > 0)) | {env: .}')" >> $GITHUB_OUTPUT
   tf_apply:
     name: Apply Terraform
+    permissions:
+      pull-requests: write
+    timeout-minutes: 30
     runs-on: ubuntu-24.04
     needs: [ find_envs ]
     strategy:

@@ -5,12 +5,13 @@ on:
     # https://crontab.guru/#0_15_*_*_6
     - cron: '0 15 * * 6'
   workflow_dispatch:
-permissions:
-  contents: write
-  pull-requests: write
+permissions: {}
 jobs:
   update-compatibility-date:
     name: Update Compatibility Date
+    permissions:
+      contents: write
+      pull-requests: write
     runs-on: ubuntu-24.04
     outputs:
       pull-request-number: ${{ steps.cpr.outputs.pull-request-number }}
@@ -138,6 +139,9 @@ jobs:
           GH_TOKEN: ${{ secrets.RUN_ACTION_PAT }}
   terraform-fmt:
     name: Run terraform fmt
+    permissions:
+      contents: write
+    timeout-minutes: 10
     runs-on: ubuntu-24.04
     needs: update-compatibility-date
     if: needs.update-compatibility-date.outputs.pull-request-number != ''

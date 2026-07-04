@@ -6,6 +6,7 @@ on:
     paths:
       - '**/*.md'
   pull_request:
+permissions: {}
 jobs:
   lint:
     name: Lint Markdown
