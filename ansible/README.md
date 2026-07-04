@@ -4,7 +4,7 @@
 
 ## 構成
 
-```
+```text
 ansible/
 ├── ansible.cfg
 ├── requirements.yml
