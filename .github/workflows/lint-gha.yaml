@@ -43,4 +43,7 @@ jobs:
         if: github.event_name == 'pull_request'
         env:
           REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: reviewdog -f=sarif -reporter=github-pr-check < /tmp/ghasec.sarif
+        run: |
+          echo "SARIF file size: $(wc -c < /tmp/ghasec.sarif) bytes"
+          echo "Result count: $(grep -c '"ruleId"' /tmp/ghasec.sarif || true)"
+          reviewdog -f=sarif -reporter=github-pr-check -tee < /tmp/ghasec.sarif
