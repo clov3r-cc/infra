@@ -25,10 +25,12 @@ jobs:
         with:
           version: latest
       - name: Run ghasec (log output)
+        id: ghasec-log
+        continue-on-error: true
         env:
           GHASEC_DISABLE_OFFLINE_WARNING: "true"
           GHASEC_DISABLE_UPDATE_CHECK: "true"
-        run: ghasec || true
+        run: ghasec
       - name: Run ghasec (markdown output for PR comment)
         if: github.event_name == 'pull_request'
         env:
@@ -67,3 +69,6 @@ jobs:
           issue-number: ${{ github.event.pull_request.number }}
           body-path: /tmp/ghasec-result.md
           edit-mode: replace
+      - name: Fail if issues found
+        if: always() && steps.ghasec-log.outcome == 'failure'
+        run: exit 1
