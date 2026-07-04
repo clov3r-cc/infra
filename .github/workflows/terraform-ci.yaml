@@ -10,6 +10,7 @@ permissions: {}
 jobs:
   find_envs:
     name: Find environments
+    timeout-minutes: 5
     runs-on: ubuntu-24.04
     outputs:
       matrix: ${{ steps.output_matrix.outputs.matrix }}
@@ -22,6 +23,7 @@ jobs:
     name: Plan Terraform
     permissions:
       pull-requests: write
+    timeout-minutes: 30
     runs-on: ubuntu-24.04
     #  pull_request は Dependabot 以外のユーザーのみ、pull_request_target は Dependabot のみが実行できる
     # pull_request_target でないと、Dependabot の作成した PR において、secrets にあるトークンを読み取れず、Terraform CLI が失敗する

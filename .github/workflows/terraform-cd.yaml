@@ -10,6 +10,7 @@ concurrency:
 jobs:
   find_envs:
     name: Find environments
+    timeout-minutes: 5
     runs-on: ubuntu-24.04
     outputs:
       matrix: ${{ steps.output_matrix.outputs.matrix }}
