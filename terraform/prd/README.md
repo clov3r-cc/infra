@@ -25,7 +25,7 @@
 ### Ansible インベントリ
 
 Ansible プロバイダーを用いて、Terraform で作成した VM のインベントリ（グループ・ホスト）を管理しています。
-[`ansible/prd`](../../ansible/prd/) の動的インベントリとして参照されます。
+[`ansible/inventories/prd`](../../ansible/inventories/prd/) の動的インベントリとして参照されます。
 
 ## リリース方法
 

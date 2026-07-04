@@ -1,8 +1,68 @@
 # `infra`/`ansible`
 
-Ansible を用いて、サーバーの設定管理を行うディレクトリです。
+サーバー設定管理を行う Ansible プロジェクトです。roles/ と playbooks/ は全環境で共有し、インベントリ・group_vars・host_vars のみ環境ごとに分離しています。
 
-## ディレクトリ構成
+## 構成
 
-- [`prd`](./prd/)
-  - 本番環境の Ansible プロジェクトです。詳細は、[ディレクトリ内の README](./prd/README.md) を参照してください。
+```
+ansible/
+├── ansible.cfg
+├── requirements.yml
+├── files/
+├── roles/          # 全環境で共有
+├── playbooks/      # 全環境で共有
+└── inventories/
+    └── prd/        # 環境ごとのインベントリ、group_vars、host_vars
+```
+
+### インベントリ
+
+|        ファイル         |                                                                    説明                                                                    |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `inventory_src.yaml`    | `cloud.terraform.terraform_provider` プラグインを使い、[`terraform/prd`](../terraform/prd/) の State からホスト情報を動的に取得します。 |
+| `inventory_router.yaml` | ルーターのインベントリです。                                                                                                               |
+
+### プレイブック
+
+|        ファイル         | 対象ホストグループ |
+| ----------------------- | ------------------ |
+| `cloud-server.yaml`     | `cloud_server`     |
+| `dns-server.yaml`       | `dns_server`       |
+| `router.yaml`           | `router`           |
+| `tailscale-server.yaml` | `tailscale_server` |
+| `zabbix-server.yaml`    | `zabbix_server`    |
+
+## 実行方法
+
+`ansible/` ディレクトリ上で実行します。
+
+```bash
+cd ansible
+
+# 依存コレクションのインストール
+uv run ansible-galaxy collection install -r requirements.yml
+
+# インベントリの確認
+uv run ansible-inventory -i inventories/prd/inventory_src.yaml --list
+
+# プレイブックの実行
+uv run ansible-playbook -i inventories/prd/inventory_src.yaml playbooks/<playbook>.yaml
+```
+
+または `mise` タスクを利用できます。
+
+```bash
+# インベントリ一覧の表示
+mise run show-inventory
+
+# プレイブックの実行
+mise run play-ansible <playbook>.yaml
+
+# 全ホストへの疎通確認
+mise run ping
+```
+
+## Vault
+
+機密情報は [Ansible Vault](https://docs.ansible.com/ansible/latest/vault_guide/index.html) で暗号化しています。
+パスワードは [get_vault_password.sh](files/get_vault_password.sh) から取得します（`ansible.cfg` に設定済み）。
