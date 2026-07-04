@@ -1,0 +1,45 @@
+name: Run ghasec
+on:
+  pull_request:
+    paths:
+      - ".github/**/*.yaml"
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/**/*.yaml"
+permissions: {}
+jobs:
+  ghasec:
+    name: Run ghasec
+    timeout-minutes: 5
+    runs-on: ubuntu-24.04
+    permissions:
+      pull-requests: write
+      contents: read
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - uses: reviewdog/action-setup@33fcb41d80a48261d0696752dfad05eb721242a0 # v1.4.1
+        with:
+          reviewdog_version: latest
+      - uses: koki-develop/setup-ghasec@dcd08c7ea5af04eb641f695c8169e3efb0c22b32 # v1.0.1
+        with:
+          version: latest
+      - name: Run ghasec (log output)
+        env:
+          GHASEC_DISABLE_OFFLINE_WARNING: "true"
+          GHASEC_DISABLE_UPDATE_CHECK: "true"
+        run: ghasec || true
+      - name: Run ghasec (SARIF output for reviewdog)
+        if: github.event_name == 'pull_request'
+        env:
+          GHASEC_DISABLE_OFFLINE_WARNING: "true"
+          GHASEC_DISABLE_UPDATE_CHECK: "true"
+        run: ghasec --format sarif > /tmp/ghasec.sarif || true
+      - name: Run reviewdog
+        if: github.event_name == 'pull_request'
+        env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: reviewdog -f=sarif -reporter=github-pr-review < /tmp/ghasec.sarif
