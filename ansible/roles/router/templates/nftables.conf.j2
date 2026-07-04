@@ -93,6 +93,18 @@ FQDN__{{ fqdn | replace('.', '_') | replace('-', '_') }}
 
 flush ruleset
 
+{% if squid_dnat_ip is defined %}
+{% set dns_servers_group = fw_address_groups | selectattr('name', 'equalto', 'DNS_SERVERS') | first %}
+table ip nat {
+    chain prerouting {
+        type nat hook prerouting priority 0;
+        ip saddr { {{ dns_servers_group.addresses | join(', ') }} } return
+        tcp dport 80 dnat to {{ squid_dnat_ip }}:{{ squid_dnat_http_port | default(3129) }}
+        tcp dport 443 dnat to {{ squid_dnat_ip }}:{{ squid_dnat_https_port | default(3130) }}
+    }
+}
+{% endif %}
+
 table ip filter {
 
     # ---------------------------------------------------------------- #
