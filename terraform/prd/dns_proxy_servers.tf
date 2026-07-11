@@ -3,7 +3,7 @@ locals {
     "01" = {
       host_name           = local.pve_hosts["prd-pve-01"]["host_name"]
       vm_id               = 203
-      dmz_nw_host_section = 6
+      dmz_nw_host_section = 7
       cpu_socket          = 1
       cpu_core            = 2
       memory              = 1024 * 2
@@ -12,7 +12,7 @@ locals {
     "02" = {
       host_name           = local.pve_hosts["prd-pve-01"]["host_name"]
       vm_id               = 204
-      dmz_nw_host_section = 7
+      dmz_nw_host_section = 8
       cpu_socket          = 1
       cpu_core            = 2
       memory              = 1024 * 2

@@ -2,8 +2,8 @@
 squid_ca_common_name: "{{ inventory_hostname | regex_replace('-0[12]$', '') }}.labo.clov3r.cc"
 keepalived_password: "{{ vault_keepalived_password }}"
 keepalived_vrrp_instances:
-  - name: DPX
+  - name: Proxy
     interface: eth0
     virtual_router_id: 23
     virtual_ipaddresses:
-      - 192.168.20.24/28
+      - 192.168.20.22/28

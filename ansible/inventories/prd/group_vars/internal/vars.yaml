@@ -1,6 +1,6 @@
 ---
 dns_nameservers:
-  - 192.168.20.22  # AdGuardHome (prd-dpx-01)
-  - 192.168.20.23  # AdGuardHome (prd-dpx-02)
+  - 192.168.20.23  # AdGuardHome (prd-dpx-01)
+  - 192.168.20.24  # AdGuardHome (prd-dpx-02)
 ntp_servers:
   - 192.168.20.1
