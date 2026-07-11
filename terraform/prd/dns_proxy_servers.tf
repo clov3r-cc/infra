@@ -80,7 +80,7 @@ resource "proxmox_vm_qemu" "dns_proxy_server" {
   agent              = 1
   clone              = local.vm_template__alma
   full_clone         = true
-  tags               = "${local.env};terraform;dns-server"
+  tags               = "${local.env};terraform;dns-server;proxy-server"
   qemu_os            = "l26"
 
   startup_shutdown {
