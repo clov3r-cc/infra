@@ -102,8 +102,8 @@ fw_address_groups:
       - 192.168.20.19
   - name: DNS_SERVERS
     addresses:
-      - 192.168.20.22
       - 192.168.20.23
+      - 192.168.20.24
   - name: FW_SERVICE_VIP
     addresses:
       - 192.168.21.3

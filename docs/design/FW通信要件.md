@@ -78,7 +78,7 @@ nftables を使用し、IPv4 ゾーンベースファイアウォールで実装
 | `FW-DMZ-VIP`        | 192.168.20.17                | FW (DMZ VIP)        |
 | `FW-DMZ-NODES`      | 192.168.20.18, 192.168.20.19 | FW 01/02 (DMZ)      |
 | `TAILSCALE-NODES`   | 192.168.20.20, 192.168.20.21 | Tailscale ノード    |
-| `DNS-SERVERS`       | 192.168.20.22, 192.168.20.23 | DNS/Proxy サーバ    |
+| `DNS-SERVERS`       | 192.168.20.23, 192.168.20.24 | DNS/Proxy サーバ    |
 | `FW-SERVICE-VIP`    | 192.168.21.3                 | FW (SERVICE VIP)    |
 | `FW-SERVICE-NODES`  | 192.168.21.4, 192.168.21.5   | FW 01/02 (SERVICE)  |
 | `ACCESS-SWITCHES`   | 192.168.22.1                 | L2 スイッチ         |

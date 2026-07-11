@@ -7,12 +7,12 @@
       - keepalived
     state: present
 
-- name: Set first dpx host fact
+- name: Set first host fact
   ansible.builtin.set_fact:
-    _squid_first_host: "{{ groups['dns_server'] | sort | first }}"
+    _squid_first_host: "{{ groups['proxy_server'] | sort | first }}"
   run_once: true
 
-- name: Generate squid CA cert on first dpx host
+- name: Generate squid CA cert on first host
   become: true
   when: inventory_hostname == _squid_first_host
   ansible.builtin.command: >-
@@ -25,7 +25,7 @@
   changed_when: true
   no_log: true
 
-- name: Slurp squid CA cert from first dpx host
+- name: Slurp squid CA cert from first host
   become: true
   when: inventory_hostname == _squid_first_host
   ansible.builtin.slurp:
@@ -33,7 +33,7 @@
   register: _squid_ca_cert
   no_log: true
 
-- name: Slurp squid CA key from first dpx host
+- name: Slurp squid CA key from first host
   become: true
   when: inventory_hostname == _squid_first_host
   ansible.builtin.slurp:
