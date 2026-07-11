@@ -1,0 +1,8 @@
+{% if proxy_server_url is defined %}
+export http_proxy={{ proxy_server_url }}
+export https_proxy={{ proxy_server_url }}
+export HTTP_PROXY={{ proxy_server_url }}
+export HTTPS_PROXY={{ proxy_server_url }}
+export no_proxy={{ proxy_no_proxy | default('192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,.labo.clov3r.cc,localhost') }}
+export NO_PROXY=$no_proxy
+{% endif %}

@@ -1,0 +1,19 @@
+---
+- name: Deploy system-wide proxy settings
+  become: true
+  when: proxy_server_url is defined
+  ansible.builtin.template:
+    src: proxy.sh.j2
+    dest: /etc/profile.d/proxy.sh
+    mode: '0644'
+
+- name: Configure dnf proxy
+  become: true
+  when: proxy_server_url is defined
+  community.general.ini_file:
+    path: /etc/dnf/dnf.conf
+    section: main
+    option: proxy
+    value: "{{ proxy_server_url }}"
+    state: present
+    no_extra_spaces: true

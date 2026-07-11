@@ -1,5 +1,4 @@
 ---
-squid_ca_common_name: "{{ inventory_hostname | regex_replace('-0[12]$', '') }}.labo.clov3r.cc"
 keepalived_password: "{{ vault_keepalived_password }}"
 keepalived_vrrp_instances:
   - name: Proxy

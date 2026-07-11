@@ -1,4 +1,6 @@
 ---
+- name: Fix eth1 DNS contamination
+  ansible.builtin.import_tasks: fix-eth1-dns.yaml
 - name: Setup Pacemaker
   ansible.builtin.import_tasks: pacemaker.yaml
 - name: Setup Pacemaker QDevice

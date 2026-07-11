@@ -1,0 +1,10 @@
+# dnsmasq nftset configuration – managed by Ansible.
+# Dynamically updates nftables sets when DNS queries resolve these domains.
+# The resolved IPs are added to the corresponding nft set BEFORE the reply
+# is returned to the client, ensuring DMZ-TO-WAN rules match immediately.
+
+{% for group in fw_domain_groups | default([]) %}
+{% for domain in group.domains %}
+nftset=/{{ domain }}/4#ip#filter#{{ group.name }}
+{% endfor %}
+{% endfor %}

@@ -29,6 +29,7 @@
   - [6.11. LOCAL → DMZ](#611-local--dmz)
   - [6.12. LOCAL → SERVICE](#612-local--service)
   - [6.13. LOCAL → INTERNAL](#613-local--internal)
+- [7. NAT（透過プロキシ）](#7-nat透過プロキシ)
 
 <!-- /code_chunk_output -->
 
@@ -86,6 +87,7 @@ nftables を使用し、IPv4 ゾーンベースファイアウォールで実装
 | `FW-INTERNAL-NODES` | 192.168.22.4, 192.168.22.5   | FW 01/02 (INTERNAL) |
 | `NAS-SERVERS`       | 192.168.22.6                 | NAS サーバ          |
 | `ZABBIX-SERVERS`    | 192.168.22.8, 192.168.22.9   | Zabbix サーバ       |
+| `DNS-PROXY-VIP`     | 192.168.20.22                | DNS/Proxy VIP       |
 | `VRRP-MULTICAST`    | 224.0.0.18                   | VRRP マルチキャスト |
 
 ### 4.3. domain-group
@@ -100,7 +102,7 @@ nftables を使用し、IPv4 ゾーンベースファイアウォールで実装
 | `LETSENCRYPT`            | `acme-v02.api.letsencrypt.org`                                                                                                                                                                      | Let's Encrypt ACME                                 |
 | `CLOUDFLARE-API`         | `api.cloudflare.com`                                                                                                                                                                                | Cloudflare API                                     |
 | `EASYLIST`               | `easylist.to`                                                                                                                                                                                       | AdGuardHome フィルタリスト                         |
-| `DEBIAN-MIRRORS`         | `deb.debian.org, security.debian.org`                                                                                                                                                               | Debian パッケージミラー                            |
+| `DEBIAN-MIRRORS`         | `deb.debian.org, security.debian.org, debian.map.fastly.net`                                                                                                                                        | Debian パッケージミラー                            |
 | `TAILSCALE-DERP-CAPTIVE` | `derp7e.tailscale.com, derp7f.tailscale.com, derp7g.tailscale.com, derp7h.tailscale.com`                                                                                                            | Tailscale キャプティブポータル検出用 DERP ドメイン |
 
 ## 5. ルール番号規則
@@ -163,9 +165,7 @@ Tailscale の通信要件: [What firewall ports should I open to use Tailscale?]
 |  12   | `TAILSCALE-NODES` |   accept   |    TCP     |     any      |      22      |       `PVE-NODES`        | Proxmox SSH                                     |
 |  20   | `TAILSCALE-NODES` |   accept   |    UDP     |    41641     |     any      |           any            | Tailscale WireGuard 直接トンネル                |
 |  30   | `TAILSCALE-NODES` |   accept   |    UDP     |     any      |     3478     |           any            | Tailscale STUN                                  |
-|  40   |   `DNS-SERVERS`   |   accept   |    TCP     |     any      |   80, 443    |   `ALMALINUX-MIRRORS`    | AlmaLinux・MariaDB パッケージミラー             |
-|  41   |   `DNS-SERVERS`   |   accept   |    TCP     |     any      |   80, 443    |     `ELREPO-MIRRORS`     | ELRepo パッケージミラー                         |
-|  42   |   `DNS-SERVERS`   |   accept   |    TCP     |     any      |     443      |          `COPR`          | COPR パッケージ取得                             |
+|  40   |   `DNS-SERVERS`   |   accept   |    TCP     |     any      |   80, 443    |   `ALMALINUX-MIRRORS`    | AlmaLinux OS 更新                               |
 |  43   |   `DNS-SERVERS`   |   accept   |    TCP     |     any      |     443      |        `ADGUARD`         | AdGuardHome アップデート・フィルタリスト        |
 |  44   |   `DNS-SERVERS`   |   accept   |    TCP     |     any      |     443      |         `GITHUB`         | lego バイナリダウンロード                       |
 |  45   |   `DNS-SERVERS`   |   accept   |    TCP     |     any      |     443      |      `LETSENCRYPT`       | Let's Encrypt ACME API                          |
@@ -188,6 +188,7 @@ Tailscale の通信要件: [What firewall ports should I open to use Tailscale?]
 |  211  |   `DNS-SERVERS`   |   accept   |  UDP/TCP   |      53      | `FW-DMZ-NODES` | DNS                  |
 |  950  | `TAILSCALE-NODES` |    drop    |    UDP     |     5351     |       -        | NAT-PMP (ログ抑制)   |
 |  951  | `TAILSCALE-NODES` |    drop    |    UDP     |     1900     |       -        | UPnP/SSDP (ログ抑制) |
+|  952  |   `DNS-SERVERS`   |    drop    | Proto 112  |      -       |       -        | VRRP (ログ抑制)      |
 
 ### 6.5. DMZ → INTERNAL
 
@@ -268,3 +269,13 @@ Tailscale の通信要件: [What firewall ports should I open to use Tailscale?]
 |  25   |   -    |    UDP     | 33434-33534  |       any        | traceroute |
 
 > **Note**: VRRP（Proto 112）はマルチキャスト（224.0.0.18）を使った双方向独立送信のため、セッション追跡ができません。そのため 各ゾーン発着それぞれ両方向に明示的なルールが必要です。
+
+## 7. NAT（透過プロキシ）
+
+HTTP/HTTPS 通信を透過的に Squid プロキシへ転送するため、nftables の `nat` テーブルで DNAT を設定します。
+`DNS-SERVERS` からの通信は除外し、それ以外の全ゾーンからの HTTP/HTTPS 通信をプロキシへ DNAT します。
+
+|    種別    | プロトコル | 宛先ポート |     DNAT 送信先      |
+| :--------: | :--------: | :--------: | :------------------: |
+| prerouting |    TCP     |     80     | `DNS-PROXY-VIP`:3129 |
+| prerouting |    TCP     |    443     | `DNS-PROXY-VIP`:3130 |

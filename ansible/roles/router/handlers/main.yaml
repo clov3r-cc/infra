@@ -27,3 +27,9 @@
   ansible.builtin.systemd_service:
     name: keepalived
     state: restarted
+
+- name: Restart dnsmasq
+  become: true
+  ansible.builtin.systemd_service:
+    name: dnsmasq
+    state: restarted

@@ -1,14 +1,9 @@
 ---
 squid_http_port: 3128
-squid_intercept_port: 3129
-squid_ssl_bump_port: 3130
 squid_cache_dir: /var/spool/squid
-squid_ssl_db_size_mb: 10
 squid_cache_size_mb: 5000
 squid_cache_mem_mb: 512
 squid_max_object_size_mb: 512
-squid_ca_cert_path: /etc/squid/squid-ca.crt
-squid_ca_key_path: /etc/squid/squid-ca.key
 squid_allowed_networks:
   - 192.168.0.0/16
   - 10.0.0.0/8

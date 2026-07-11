@@ -28,8 +28,6 @@ http_access allow localnet
 http_access deny all
 
 http_port {{ squid_http_port }}
-http_port {{ squid_intercept_port }} intercept
-https_port {{ squid_ssl_bump_port }} intercept ssl-bump cert={{ squid_ca_cert_path }} key={{ squid_ca_key_path }}
 
 cache_dir ufs {{ squid_cache_dir }} {{ squid_cache_size_mb }} 16 256
 cache_mem {{ squid_cache_mem_mb }} MB

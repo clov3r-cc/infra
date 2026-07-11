@@ -132,31 +132,13 @@ fw_rulesets:
           port: 3478
       - number: 40
         action: accept
-        description: Allow HTTPS to AlmaLinux mirrors from DNS_SERVERS
+        description: Allow HTTPS to AlmaLinux mirrors for OS update from DNS_SERVERS
         protocol: tcp
         source:
           address_group: DNS_SERVERS
         destination:
           domain_group: ALMALINUX_MIRRORS
           port: "80,443"
-      - number: 41
-        action: accept
-        description: Allow HTTPS to ELRepo mirrors from DNS_SERVERS
-        protocol: tcp
-        source:
-          address_group: DNS_SERVERS
-        destination:
-          domain_group: ELREPO_MIRRORS
-          port: "80,443"
-      - number: 42
-        action: accept
-        description: Allow HTTPS to COPR from DNS_SERVERS
-        protocol: tcp
-        source:
-          address_group: DNS_SERVERS
-        destination:
-          domain_group: COPR
-          port: 443
       - number: 43
         action: accept
         description: Allow HTTPS to AdGuard updates from DNS_SERVERS
@@ -309,6 +291,12 @@ fw_rulesets:
           address_group: TAILSCALE_NODES
         destination:
           port: 1900
+      - number: 952
+        action: drop
+        description: Silently drop VRRP from DNS_SERVERS
+        protocol: "112"
+        source:
+          address_group: DNS_SERVERS
 
   - name: DMZ-TO-INTERNAL
     default_action: drop
@@ -417,15 +405,24 @@ fw_rulesets:
         destination:
           address_group: DNS_SERVERS
           port: 53
-      - number: 20
+      - number: 30
         action: accept
-        description: Allow HTTPS to DNS_SERVERS for repo mirror from ZABBIX_SERVERS
+        description: Allow Squid explicit proxy from ZABBIX_SERVERS to DNS_PROXY_VIP
         protocol: tcp
         source:
           address_group: ZABBIX_SERVERS
         destination:
-          address_group: DNS_SERVERS
-          port: 443
+          address_group: DNS_PROXY_VIP
+          port: 3128
+      - number: 35
+        action: accept
+        description: Allow Squid explicit proxy from NAS_SERVERS to DNS_PROXY_VIP
+        protocol: tcp
+        source:
+          address_group: NAS_SERVERS
+        destination:
+          address_group: DNS_PROXY_VIP
+          port: 3128
 
   - name: INTERNAL-TO-LOCAL
     default_action: drop

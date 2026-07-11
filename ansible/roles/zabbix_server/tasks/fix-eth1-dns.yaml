@@ -1,0 +1,11 @@
+---
+- name: Fix eth1 DNS contamination
+  become: true
+  when: ansible_facts['os_family'] == 'RedHat'
+  community.general.nmcli:
+    conn_name: "cloud-init eth1"
+    type: ethernet
+    dns4: []
+    dns4_ignore_auto: true
+    state: present
+  notify: Reload NetworkManager connection eth1

@@ -1,0 +1,25 @@
+---
+- name: Install dnsmasq
+  become: true
+  ansible.builtin.package:
+    name: dnsmasq
+    state: present
+
+- name: Create dnsmasq drop-in directory
+  become: true
+  ansible.builtin.file:
+    path: /etc/dnsmasq.d
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Deploy dnsmasq nftset configuration
+  become: true
+  ansible.builtin.template:
+    src: dnsmasq-nftset.conf.j2
+    dest: /etc/dnsmasq.d/nftset.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart dnsmasq

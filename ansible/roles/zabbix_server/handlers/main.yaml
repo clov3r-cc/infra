@@ -1,4 +1,9 @@
 ---
+- name: Reload NetworkManager connection eth1
+  become: true
+  ansible.builtin.command: nmcli con up "cloud-init eth1"
+  changed_when: true
+
 - name: Restart corosync
   become: true
   ansible.builtin.systemd_service:
