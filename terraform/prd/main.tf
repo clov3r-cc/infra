@@ -61,8 +61,8 @@ EOT
   vm_internal_nw_subnet_mask = split("/", local.vm_internal_nw_subnet_cidr)[1]
   vm_internal_nw_default_gw  = cidrhost(local.vm_internal_nw_subnet_cidr, 3)
   vm_adguard_ips = [
-    cidrhost(local.vm_dmz_nw_subnet_cidr, 6), # prd-dsq-01
-    cidrhost(local.vm_dmz_nw_subnet_cidr, 7), # prd-dsq-02
+    cidrhost(local.vm_dmz_nw_subnet_cidr, 6), # prd-dpx-01
+    cidrhost(local.vm_dmz_nw_subnet_cidr, 7), # prd-dpx-02
   ]
 
   # Zabbix Server Heartbeat network configuration

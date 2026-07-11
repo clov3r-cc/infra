@@ -1,0 +1,12 @@
+---
+- name: Restart squid
+  become: true
+  ansible.builtin.systemd:
+    name: squid
+    state: restarted
+
+- name: Restart keepalived
+  become: true
+  ansible.builtin.systemd:
+    name: keepalived
+    state: restarted
