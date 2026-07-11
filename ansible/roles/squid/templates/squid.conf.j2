@@ -2,13 +2,14 @@
 # Recommended minimum configuration:
 #
 
-acl localnet src 0.0.0.1-0.255.255.255  # RFC 1122 "this" network (LAN)
 {% for network in squid_allowed_networks %}
-acl localnet src {{ network }}{% endfor %}
+acl localnet src {{ network }}
+{% endfor %}
 
 acl SSL_ports port {{ squid_ssl_ports | join(' ') }}
 {% for port in squid_safe_ports %}
-acl Safe_ports port {{ port }}{% endfor %}
+acl Safe_ports port {{ port }}
+{% endfor %}
 
 #
 # Recommended minimum Access Permission configuration:

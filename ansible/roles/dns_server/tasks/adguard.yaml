@@ -112,19 +112,3 @@
     enabled: true
     state: started
 
-- name: Allow nginx to connect to upstream (SELinux)
-  become: true
-  ansible.posix.seboolean:
-    name: httpd_can_network_connect
-    state: true
-    persistent: true
-
-- name: Deploy nginx AdGuard Home proxy config
-  become: true
-  ansible.builtin.template:
-    src: nginx-adguard.conf.j2
-    dest: /etc/nginx/conf.d/AdGuardHome.conf
-    owner: root
-    group: root
-    mode: "0644"
-  notify: Reload nginx
