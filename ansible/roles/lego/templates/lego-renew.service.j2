@@ -10,9 +10,7 @@ ExecStart=/usr/local/bin/lego \
   --email {{ lego_email }} \
   --dns {{ lego_dns_provider }} \
   --accept-tos \
-{% for domain in lego_domains %}
-  --domains {{ domain }} \
-{% endfor %}
+  --domains {{ lego_domain }} \
   renew \
   --renew-hook "systemctl reload nginx && systemctl restart AdGuardHome"
 StandardOutput=append:/var/log/lego-renew.log

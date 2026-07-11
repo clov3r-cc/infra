@@ -56,7 +56,7 @@
 - name: Check if certificate already exists
   become: true
   ansible.builtin.stat:
-    path: "{{ lego_path }}/certificates/{{ lego_domains | first }}.crt"
+    path: "{{ lego_path }}/certificates/{{ lego_domain }}.crt"
   register: _lego_cert
 
 - name: Obtain initial certificate
@@ -67,8 +67,8 @@
       --path {{ lego_path }}
       --email {{ lego_email }}
       --dns {{ lego_dns_provider }}
+      --domains {{ lego_domain }}
       --accept-tos
-      {{ _lego_domain_args }}
       run
     executable: /bin/bash
   environment:
