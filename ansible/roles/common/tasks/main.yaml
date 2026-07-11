@@ -1,8 +1,8 @@
 ---
 - name: Configure DNS
   ansible.builtin.import_tasks: dns.yaml
-- name: Configure DNF local mirror
-  ansible.builtin.import_tasks: dnf-local-mirror.yaml
+- name: Flush DNS handlers
+  ansible.builtin.meta: flush_handlers
 - name: Install packages
   ansible.builtin.import_tasks: packages.yaml
 - name: Setup package upgrade

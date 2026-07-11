@@ -104,6 +104,13 @@
     mode: "0640"
   notify: Restart squid
 
+- name: Initialize squid cache directory
+  become: true
+  ansible.builtin.command: squid -z
+  args:
+    creates: "{{ squid_cache_dir }}/swap.state"
+  changed_when: false
+
 - name: Enable and start squid
   become: true
   ansible.builtin.systemd:
