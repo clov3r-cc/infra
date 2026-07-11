@@ -1,7 +1,7 @@
 #!/usr/sbin/nft -f
 
 {# ------------------------------------------------------------------ #}
-{# Macros                                                              #}
+{# Macros                                                             #}
 {# ------------------------------------------------------------------ #}
 
 {%- macro port_expr(port) -%}
@@ -77,7 +77,7 @@ FQDN__{{ fqdn | replace('.', '_') | replace('-', '_') }}
 {%- endmacro -%}
 
 {# ------------------------------------------------------------------ #}
-{# Collect unique FQDNs from all rulesets                              #}
+{# Collect unique FQDNs from all rulesets                             #}
 {# ------------------------------------------------------------------ #}
 
 {%- set fqdn_ns = namespace(items=[]) -%}
@@ -92,6 +92,10 @@ FQDN__{{ fqdn | replace('.', '_') | replace('-', '_') }}
 {%- endfor -%}
 
 flush ruleset
+
+# ---------------------------------------------------------------- #
+# NAT for HTTP/HTTPS Proxy                                         #
+# ---------------------------------------------------------------- #
 
 {% if squid_dnat_ip is defined %}
 {% set dns_servers_group = fw_address_groups | selectattr('name', 'equalto', 'DNS_SERVERS') | first %}
@@ -108,7 +112,7 @@ table ip nat {
 table ip filter {
 
     # ---------------------------------------------------------------- #
-    # Network groups                                                    #
+    # Network groups                                                   #
     # ---------------------------------------------------------------- #
 {% for group in fw_network_groups %}
     set {{ group.name }} {
@@ -119,7 +123,7 @@ table ip filter {
 {% endfor %}
 
     # ---------------------------------------------------------------- #
-    # Address groups                                                    #
+    # Address groups                                                   #
     # ---------------------------------------------------------------- #
 {% for group in fw_address_groups %}
     set {{ group.name }} {
@@ -150,7 +154,7 @@ table ip filter {
 {% endfor %}
 
     # ---------------------------------------------------------------- #
-    # Ruleset chains                                                    #
+    # Ruleset chains                                                   #
     # ---------------------------------------------------------------- #
 {% for ruleset in fw_rulesets %}
     chain {{ ruleset.name }} {
@@ -167,7 +171,7 @@ table ip filter {
 {% endfor %}
 
     # ---------------------------------------------------------------- #
-    # Base chains                                                       #
+    # Base chains                                                      #
     # ---------------------------------------------------------------- #
     chain input {
         type filter hook input priority 0; policy drop;
