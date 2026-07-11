@@ -1,21 +1,5 @@
 #region Proxmox VE
 
-output "dns_servers__prd" {
-  value = [for vm in proxmox_vm_qemu.dns_server : {
-    host_name   = vm.current_node
-    id          = vm.vmid
-    name        = vm.name
-    description = vm.description
-    ethernet_adapters = {
-      ip0 = {
-        bridge          = vm.network[0].bridge
-        ip_address      = trimprefix(split(",", vm.ipconfig0)[0], "ip=")
-        default_gateway = trimprefix(split(",", vm.ipconfig0)[1], "gw=")
-      }
-    }
-  }]
-}
-
 output "zabbix_servers__prd" {
   value = [for vm in proxmox_vm_qemu.zabbix_server : {
     host_name   = vm.current_node
