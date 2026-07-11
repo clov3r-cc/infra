@@ -111,6 +111,22 @@
     creates: "{{ squid_cache_dir }}/swap.state"
   changed_when: false
 
+- name: Initialize SSL certificate database for ssl-bump
+  become: true
+  ansible.builtin.command: >-
+    /usr/lib64/squid/security_file_certgen -c -s /var/spool/squid/ssl_db -M {{ squid_ssl_db_size_mb }}
+  args:
+    creates: /var/spool/squid/ssl_db/index.txt
+  changed_when: false
+
+- name: Set ownership of SSL certificate database
+  become: true
+  ansible.builtin.file:
+    path: /var/spool/squid/ssl_db
+    owner: squid
+    group: squid
+    recurse: true
+
 - name: Enable and start squid
   become: true
   ansible.builtin.systemd:
