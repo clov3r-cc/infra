@@ -216,11 +216,12 @@ Tailscale の通信要件: [What firewall ports should I open to use Tailscale?]
 
 ### 6.8. INTERNAL → DMZ
 
-| Rule  |      送信元      | プロトコル | 送信先ポート | 送信先アドレス |       目的       |
-| :---: | :--------------: | :--------: | :----------: | :------------: | ---------------- |
-|  10   | `ZABBIX-SERVERS` |  UDP/TCP   |      53      | `DNS-SERVERS`  | DNS              |
-|  11   |  `NAS-SERVERS`   |  UDP/TCP   |      53      | `DNS-SERVERS`  | DNS              |
-|  20   | `ZABBIX-SERVERS` |    TCP     |     443      | `DNS-SERVERS`  | リポジトリミラー |
+| Rule  |      送信元      | プロトコル | 送信先ポート | 送信先アドレス  |       目的        |
+| :---: | :--------------: | :--------: | :----------: | :-------------: | ----------------- |
+|  10   | `ZABBIX-SERVERS` |  UDP/TCP   |      53      |  `DNS-SERVERS`  | DNS               |
+|  11   |  `NAS-SERVERS`   |  UDP/TCP   |      53      |  `DNS-SERVERS`  | DNS               |
+|  30   | `ZABBIX-SERVERS` |    TCP     |     3128     | `DNS-PROXY-VIP` | 非透過 HTTP proxy |
+|  35   |  `NAS-SERVERS`   |    TCP     |     3128     | `DNS-PROXY-VIP` | 非透過 HTTP proxy |
 
 ### 6.9. INTERNAL → LOCAL
 
