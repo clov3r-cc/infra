@@ -5,5 +5,10 @@
   roles:
     - common
     - lego
+    - adguard
+
+- name: Configure Proxy servers
+  hosts: proxy_server
+  gather_facts: true
+  roles:
     - squid
-    - dns_server

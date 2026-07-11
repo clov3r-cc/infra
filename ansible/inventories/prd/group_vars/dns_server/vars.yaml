@@ -1,14 +1,9 @@
 ---
-dnf_local_mirror_urls: []  # ミラーサーバ自身はアップストリームを使う
-nginx_cert_domain: "{{ inventory_hostname }}.labo.clov3r.cc"
-squid_ca_common_name: "{{ inventory_hostname | regex_replace('-0[12]$', '') }}.labo.clov3r.cc"
-
 lego_version: "4.33.0"  # 初回インストール時のバージョン
 lego_path: /etc/lego
 lego_email: me@clov3r.cc
+lego_domain: "{{ inventory_hostname }}.labo.clov3r.cc"
 lego_dns_provider: cloudflare
-lego_domains:
-  - "{{ nginx_cert_domain }}"
 lego_cloudflare_api_token: "{{ vault_lego_cloudflare_api_token }}"
 
 adguard_version: "0.107.73"  # 初回インストール時のバージョン（以降はAdGuard Homeの自動更新に委ねる）
@@ -46,14 +41,6 @@ adguard_blocked_services:
   - tinder
   - wizz
   - xiaohongshu
-keepalived_password: "{{ vault_keepalived_password }}"
-keepalived_vrrp_instances:
-  - name: DPX
-    interface: eth0
-    virtual_router_id: 23
-    virtual_ipaddresses:
-      - 192.168.20.24/28
-
 adguard_rewrites:
   - domain: prd-dpx-01.labo.clov3r.cc
     answer: 192.168.20.22
