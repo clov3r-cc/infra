@@ -74,7 +74,7 @@ resource "proxmox_vm_qemu" "dns_proxy_server" {
   name               = "${local.env}-dpx-${format("%02d", tonumber(each.key))}"
   target_node        = each.value.host_name
   vmid               = each.value.vm_id
-  description        = "Linux VM to manage something. This VM is managed by Terraform."
+  description        = "DNS and Proxy server. This VM is managed by Terraform."
   bios               = "seabios"
   start_at_node_boot = true
   agent              = 1
