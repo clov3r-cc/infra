@@ -37,6 +37,8 @@ maximum_object_size {{ squid_max_object_size_mb }} MB
 
 coredump_dir {{ squid_cache_dir }}
 
+dns_v4_first on
+
 refresh_pattern ^ftp:           1440    20%     10080
 refresh_pattern -i (/cgi-bin/|\?) 0     0%      0
 refresh_pattern .               0       20%     4320
