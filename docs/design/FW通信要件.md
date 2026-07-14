@@ -29,7 +29,6 @@
   - [6.11. LOCAL → DMZ](#611-local--dmz)
   - [6.12. LOCAL → SERVICE](#612-local--service)
   - [6.13. LOCAL → INTERNAL](#613-local--internal)
-- [7. NAT（透過プロキシ）](#7-nat透過プロキシ)
 
 <!-- /code_chunk_output -->
 
@@ -269,13 +268,3 @@ Tailscale の通信要件: [What firewall ports should I open to use Tailscale?]
 |  25   |   -    |    UDP     | 33434-33534  |       any        | traceroute |
 
 > **Note**: VRRP（Proto 112）はマルチキャスト（224.0.0.18）を使った双方向独立送信のため、セッション追跡ができません。そのため 各ゾーン発着それぞれ両方向に明示的なルールが必要です。
-
-## 7. NAT（透過プロキシ）
-
-HTTP/HTTPS 通信を透過的に Squid プロキシへ転送するため、nftables の `nat` テーブルで DNAT を設定します。
-`DNS-SERVERS` からの通信は除外し、それ以外の全ゾーンからの HTTP/HTTPS 通信をプロキシへ DNAT します。
-
-|    種別    | プロトコル | 宛先ポート |     DNAT 送信先      |
-| :--------: | :--------: | :--------: | :------------------: |
-| prerouting |    TCP     |     80     | `DNS-PROXY-VIP`:3129 |
-| prerouting |    TCP     |    443     | `DNS-PROXY-VIP`:3130 |
