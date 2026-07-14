@@ -116,7 +116,7 @@ table ip filter {
 {% endfor %}
 
     # ---------------------------------------------------------------- #
-    # Domain group sets  (populated by dnsmasq nftset)                 #
+    # Domain group sets  (populated by nftset-warmup timer)             #
     # ---------------------------------------------------------------- #
 {% for group in fw_domain_groups | default([]) %}
     set {{ group.name }} {
@@ -126,7 +126,7 @@ table ip filter {
 {% endfor %}
 
     # ---------------------------------------------------------------- #
-    # FQDN sets  (populated by dnsmasq nftset)                         #
+    # FQDN sets  (populated by nftset-warmup timer)                    #
     # ---------------------------------------------------------------- #
 {% for fqdn in fqdn_ns.items %}
     set {{ fqdn_set_name(fqdn) }} {

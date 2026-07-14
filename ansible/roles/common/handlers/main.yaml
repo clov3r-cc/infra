@@ -16,8 +16,3 @@
   ansible.builtin.command: nmcli con up "cloud-init eth0"
   changed_when: true
 
-- name: Restart systemd-resolved
-  become: true
-  ansible.builtin.systemd_service:
-    name: systemd-resolved
-    state: restarted

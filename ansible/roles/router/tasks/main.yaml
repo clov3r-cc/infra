@@ -1,12 +1,9 @@
 ---
-- name: Configure systemd-resolved
-  ansible.builtin.import_tasks: resolved.yaml
+- name: Configure dnsmasq
+  ansible.builtin.import_tasks: dnsmasq.yaml
 
 - name: Configure nftables
   ansible.builtin.import_tasks: nftables.yaml
-
-- name: Configure dnsmasq
-  ansible.builtin.import_tasks: dnsmasq.yaml
 
 - name: Configure keepalived
   ansible.builtin.import_tasks: keepalived.yaml

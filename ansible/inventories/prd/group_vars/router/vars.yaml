@@ -1,6 +1,4 @@
 ---
-dns_nameservers:
-  - 192.168.20.1
 ntp_servers:
   - 192.168.20.1
 keepalived_password: "{{ vault_keepalived_password }}"

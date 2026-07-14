@@ -16,10 +16,10 @@
     name: systemd-networkd
     state: reloaded
 
-- name: Restart systemd-resolved
+- name: Restart dnsmasq
   become: true
   ansible.builtin.systemd_service:
-    name: systemd-resolved
+    name: dnsmasq
     state: restarted
 
 - name: Restart keepalived
@@ -28,8 +28,3 @@
     name: keepalived
     state: restarted
 
-- name: Restart dnsmasq
-  become: true
-  ansible.builtin.systemd_service:
-    name: dnsmasq
-    state: restarted

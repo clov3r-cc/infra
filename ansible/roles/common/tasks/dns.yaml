@@ -12,25 +12,28 @@
     state: present
   notify: Reload NetworkManager connection eth0
 
-- name: Create systemd-resolved drop-in directory
+- name: Stop and disable systemd-resolved (Debian)
   become: true
   when:
     - ansible_facts['os_family'] == 'Debian'
     - dns_nameservers is defined
-  ansible.builtin.file:
-    path: /etc/systemd/resolved.conf.d
-    state: directory
-    mode: '0755'
+  ansible.builtin.systemd_service:
+    name: systemd-resolved
+    state: stopped
+    enabled: false
+    masked: true
 
-- name: Configure DNS nameservers (systemd-resolved)
+- name: Set static /etc/resolv.conf (Debian)
   become: true
   when:
     - ansible_facts['os_family'] == 'Debian'
     - dns_nameservers is defined
   ansible.builtin.copy:
-    dest: /etc/systemd/resolved.conf.d/dns.conf
+    dest: /etc/resolv.conf
     content: |
-      [Resolve]
-      DNS={{ dns_nameservers | join(' ') }}
-    mode: '0644'
-  notify: Restart systemd-resolved
+      {% for ns in dns_nameservers %}
+      nameserver {{ ns }}
+      {% endfor %}
+    owner: root
+    group: root
+    mode: "0644"
