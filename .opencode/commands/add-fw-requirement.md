@@ -29,7 +29,7 @@ FW に通信要件を追加する。
 また、名前解決の結果は稼働系と待機系で共有されないので、keepalived の稼働系切り替わり時に、自身が稼働系である場合に名前解決をあらかじめ実行し、nftables に連携するスクリプトを実行する。
 
 - dnsmasq を構成するための Ansible の Playbook: ansible/roles/router/tasks/dnsmasq.yaml
-- dnsmasq の設定ファイルに用いるテンプレート: ansible/roles/router/templates/dnsmasq-router.conf.j2
+- dnsmasq の設定ファイルに用いるテンプレート: ansible/roles/router/templates/dnsmasq.conf.j2
 - dnsmasq によって名前解決された結果を nftables に反映するためのシェルスクリプトや nftables、keepalived の設定
   - ansible/roles/router/templates/nftset-warmup.sh.j2
   - ansible/roles/router/templates/dnsmasq-nftset.conf.j2
