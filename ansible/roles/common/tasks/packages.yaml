@@ -1,6 +1,5 @@
 ---
-- name: Install common packages (RedHat)
-  become: true
+- name: packages | Install common packages (RedHat)
   when: ansible_facts['os_family'] == 'RedHat'
   ansible.builtin.package:
     name:
@@ -13,8 +12,7 @@
       - unzip
     state: present
 
-- name: Install common packages (Debian)
-  become: true
+- name: packages | Install common packages (Debian)
   when: ansible_facts['os_family'] == 'Debian'
   ansible.builtin.package:
     name:

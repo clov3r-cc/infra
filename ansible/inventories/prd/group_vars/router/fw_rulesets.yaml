@@ -184,6 +184,24 @@ fw_rulesets:
         destination:
           domain_group: EASYLIST
           port: 443
+      - number: 48
+        action: accept
+        description: Allow HTTPS to ELRepo mirrors from DNS_SERVERS
+        protocol: tcp
+        source:
+          address_group: DNS_SERVERS
+        destination:
+          domain_group: ELREPO_MIRRORS
+          port: "80,443"
+      - number: 49
+        action: accept
+        description: Allow HTTPS to MariaDB mirrors from DNS_SERVERS
+        protocol: tcp
+        source:
+          address_group: DNS_SERVERS
+        destination:
+          domain_group: MARIADB_MIRRORS
+          port: "80,443"
       - number: 50
         action: accept
         description: Allow DNS from DNS_SERVERS to Cloudflare for SSL cert renewal DNS challenge

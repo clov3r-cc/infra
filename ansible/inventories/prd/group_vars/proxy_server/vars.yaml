@@ -1,6 +1,29 @@
 ---
-keepalived_password: "{{ vault_keepalived_password }}"
-keepalived_vrrp_instances:
+squid_http_port: 3128
+squid_cache_dir: /var/spool/squid
+squid_cache_size_mb: 5000
+squid_cache_mem_mb: 512
+squid_max_object_size_mb: 512
+squid_allowed_networks:
+  - 192.168.0.0/16
+  - 10.0.0.0/8
+  - 172.16.0.0/12
+squid_ssl_ports:
+  - 443
+squid_safe_ports:
+  - 80
+  - 21
+  - 443
+  - 70
+  - 210
+  - 1025-65535
+  - 280
+  - 488
+  - 591
+  - 777
+
+proxy_keepalived_password: "{{ vault_proxy_keepalived_password }}"
+proxy_keepalived_vrrp_instances:
   - name: Proxy
     interface: eth0
     virtual_router_id: 23

@@ -1,6 +1,5 @@
 ---
 - name: Install required packages
-  become: true
   ansible.builtin.package:
     name:
       - squid
@@ -8,7 +7,6 @@
     state: present
 
 - name: Create keepalived directory
-  become: true
   ansible.builtin.file:
     path: /etc/keepalived
     state: directory
@@ -17,7 +15,6 @@
     mode: "0755"
 
 - name: Deploy keepalived configuration
-  become: true
   ansible.builtin.template:
     src: keepalived.conf.j2
     dest: /etc/keepalived/keepalived.conf
@@ -27,14 +24,12 @@
   notify: Restart keepalived
 
 - name: Enable and start keepalived
-  become: true
   ansible.builtin.systemd_service:
     name: keepalived
     state: started
     enabled: true
 
 - name: Deploy squid configuration
-  become: true
   ansible.builtin.template:
     src: squid.conf.j2
     dest: /etc/squid/squid.conf
@@ -44,15 +39,13 @@
   notify: Restart squid
 
 - name: Initialize squid cache directory
-  become: true
   ansible.builtin.command: squid -z
   args:
     creates: "{{ squid_cache_dir }}/swap.state"
   changed_when: false
 
 - name: Enable and start squid
-  become: true
-  ansible.builtin.systemd:
+  ansible.builtin.systemd_service:
     name: squid
     daemon_reload: true
     enabled: true

@@ -1,13 +1,11 @@
 ---
-- name: Install qemu-guest-agent
-  become: true
+- name: qemu-guest-agent | Install qemu-guest-agent
   ansible.builtin.package:
     name: qemu-guest-agent
     state: present
   when: install_qemu_guest_agent | default(true)
 
-- name: Start and enable qemu-guest-agent
-  become: true
+- name: qemu-guest-agent | Start and enable qemu-guest-agent
   ansible.builtin.systemd_service:
     name: qemu-guest-agent
     state: started

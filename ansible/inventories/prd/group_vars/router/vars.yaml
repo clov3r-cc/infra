@@ -1,8 +1,8 @@
 ---
 ntp_servers:
   - 192.168.20.1
-keepalived_password: "{{ vault_keepalived_password }}"
-keepalived_vrrp_instances:
+router_keepalived_password: "{{ vault_router_keepalived_password }}"
+router_keepalived_vrrp_instances:
   - name: WAN
     interface: eth0
     virtual_router_id: 19

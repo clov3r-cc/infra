@@ -1,3 +1,0 @@
----
-- name: Configure SELinux permissive mode
-  ansible.builtin.import_tasks: selinux-permissive.yaml

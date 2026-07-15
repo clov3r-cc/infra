@@ -1,4 +1,4 @@
-# dnsmasq nftset configuration – managed by Ansible.
+# {{ ansible_managed }}
 # Dynamically updates nftables sets when DNS queries resolve these domains.
 
 {% for group in fw_domain_groups | default([]) %}

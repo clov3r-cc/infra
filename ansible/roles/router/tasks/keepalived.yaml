@@ -1,12 +1,10 @@
 ---
-- name: Install keepalived
-  become: true
+- name: keepalived | Install keepalived
   ansible.builtin.package:
     name: keepalived
     state: present
 
-- name: Deploy keepalived configuration
-  become: true
+- name: keepalived | Deploy keepalived configuration
   ansible.builtin.template:
     src: keepalived.conf.j2
     dest: /etc/keepalived/keepalived.conf
@@ -15,8 +13,7 @@
     mode: "0600"
   notify: Restart keepalived
 
-- name: Enable and start keepalived
-  become: true
+- name: keepalived | Enable and start keepalived
   ansible.builtin.systemd_service:
     name: keepalived
     state: started

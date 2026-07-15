@@ -1,22 +1,19 @@
 ---
-- name: Check if AdGuard Home binary exists
-  become: true
+- name: adguard | Check if AdGuard Home binary exists
   ansible.builtin.stat:
     path: /opt/AdGuardHome/AdGuardHome
-  register: dns_server_adguard_binary
+  register: __adguard_binary
 
-- name: Install AdGuard Home binary
-  when: not dns_server_adguard_binary.stat.exists
+- name: adguard | Install AdGuard Home binary
+  when: not __adguard_binary.stat.exists
   block:
-    - name: Download AdGuard Home archive
-      become: true
+    - name: adguard | Download AdGuard Home archive
       ansible.builtin.get_url:
         url: "https://github.com/AdguardTeam/AdGuardHome/releases/download/v{{ adguard_version }}/AdGuardHome_linux_amd64.tar.gz"
         dest: /tmp/AdGuardHome.tar.gz
         mode: "0644"
 
-    - name: Create install directory
-      become: true
+    - name: adguard | Create install directory
       ansible.builtin.file:
         path: /opt/AdGuardHome
         state: directory
@@ -24,8 +21,7 @@
         group: root
         mode: "0755"
 
-    - name: Extract AdGuard Home binary
-      become: true
+    - name: adguard | Extract AdGuard Home binary
       ansible.builtin.unarchive:
         src: /tmp/AdGuardHome.tar.gz
         dest: /opt/AdGuardHome
@@ -34,14 +30,12 @@
           - "--strip-components=2"
       notify: Restart AdGuardHome
 
-    - name: Remove archive
-      become: true
+    - name: adguard | Remove archive
       ansible.builtin.file:
         path: /tmp/AdGuardHome.tar.gz
         state: absent
 
-- name: Deploy AdGuard Home service file
-  become: true
+- name: adguard | Deploy AdGuard Home service file
   ansible.builtin.copy:
     src: AdGuardHome.service
     dest: /etc/systemd/system/AdGuardHome.service
@@ -50,11 +44,10 @@
     mode: "0644"
   notify: Restart AdGuardHome
 
-- name: Read existing AdGuard Home password hash
-  become: true
+- name: adguard | Read existing AdGuard Home password hash
   ansible.builtin.command:
     argv:
-      - python3
+      - "{{ ansible_playbook_python }}"
       - -c
       - |
         import yaml, sys
@@ -63,15 +56,15 @@
           print(config['users'][0]['password'])
         except Exception:
           print('')
-  register: dns_server_adguard_existing_hash
+  register: __adguard_existing_hash
   changed_when: false
   failed_when: false
   no_log: true
 
-- name: Generate bcrypt hash for AdGuard Home admin password
+- name: adguard | Generate bcrypt hash for AdGuard Home admin password
   ansible.builtin.command:
     argv:
-      - python3
+      - "{{ ansible_playbook_python }}"
       - -c
       - |
         import bcrypt, sys, json
@@ -82,14 +75,13 @@
           print(existing.decode())
         else:
           print(bcrypt.hashpw(pw, bcrypt.gensalt()).decode())
-    stdin: "{{ {'password': adguard_admin_password, 'existing': dns_server_adguard_existing_hash.stdout} | to_json }}"
-  register: dns_server_adguard_password_hash
+    stdin: "{{ {'password': adguard_admin_password, 'existing': __adguard_existing_hash.stdout} | to_json }}"
+  register: __adguard_password_hash
   changed_when: false
   delegate_to: localhost
   no_log: true
 
-- name: Deploy AdGuard Home configuration
-  become: true
+- name: adguard | Deploy AdGuard Home configuration
   ansible.builtin.template:
     src: AdGuardHome.yaml.j2
     dest: /opt/AdGuardHome/AdGuardHome.yaml
@@ -98,15 +90,13 @@
     mode: "0600"
   notify: Restart AdGuardHome
 
-- name: Restore SELinux context on AdGuard Home directory
-  become: true
+- name: adguard | Restore SELinux context on AdGuard Home directory
   ansible.builtin.command:
     cmd: restorecon -r /opt/AdGuardHome
   changed_when: false
 
-- name: Enable and start AdGuard Home
-  become: true
-  ansible.builtin.systemd:
+- name: adguard | Enable and start AdGuard Home
+  ansible.builtin.systemd_service:
     name: AdGuardHome
     daemon_reload: true
     enabled: true

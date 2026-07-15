@@ -20,6 +20,9 @@ fw_domain_groups:
       - mirrors.coreix.net
       - mirror.rackspace.com
       - linux-mirrors.fnal.gov
+  - name: MARIADB_MIRRORS
+    domains:
+      - mirror.stechnology.jp
   - name: COPR
     domains:
       - copr.fedorainfracloud.org

@@ -1,6 +1,5 @@
 ---
-- name: Fix eth1 DNS contamination
-  become: true
+- name: fix-eth1-dns | Fix eth1 DNS contamination
   when: ansible_facts['os_family'] == 'RedHat'
   community.general.nmcli:
     conn_name: "cloud-init eth1"

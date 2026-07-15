@@ -1,6 +1,5 @@
 ---
-- name: Deploy nftables configuration
-  become: true
+- name: nftables | Deploy nftables configuration
   ansible.builtin.template:
     src: nftables.conf.j2
     dest: /etc/nftables.conf
@@ -10,8 +9,7 @@
     validate: nft -c -f %s
   notify: Reload nftables
 
-- name: Deploy nftset warmup script
-  become: true
+- name: nftables | Deploy nftset warmup script
   ansible.builtin.template:
     src: nftset-warmup.sh.j2
     dest: /usr/local/sbin/nftset-warmup
@@ -19,8 +17,7 @@
     group: root
     mode: "0700"
 
-- name: Deploy nftset-warmup systemd service
-  become: true
+- name: nftables | Deploy nftset-warmup systemd service
   ansible.builtin.copy:
     dest: /etc/systemd/system/nftset-warmup.service
     owner: root
@@ -35,8 +32,7 @@
       ExecStart=/usr/local/sbin/nftset-warmup
   notify: Reload systemd daemon
 
-- name: Deploy nftset-warmup systemd timer
-  become: true
+- name: nftables | Deploy nftset-warmup systemd timer
   ansible.builtin.copy:
     dest: /etc/systemd/system/nftset-warmup.timer
     owner: root
@@ -54,8 +50,7 @@
       WantedBy=timers.target
   notify: Reload systemd daemon
 
-- name: Enable and start nftset-warmup timer
-  become: true
+- name: nftables | Enable and start nftset-warmup timer
   ansible.builtin.systemd_service:
     name: nftset-warmup.timer
     state: started

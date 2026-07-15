@@ -1,6 +1,5 @@
 ---
-- name: Configure DNS nameservers (NetworkManager)
-  become: true
+- name: dns | Configure DNS nameservers (NetworkManager)
   when:
     - ansible_facts['os_family'] == 'RedHat'
     - dns_nameservers is defined
@@ -12,8 +11,7 @@
     state: present
   notify: Reload NetworkManager connection eth0
 
-- name: Stop and disable systemd-resolved (Debian)
-  become: true
+- name: dns | Stop and disable systemd-resolved (Debian)
   when:
     - ansible_facts['os_family'] == 'Debian'
     - dns_nameservers is defined
@@ -23,8 +21,7 @@
     enabled: false
     masked: true
 
-- name: Set static /etc/resolv.conf (Debian)
-  become: true
+- name: dns | Set static /etc/resolv.conf (Debian)
   when:
     - ansible_facts['os_family'] == 'Debian'
     - dns_nameservers is defined

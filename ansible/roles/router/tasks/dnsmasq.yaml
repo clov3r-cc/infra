@@ -1,12 +1,10 @@
 ---
-- name: Install dnsmasq
-  become: true
+- name: dnsmasq | Install dnsmasq
   ansible.builtin.package:
     name: dnsmasq
     state: present
 
-- name: Deploy dnsmasq configuration
-  become: true
+- name: dnsmasq | Deploy dnsmasq configuration
   ansible.builtin.template:
     src: dnsmasq.conf.j2
     dest: /etc/dnsmasq.d/router.conf
@@ -15,8 +13,7 @@
     mode: '0644'
   notify: Restart dnsmasq
 
-- name: Deploy dnsmasq nftset configuration
-  become: true
+- name: dnsmasq | Deploy dnsmasq nftset configuration
   ansible.builtin.template:
     src: dnsmasq-nftset.conf.j2
     dest: /etc/dnsmasq.d/nftset.conf
@@ -25,27 +22,23 @@
     mode: '0644'
   notify: Restart dnsmasq
 
-- name: Stop and disable systemd-resolved
-  become: true
+- name: dnsmasq | Stop and disable systemd-resolved
   ansible.builtin.systemd_service:
     name: systemd-resolved
     state: stopped
     enabled: false
 
-- name: Remove resolved DNS config drop-in
-  become: true
+- name: dnsmasq | Remove resolved DNS config drop-in
   ansible.builtin.file:
     path: /etc/systemd/resolved.conf.d/dns.conf
     state: absent
 
-- name: Remove resolved stub-extra drop-in
-  become: true
+- name: dnsmasq | Remove resolved stub-extra drop-in
   ansible.builtin.file:
     path: /etc/systemd/resolved.conf.d/stub-extra.conf
     state: absent
 
-- name: Remove networkd DNS scope drop-ins
-  become: true
+- name: dnsmasq | Remove networkd DNS scope drop-ins
   ansible.builtin.file:
     path: "/etc/systemd/network/10-netplan-{{ item }}.network.d"
     state: absent
@@ -54,8 +47,7 @@
     - eth2
     - eth3
 
-- name: Set /etc/resolv.conf to use dnsmasq
-  become: true
+- name: dnsmasq | Set /etc/resolv.conf to use dnsmasq
   ansible.builtin.copy:
     dest: /etc/resolv.conf
     content: |
@@ -64,8 +56,7 @@
     group: root
     mode: "0644"
 
-- name: Enable and start dnsmasq
-  become: true
+- name: dnsmasq | Enable and start dnsmasq
   ansible.builtin.systemd_service:
     name: dnsmasq
     state: started

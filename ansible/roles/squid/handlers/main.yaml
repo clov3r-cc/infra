@@ -1,12 +1,10 @@
 ---
 - name: Restart squid
-  become: true
-  ansible.builtin.systemd:
+  ansible.builtin.systemd_service:
     name: squid
     state: restarted
 
 - name: Restart keepalived
-  become: true
-  ansible.builtin.systemd:
+  ansible.builtin.systemd_service:
     name: keepalived
     state: restarted

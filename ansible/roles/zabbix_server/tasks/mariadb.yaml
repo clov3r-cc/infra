@@ -1,7 +1,22 @@
 ---
-- name: Install MariaDB
-  when: "'zabbix_server' in group_names or 'zabbix_server__single' in group_names"
-  become: true
+- name: mariadb | Add MariaDB GPG key
+  environment:
+    https_proxy: "{{ proxy_server_url }}"
+  ansible.builtin.rpm_key:
+    key: https://mirror.stechnology.jp/mariadb/yum/RPM-GPG-KEY-MariaDB
+    state: present
+
+- name: mariadb | Add MariaDB repository
+  ansible.builtin.yum_repository:
+    name: mariadb
+    description: MariaDB
+    baseurl: https://mirror.stechnology.jp/mariadb/yum/11.8/rhel/$releasever/$basearch
+    gpgkey: https://mirror.stechnology.jp/mariadb/yum/RPM-GPG-KEY-MariaDB
+    gpgcheck: true
+    enabled: true
+
+- name: mariadb | Install MariaDB
+  when: "inventory_hostname in groups[zabbix_server_zabbix_group] or 'zabbix_server__single' in group_names"
   ansible.builtin.package:
     name:
       - MariaDB-client
@@ -9,9 +24,8 @@
     state: present
 
 # systemd に mariadb を操作させない
-- name: Stop, disable and mask mariadb
-  when: "'zabbix_server__ha' in group_names"
-  become: true
+- name: mariadb | Stop, disable and mask mariadb
+  when: "inventory_hostname in zabbix_server_ha_hosts"
   ansible.builtin.systemd_service:
     name: mariadb
     state: stopped
