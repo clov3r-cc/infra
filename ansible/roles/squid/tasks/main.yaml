@@ -39,10 +39,13 @@
   notify: Restart squid
 
 - name: Initialize squid cache directory
-  ansible.builtin.command: squid -z
+  ansible.builtin.shell: test {{ ansible_check_mode | lower }} = false && squid -z
   args:
     creates: "{{ squid_cache_dir }}/swap.state"
-  changed_when: false
+  check_mode: false
+  register: __squid_init_cache
+  failed_when: ansible_check_mode == false and __squid_init_cache.rc != 0
+  changed_when: not ansible_check_mode
 
 - name: Enable and start squid
   ansible.builtin.systemd_service:

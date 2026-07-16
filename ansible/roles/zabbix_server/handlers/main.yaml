@@ -1,7 +1,8 @@
 ---
 - name: Reload NetworkManager connection eth1
-  ansible.builtin.command: nmcli con up "cloud-init eth1"
-  changed_when: true
+  ansible.builtin.shell: test {{ ansible_check_mode | lower }} = false && nmcli con up "cloud-init eth1"
+  check_mode: false
+  changed_when: not ansible_check_mode
 
 - name: Restart corosync
   ansible.builtin.systemd_service:

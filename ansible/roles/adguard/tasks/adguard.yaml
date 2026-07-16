@@ -57,6 +57,7 @@
         except Exception:
           print('')
   register: __adguard_existing_hash
+  check_mode: false
   changed_when: false
   failed_when: false
   no_log: true
@@ -77,6 +78,7 @@
           print(bcrypt.hashpw(pw, bcrypt.gensalt()).decode())
     stdin: "{{ {'password': adguard_admin_password, 'existing': __adguard_existing_hash.stdout} | to_json }}"
   register: __adguard_password_hash
+  check_mode: false
   changed_when: false
   delegate_to: localhost
   no_log: true
@@ -93,6 +95,7 @@
 - name: adguard | Restore SELinux context on AdGuard Home directory
   ansible.builtin.command:
     cmd: restorecon -r /opt/AdGuardHome
+  check_mode: false
   changed_when: false
 
 - name: adguard | Enable and start AdGuard Home

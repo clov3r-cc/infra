@@ -10,6 +10,7 @@
     state: restarted
 
 - name: Reload NetworkManager connection eth0
-  ansible.builtin.command: nmcli con up "cloud-init eth0"
-  changed_when: true
+  ansible.builtin.shell: test {{ ansible_check_mode | lower }} = false && nmcli con up "cloud-init eth0"
+  check_mode: false
+  changed_when: not ansible_check_mode
 

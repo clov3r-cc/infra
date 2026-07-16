@@ -29,6 +29,7 @@
     - name: lego | Restore SELinux context on lego binary
       ansible.builtin.command:
         cmd: restorecon -v /usr/local/bin/lego
+      check_mode: false
       changed_when: false
 
 - name: Create lego directory
@@ -55,7 +56,7 @@
 - name: Obtain initial certificate
   ansible.builtin.shell:
     cmd: >-
-      /usr/local/bin/lego
+      test {{ ansible_check_mode | lower }} = false && /usr/local/bin/lego
       --path {{ lego_path }}
       --email {{ lego_email }}
       --dns {{ lego_dns_provider }}
@@ -66,7 +67,10 @@
   environment:
     CF_DNS_API_TOKEN: "{{ lego_cloudflare_api_token }}"
   when: not __lego_cert.stat.exists
-  changed_when: true
+  check_mode: false
+  register: __lego_obtain_cert
+  failed_when: ansible_check_mode == false and __lego_obtain_cert.rc != 0
+  changed_when: not ansible_check_mode
   notify:
     - Reload nginx
     - Restart AdGuardHome
