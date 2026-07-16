@@ -45,14 +45,17 @@
       - drbd9x-utils
     state: present
 
-# systemd に DRBD を操作させない
-- name: drbd | Stop, disable and mask drbd
+- name: drbd | Unmask drbd service
+  when: "inventory_hostname in zabbix_server_ha_hosts"
+  ansible.builtin.command: systemctl unmask drbd
+  changed_when: false
+
+- name: drbd | Enable and start drbd
   when: "inventory_hostname in zabbix_server_ha_hosts"
   ansible.builtin.systemd_service:
     name: drbd
-    state: stopped
-    enabled: false
-    masked: true
+    state: started
+    enabled: true
 
 - name: drbd | Deploy DRBD configuration
   when: "inventory_hostname in zabbix_server_ha_hosts"
@@ -69,23 +72,31 @@
   failed_when: false
   changed_when: false
 
-- name: drbd | Check if DRBD metadata exists
+- name: drbd | Check if DRBD was previously initialized
   when: "inventory_hostname in zabbix_server_ha_hosts"
-  ansible.builtin.command: drbdadm dump-md drbd1
-  register: __zabbix_server_drbd_dump_md
-  check_mode: false
-  failed_when: false
-  changed_when: false
+  ansible.builtin.stat:
+    path: /etc/drbd.d/.drbd1-initialized
+  register: __zabbix_server_drbd_initialized
 
 - name: drbd | Initialize DRBD device metadata
   when:
     - inventory_hostname in zabbix_server_ha_hosts
-    - __zabbix_server_drbd_dump_md.rc != 0
+    - __zabbix_server_drbd_cstate.rc != 0
+    - not __zabbix_server_drbd_initialized.stat.exists
   ansible.builtin.shell: test {{ ansible_check_mode | lower }} = false && drbdadm create-md drbd1 --force
   check_mode: false
   register: __zabbix_server_init_drbd_dev_metadata
   failed_when: ansible_check_mode == false and __zabbix_server_init_drbd_dev_metadata.rc != 0
   changed_when: not ansible_check_mode
+
+- name: drbd | Mark DRBD as initialized
+  when:
+    - inventory_hostname in zabbix_server_ha_hosts
+    - not __zabbix_server_drbd_initialized.stat.exists
+  ansible.builtin.file:
+    path: /etc/drbd.d/.drbd1-initialized
+    state: touch
+    mode: '0644'
 
 - name: drbd | Start DRBD device
   when: "inventory_hostname in zabbix_server_ha_hosts and __zabbix_server_drbd_cstate.rc != 0"
@@ -95,15 +106,11 @@
   failed_when: ansible_check_mode == false and __zabbix_server_start_drbd_dev.rc != 0
   changed_when: not ansible_check_mode
 
-- name: drbd | Check if DRBD connection is configured again
+- name: drbd | Wait for DRBD connection
   when: "inventory_hostname in zabbix_server_ha_hosts"
-  ansible.builtin.command: drbdadm cstate drbd1
-  register: __zabbix_server_drbd_cstate
+  ansible.builtin.command: drbdadm wait-connect drbd1
   check_mode: false
   changed_when: false
-  until: __zabbix_server_drbd_cstate.stdout == 'Connected'
-  retries: 5
-  delay: 10
 
 - name: drbd | Check if DRBD disk is synced
   when: "inventory_hostname in zabbix_server_ha_hosts"
@@ -127,20 +134,16 @@
 
     - name: drbd | Sync disk at first node
       when: inventory_hostname == zabbix_server_ha_hosts[0]
-      ansible.builtin.command: drbdadm primary drbd1 --force
+      ansible.builtin.shell: test {{ ansible_check_mode | lower }} = false && drbdadm primary drbd1 --force
       check_mode: false
       register: __zabbix_server_sync_disk
       failed_when: ansible_check_mode == false and __zabbix_server_sync_disk.rc != 0
       changed_when: not ansible_check_mode
 
-    - name: drbd | Check if DRBD disk is synced again
-      ansible.builtin.command: drbdadm dstate drbd1
-      register: __zabbix_server_drbd_dstate_synced
+    - name: drbd | Wait for DRBD sync
+      ansible.builtin.command: drbdadm wait-sync drbd1
       check_mode: false
       changed_when: false
-      until: __zabbix_server_drbd_dstate_synced.stdout == 'UpToDate/UpToDate'
-      retries: 3
-      delay: 200
 
     - name: drbd | Check if filesystem exists on DRBD device
       when: inventory_hostname == zabbix_server_ha_hosts[0]

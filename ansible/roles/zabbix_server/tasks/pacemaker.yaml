@@ -191,3 +191,16 @@
     constraint_id: "loc-fence-{{ item }}"
   loop: "{{ zabbix_server_ha_hosts }}"
   run_once: true
+
+# DRBD デバイスのマウントを Pacemaker で管理する
+- name: pacemaker | Configure DRBD filesystem resource
+  when: "inventory_hostname in zabbix_server_ha_hosts"
+  pcs_resource:
+    name: drbd-fs
+    resource_class: ocf
+    resource_type: "ocf:heartbeat:Filesystem"
+    options: >-
+      device=/dev/drbd1
+      directory=/mnt/drbd1
+      fstype=ext4
+  run_once: true

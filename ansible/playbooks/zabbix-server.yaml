@@ -7,7 +7,7 @@
   roles:
     # - role: common
     #   tags: [common]
-    # - role: ondrejhome.pcs-modules-2
-    #   tags: [pcs-modules, ha]
+    - role: ondrejhome.pcs-modules-2
+      tags: [pcs-modules, ha]
     - role: zabbix_server
       tags: [zabbix, ha, drbd, pacemaker]
