@@ -18,8 +18,8 @@
       gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-AlmaLinux-{{ ansible_facts['distribution_major_version'] }}
       module_hotfixes=1
 
-- name: pacemaker_qdevice | Install Pacemaker
-  when: "inventory_hostname in groups[zabbix_server_qdevice_group]"
+- name: pacemaker_qdevice | Install Pacemaker QDevice
+  when: "inventory_hostname in groups['zabbix_server__qdevice']"
   ansible.builtin.package:
     name:
       - corosync-qnetd
@@ -27,7 +27,7 @@
     state: present
 
 - name: pacemaker_qdevice | Set hacluster user password
-  when: "inventory_hostname in groups[zabbix_server_qdevice_group]"
+  when: "inventory_hostname in groups['zabbix_server__qdevice']"
   ansible.builtin.user:
     name: hacluster
     password: "{{ zabbix_server_hacluster_password | password_hash('sha512') }}"

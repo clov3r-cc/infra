@@ -19,7 +19,7 @@
       module_hotfixes=1
 
 - name: pacemaker | Install Pacemaker
-  when: "inventory_hostname in zabbix_server_ha_hosts"
+  when: "inventory_hostname in groups['zabbix_server__ha']"
   ansible.builtin.package:
     name:
       - corosync
@@ -29,14 +29,14 @@
     state: present
 
 - name: pacemaker | Get latest fence_pve release info from GitHub
-  when: "inventory_hostname in zabbix_server_ha_hosts"
+  when: "inventory_hostname in groups['zabbix_server__ha']"
   delegate_to: localhost
   ansible.builtin.uri:
     url: https://api.github.com/repos/clov3r-cc/fence-agents/releases/latest
   register: __zabbix_server_fence_pve_release
 
 - name: pacemaker | Read installed fence_pve version
-  when: "inventory_hostname in zabbix_server_ha_hosts"
+  when: "inventory_hostname in groups['zabbix_server__ha']"
   ansible.builtin.slurp:
     src: /usr/local/share/fence_pve_version
   register: __zabbix_server_fence_pve_version
@@ -44,7 +44,7 @@
 
 - name: pacemaker | Install fence_pve binary
   when: >-
-    inventory_hostname in zabbix_server_ha_hosts and
+    inventory_hostname in groups['zabbix_server__ha'] and
     (__zabbix_server_fence_pve_version.failed or
      (__zabbix_server_fence_pve_version.content | b64decode | trim) != __zabbix_server_fence_pve_release.json.tag_name)
   vars:
@@ -90,14 +90,14 @@
         mode: "0644"
 
 - name: pacemaker | Set hacluster user password
-  when: "inventory_hostname in zabbix_server_ha_hosts"
+  when: "inventory_hostname in groups['zabbix_server__ha']"
   ansible.builtin.user:
     name: hacluster
     password: "{{ zabbix_server_hacluster_password | password_hash('sha512') }}"
   changed_when: false
 
 - name: pacemaker | Generate corosync authkey on first node
-  when: "inventory_hostname in zabbix_server_ha_hosts and inventory_hostname == zabbix_server_ha_hosts[0]"
+  when: "inventory_hostname in groups['zabbix_server__ha'] and inventory_hostname == groups['zabbix_server__ha'][0]"
   ansible.builtin.shell: test {{ ansible_check_mode | lower }} = false && corosync-keygen
   args:
     creates: /etc/corosync/authkey
@@ -106,14 +106,14 @@
   failed_when: ansible_check_mode == false and __zabbix_server_generate_corosync_key.rc != 0
 
 - name: pacemaker | Fetch authkey from first node
-  when: "inventory_hostname in zabbix_server_ha_hosts and inventory_hostname == zabbix_server_ha_hosts[0]"
+  when: "inventory_hostname in groups['zabbix_server__ha'] and inventory_hostname == groups['zabbix_server__ha'][0]"
   ansible.builtin.fetch:
     src: /etc/corosync/authkey
     dest: /tmp/corosync-authkey
     flat: true
 
 - name: pacemaker | Distribute authkey to all nodes
-  when: "inventory_hostname in zabbix_server_ha_hosts and inventory_hostname != zabbix_server_ha_hosts[0]"
+  when: "inventory_hostname in groups['zabbix_server__ha'] and inventory_hostname != groups['zabbix_server__ha'][0]"
   ansible.builtin.copy:
     src: /tmp/corosync-authkey
     dest: /etc/corosync/authkey
@@ -125,7 +125,7 @@
     - Restart pacemaker
 
 - name: pacemaker | Deploy corosync configuration
-  when: "inventory_hostname in zabbix_server_ha_hosts"
+  when: "inventory_hostname in groups['zabbix_server__ha']"
   ansible.builtin.template:
     src: corosync.conf.j2
     dest: /etc/corosync/corosync.conf
@@ -137,14 +137,14 @@
     - Restart pacemaker
 
 - name: pacemaker | Enable and start corosync
-  when: "inventory_hostname in zabbix_server_ha_hosts"
+  when: "inventory_hostname in groups['zabbix_server__ha']"
   ansible.builtin.systemd_service:
     name: corosync
     state: started
     enabled: true
 
 - name: pacemaker | Enable and start pacemaker
-  when: "inventory_hostname in zabbix_server_ha_hosts"
+  when: "inventory_hostname in groups['zabbix_server__ha']"
   ansible.builtin.systemd_service:
     name: pacemaker
     state: started
@@ -152,7 +152,7 @@
 
 # pcsd は使用しない
 - name: pacemaker | Disable, stop and mask pcsd
-  when: "inventory_hostname in zabbix_server_ha_hosts"
+  when: "inventory_hostname in groups['zabbix_server__ha']"
   ansible.builtin.systemd_service:
     name: pcsd
     state: stopped
@@ -160,7 +160,7 @@
     masked: true
 
 - name: pacemaker | Configure STONITH resource
-  when: "inventory_hostname in zabbix_server_ha_hosts"
+  when: "inventory_hostname in groups['zabbix_server__ha']"
   pcs_resource:
     name: "fence-{{ item }}"
     resource_class: stonith
@@ -178,23 +178,23 @@
       delay="15"
       op monitor interval="60s" timeout="30s"
       meta target-role="Started" is-managed="true"
-  loop: "{{ zabbix_server_ha_hosts }}"
+  loop: "{{ groups['zabbix_server__ha'] }}"
   run_once: true
 
 # STONITH must not run on its own node
 - name: pacemaker | Add location constraint
-  when: "inventory_hostname in zabbix_server_ha_hosts"
+  when: "inventory_hostname in groups['zabbix_server__ha']"
   pcs_constraint_location:
     resource: "fence-{{ item }}"
     node_name: "{{ item }}"
     score: "-INFINITY"
     constraint_id: "loc-fence-{{ item }}"
-  loop: "{{ zabbix_server_ha_hosts }}"
+  loop: "{{ groups['zabbix_server__ha'] }}"
   run_once: true
 
 # DRBD デバイスのマウントを Pacemaker で管理する
 - name: pacemaker | Configure DRBD filesystem resource
-  when: "inventory_hostname in zabbix_server_ha_hosts"
+  when: "inventory_hostname in groups['zabbix_server__ha']"
   pcs_resource:
     name: drbd-fs
     resource_class: ocf

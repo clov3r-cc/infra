@@ -16,7 +16,7 @@
     enabled: true
 
 - name: mariadb | Install MariaDB
-  when: "inventory_hostname in groups[zabbix_server_zabbix_group] or 'zabbix_server__single' in group_names"
+  when: "inventory_hostname in groups['zabbix_server__ha'] or 'zabbix_server__single' in group_names"
   ansible.builtin.package:
     name:
       - MariaDB-client
@@ -25,7 +25,7 @@
 
 # systemd に mariadb を操作させない
 - name: mariadb | Stop, disable and mask mariadb
-  when: "inventory_hostname in zabbix_server_ha_hosts"
+  when: "inventory_hostname in groups['zabbix_server__ha']"
   ansible.builtin.systemd_service:
     name: mariadb
     state: stopped
