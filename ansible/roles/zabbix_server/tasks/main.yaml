@@ -5,5 +5,7 @@
   ansible.builtin.import_tasks: drbd.yaml
 - name: Setup Pacemaker
   ansible.builtin.import_tasks: pacemaker.yaml
+- name: Setup Pacemaker QDevice
+  ansible.builtin.import_tasks: pacemaker_qdevice.yaml
 # - name: Setup MariaDB
 #   ansible.builtin.import_tasks: mariadb.yaml
