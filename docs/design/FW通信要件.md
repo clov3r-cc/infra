@@ -86,6 +86,7 @@ nftables を使用し、IPv4 ゾーンベースファイアウォールで実装
 | `FW-INTERNAL-NODES` | 192.168.22.4, 192.168.22.5   | FW 01/02 (INTERNAL) |
 | `NAS-SERVERS`       | 192.168.22.6                 | NAS サーバ          |
 | `ZABBIX-SERVERS`    | 192.168.22.8, 192.168.22.9   | Zabbix サーバ       |
+| `DESKTOP`           | 192.168.22.10                | デスクトップ        |
 | `DNS-PROXY-VIP`     | 192.168.20.22                | DNS/Proxy VIP       |
 | `VRRP-MULTICAST`    | 224.0.0.18                   | VRRP マルチキャスト |
 
@@ -196,6 +197,7 @@ Tailscale の通信要件: [What firewall ports should I open to use Tailscale?]
 |  10   | `TAILSCALE-NODES` |    ICMP    |      -       |   `NAS-SERVERS`   | ICMP         |
 |  15   | `TAILSCALE-NODES` |    UDP     | 33434-33534  |   `NAS-SERVERS`   | traceroute   |
 |  20   | `TAILSCALE-NODES` |    TCP     |      22      | `ZABBIX-SERVERS`  | SSH          |
+|  25   | `TAILSCALE-NODES` |    TCP     |      22      |    `DESKTOP`      | SSH          |
 |  30   | `TAILSCALE-NODES` |    TCP     |      22      | `ACCESS-SWITCHES` | SSH          |
 |  40   | `TAILSCALE-NODES` |    TCP     |     9999     |   `NAS-SERVERS`   | NAS サービス |
 
@@ -210,8 +212,8 @@ Tailscale の通信要件: [What firewall ports should I open to use Tailscale?]
 | Rule  |      送信元      | プロトコル | 送信先ポート | 送信先アドレス |     目的      |
 | :---: | :--------------: | :--------: | :----------: | :------------: | ------------- |
 |  10   |  `NAS-SERVERS`   |    ICMP    |      -       |      any       | ICMP          |
-|  200  |  `NAS-SERVERS`   |    TCP     |     443      |      any       | NAS HTTPS API |
-|  210  | `ZABBIX-SERVERS` |    UDP     |     123      | `WAN-GATEWAY`  | NTP           |
+|  200  |  `NAS-SERVERS`   |    TCP     |     443      |      any       | NAS HTTPS API         |
+|  210  | `ZABBIX-SERVERS` |    UDP     |     123      | `WAN-GATEWAY`  | NTP                   |
 |  211  |  `NAS-SERVERS`   |    UDP     |     123      | `WAN-GATEWAY`  | NTP           |
 
 ### 6.8. INTERNAL → DMZ
@@ -220,6 +222,7 @@ Tailscale の通信要件: [What firewall ports should I open to use Tailscale?]
 | :---: | :--------------: | :--------: | :----------: | :-------------: | ----------------- |
 |  10   | `ZABBIX-SERVERS` |  UDP/TCP   |      53      |  `DNS-SERVERS`  | DNS               |
 |  11   |  `NAS-SERVERS`   |  UDP/TCP   |      53      |  `DNS-SERVERS`  | DNS               |
+|  12   |    `DESKTOP`     |  UDP/TCP   |      53      |  `DNS-SERVERS`  | DNS               |
 |  30   | `ZABBIX-SERVERS` |    TCP     |     3128     | `DNS-PROXY-VIP` | 非透過 HTTP proxy |
 |  35   |  `NAS-SERVERS`   |    TCP     |     3128     | `DNS-PROXY-VIP` | 非透過 HTTP proxy |
 

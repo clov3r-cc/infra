@@ -346,6 +346,15 @@ fw_rulesets:
         destination:
           address_group: ZABBIX_SERVERS
           port: 22
+      - number: 25
+        action: accept
+        description: Allow SSH from TAILSCALE_NODES to DESKTOP
+        protocol: tcp
+        source:
+          address_group: TAILSCALE_NODES
+        destination:
+          address_group: DESKTOP
+          port: 22
       - number: 30
         action: accept
         description: Allow SSH from TAILSCALE_NODES to ACCESS_SWITCHES
@@ -420,6 +429,15 @@ fw_rulesets:
         protocol: tcp_udp
         source:
           address_group: NAS_SERVERS
+        destination:
+          address_group: DNS_SERVERS
+          port: 53
+      - number: 12
+        action: accept
+        description: Allow DNS from DESKTOP to DNS_SERVERS
+        protocol: tcp_udp
+        source:
+          address_group: DESKTOP
         destination:
           address_group: DNS_SERVERS
           port: 53
