@@ -1,0 +1,8 @@
+# {{ ansible_managed }}
+# Dynamically updates nftables sets when DNS queries resolve these domains.
+
+{% for group in fw_domain_groups | default([]) %}
+{% for domain in group.domains %}
+nftset=/{{ domain }}/4#ip#filter#{{ group.name }}
+{% endfor %}
+{% endfor %}

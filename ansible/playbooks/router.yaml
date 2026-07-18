@@ -1,7 +1,11 @@
 ---
 - name: Configure routers
   hosts: router
+  become: true
   gather_facts: true
+  tags: [router, firewall, dns, ha]
   roles:
-    - common
-    - router
+    - role: common
+      tags: [common]
+    - role: router
+      tags: [router, firewall, dns, ha]

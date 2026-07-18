@@ -1,0 +1,7 @@
+# {{ ansible_managed }}
+{% set dmz_nodes = fw_address_groups | selectattr('name', 'equalto', 'FW_DMZ_NODES') | map(attribute='addresses') | first %}
+listen-address=127.0.0.1
+listen-address={{ dmz_nodes[host_index - 1] }}
+no-resolv
+server=192.168.20.1
+cache-size=150

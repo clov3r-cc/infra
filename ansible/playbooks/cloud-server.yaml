@@ -1,6 +1,9 @@
 ---
 - name: Servers in Oracle Cloud Infrastructure
   hosts: cloud_server
+  become: true
   gather_facts: true
+  tags: [cloud-server, common]
   roles:
-    - common
+    - role: common
+      tags: [common]

@@ -1,7 +1,11 @@
 ---
 - name: Configure Tailscale servers
   hosts: tailscale_server
+  become: true
   gather_facts: true
+  tags: [tailscale-server, tailscale]
   roles:
-    - common
-    - tailscale
+    - role: common
+      tags: [common]
+    - role: tailscale
+      tags: [tailscale, vpn]

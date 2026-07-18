@@ -1,6 +1,5 @@
 ---
-- name: Enable IPv4 forwarding
-  become: true
+- name: ip-forwarding | Enable IPv4 forwarding
   ansible.posix.sysctl:
     name: net.ipv4.ip_forward
     value: "1"

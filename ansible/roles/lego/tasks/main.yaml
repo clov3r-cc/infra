@@ -2,20 +2,18 @@
 - name: Check if lego binary exists
   ansible.builtin.stat:
     path: /usr/local/bin/lego
-  register: _lego_binary
+  register: __lego_binary
 
 - name: Install lego
-  when: not _lego_binary.stat.exists
+  when: not __lego_binary.stat.exists
   block:
-    - name: Download lego archive
-      become: true
+    - name: lego | Download lego archive
       ansible.builtin.get_url:
         url: "https://github.com/go-acme/lego/releases/download/v{{ lego_version }}/lego_v{{ lego_version }}_linux_amd64.tar.gz"
         dest: /tmp/lego.tar.gz
         mode: "0644"
 
-    - name: Extract lego binary
-      become: true
+    - name: lego | Extract lego binary
       ansible.builtin.unarchive:
         src: /tmp/lego.tar.gz
         dest: /usr/local/bin
@@ -23,20 +21,18 @@
         include:
           - lego
 
-    - name: Remove archive
-      become: true
+    - name: lego | Remove archive
       ansible.builtin.file:
         path: /tmp/lego.tar.gz
         state: absent
 
-    - name: Restore SELinux context on lego binary
-      become: true
+    - name: lego | Restore SELinux context on lego binary
       ansible.builtin.command:
         cmd: restorecon -v /usr/local/bin/lego
+      check_mode: false
       changed_when: false
 
 - name: Create lego directory
-  become: true
   ansible.builtin.file:
     path: "{{ lego_path }}"
     state: directory
@@ -45,7 +41,6 @@
     mode: "0700"
 
 - name: Deploy lego environment file
-  become: true
   ansible.builtin.template:
     src: lego-env.j2
     dest: "{{ lego_path }}/lego.env"
@@ -54,33 +49,33 @@
     mode: "0600"
 
 - name: Check if certificate already exists
-  become: true
   ansible.builtin.stat:
-    path: "{{ lego_path }}/certificates/{{ lego_domains | first }}.crt"
-  register: _lego_cert
+    path: "{{ lego_path }}/certificates/{{ lego_domain }}.crt"
+  register: __lego_cert
 
 - name: Obtain initial certificate
-  become: true
   ansible.builtin.shell:
     cmd: >-
-      /usr/local/bin/lego
+      test {{ ansible_check_mode | lower }} = false && /usr/local/bin/lego
       --path {{ lego_path }}
       --email {{ lego_email }}
       --dns {{ lego_dns_provider }}
+      --domains {{ lego_domain }}
       --accept-tos
-      {{ _lego_domain_args }}
       run
     executable: /bin/bash
   environment:
     CF_DNS_API_TOKEN: "{{ lego_cloudflare_api_token }}"
-  when: not _lego_cert.stat.exists
-  changed_when: true
+  when: not __lego_cert.stat.exists
+  check_mode: false
+  register: __lego_obtain_cert
+  failed_when: ansible_check_mode == false and __lego_obtain_cert.rc != 0
+  changed_when: not ansible_check_mode
   notify:
     - Reload nginx
     - Restart AdGuardHome
 
 - name: Deploy lego renew systemd service
-  become: true
   ansible.builtin.template:
     src: lego-renew.service.j2
     dest: /etc/systemd/system/lego-renew.service
@@ -89,7 +84,6 @@
     mode: "0644"
 
 - name: Deploy lego renew systemd timer
-  become: true
   ansible.builtin.copy:
     src: lego-renew.timer
     dest: /etc/systemd/system/lego-renew.timer
@@ -98,7 +92,6 @@
     mode: "0644"
 
 - name: Deploy lego-renew logrotate config
-  become: true
   ansible.builtin.copy:
     src: lego-renew.logrotate
     dest: /etc/logrotate.d/lego-renew
@@ -107,8 +100,7 @@
     mode: "0644"
 
 - name: Enable and start lego renew timer
-  become: true
-  ansible.builtin.systemd:
+  ansible.builtin.systemd_service:
     name: lego-renew.timer
     daemon_reload: true
     enabled: true

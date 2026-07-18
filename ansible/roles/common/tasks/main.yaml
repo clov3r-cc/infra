@@ -3,6 +3,8 @@
   ansible.builtin.import_tasks: dns.yaml
 - name: Flush DNS handlers
   ansible.builtin.meta: flush_handlers
+- name: Configure proxy
+  ansible.builtin.import_tasks: proxy.yaml
 - name: Install packages
   ansible.builtin.import_tasks: packages.yaml
 - name: Setup package upgrade

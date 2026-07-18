@@ -1,0 +1,63 @@
+---
+- name: dnsmasq | Install dnsmasq
+  ansible.builtin.package:
+    name: dnsmasq
+    state: present
+
+- name: dnsmasq | Deploy dnsmasq configuration
+  ansible.builtin.template:
+    src: dnsmasq.conf.j2
+    dest: /etc/dnsmasq.d/router.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart dnsmasq
+
+- name: dnsmasq | Deploy dnsmasq nftset configuration
+  ansible.builtin.template:
+    src: dnsmasq-nftset.conf.j2
+    dest: /etc/dnsmasq.d/nftset.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart dnsmasq
+
+- name: dnsmasq | Stop and disable systemd-resolved
+  ansible.builtin.systemd_service:
+    name: systemd-resolved
+    state: stopped
+    enabled: false
+
+- name: dnsmasq | Remove resolved DNS config drop-in
+  ansible.builtin.file:
+    path: /etc/systemd/resolved.conf.d/dns.conf
+    state: absent
+
+- name: dnsmasq | Remove resolved stub-extra drop-in
+  ansible.builtin.file:
+    path: /etc/systemd/resolved.conf.d/stub-extra.conf
+    state: absent
+
+- name: dnsmasq | Remove networkd DNS scope drop-ins
+  ansible.builtin.file:
+    path: "/etc/systemd/network/10-netplan-{{ item }}.network.d"
+    state: absent
+  loop:
+    - eth1
+    - eth2
+    - eth3
+
+- name: dnsmasq | Set /etc/resolv.conf to use dnsmasq
+  ansible.builtin.copy:
+    dest: /etc/resolv.conf
+    content: |
+      nameserver 127.0.0.1
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: dnsmasq | Enable and start dnsmasq
+  ansible.builtin.systemd_service:
+    name: dnsmasq
+    state: started
+    enabled: true

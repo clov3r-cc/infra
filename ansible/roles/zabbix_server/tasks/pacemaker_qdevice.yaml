@@ -1,18 +1,34 @@
 ---
-- name: Install Pacemaker
-  when: "'zabbix_server__qdevice' in group_names"
-  become: true
+- name: repos | Add HighAvailability JP mirrors
+  ansible.builtin.blockinfile:
+    path: /etc/yum.repos.d/almalinux-jp-mirrors.repo
+    marker: "# {mark} ANSIBLE MANAGED - jp-highavailability"
+    block: |
+      [jp-highavailability]
+      name=AlmaLinux {{ ansible_facts['distribution_major_version'] }} - HighAvailability (JP Mirrors)
+      baseurl=http://ftp.jaist.ac.jp/pub/Linux/almalinux/$releasever/HighAvailability/$basearch/os/
+             http://ftp.sakura.ad.jp/almalinux/$releasever/HighAvailability/$basearch/os/
+             http://ftp.yz.yamagata-u.ac.jp/pub/linux/almalinux/$releasever/HighAvailability/$basearch/os/
+             http://mirrors.xtom.jp/almalinux/$releasever/HighAvailability/$basearch/os/
+             http://ftp.udx.icscoe.jp/Linux/almalinux/$releasever/HighAvailability/$basearch/os/
+             http://ftp.iij.ad.jp/pub/linux/almalinux/$releasever/HighAvailability/$basearch/os/
+             http://ftp.riken.jp/Linux/almalinux/$releasever/HighAvailability/$basearch/os/
+      enabled=1
+      gpgcheck=1
+      gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-AlmaLinux-{{ ansible_facts['distribution_major_version'] }}
+      module_hotfixes=1
+
+- name: pacemaker_qdevice | Install Pacemaker
+  when: "inventory_hostname in groups[zabbix_server_qdevice_group]"
   ansible.builtin.package:
     name:
       - corosync-qnetd
       - pcs
     state: present
-    enablerepo: highavailability
 
-- name: Set hacluster user password
-  when: "'zabbix_server__qdevice' in group_names"
-  become: true
+- name: pacemaker_qdevice | Set hacluster user password
+  when: "inventory_hostname in groups[zabbix_server_qdevice_group]"
   ansible.builtin.user:
     name: hacluster
-    password: "{{ hacluster_password | password_hash('sha512') }}"
+    password: "{{ zabbix_server_hacluster_password | password_hash('sha512') }}"
   changed_when: false

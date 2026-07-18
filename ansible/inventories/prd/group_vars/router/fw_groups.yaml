@@ -20,6 +20,9 @@ fw_domain_groups:
       - mirrors.coreix.net
       - mirror.rackspace.com
       - linux-mirrors.fnal.gov
+  - name: MARIADB_MIRRORS
+    domains:
+      - mirror.stechnology.jp
   - name: COPR
     domains:
       - copr.fedorainfracloud.org
@@ -128,6 +131,12 @@ fw_address_groups:
     addresses:
       - 192.168.22.8
       - 192.168.22.9
+  - name: DESKTOP
+    addresses:
+      - 192.168.22.10
+  - name: DNS_PROXY_VIP
+    addresses:
+      - 192.168.20.22
   - name: VRRP_MULTICAST
     addresses:
       - 224.0.0.18

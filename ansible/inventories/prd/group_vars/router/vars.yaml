@@ -1,13 +1,8 @@
 ---
-dns_nameservers:
-  - 192.168.20.1
 ntp_servers:
   - 192.168.20.1
-squid_dnat_ip: 192.168.20.24
-squid_dnat_http_port: 3129
-squid_dnat_https_port: 3130
-keepalived_password: "{{ vault_keepalived_password }}"
-keepalived_vrrp_instances:
+router_keepalived_password: "{{ vault_router_keepalived_password }}"
+router_keepalived_vrrp_instances:
   - name: WAN
     interface: eth0
     virtual_router_id: 19

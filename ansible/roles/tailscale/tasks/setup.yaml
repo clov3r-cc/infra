@@ -1,13 +1,15 @@
 ---
-- name: Download Tailscale install script
-  become: true
+- name: setup | Download Tailscale install script
   ansible.builtin.get_url:
     url: https://tailscale.com/install.sh
     dest: /tmp/tailscale-install.sh
     mode: "0700"
 
-- name: Install Tailscale
-  become: true
-  ansible.builtin.command: /tmp/tailscale-install.sh
+- name: setup | Install Tailscale
+  ansible.builtin.shell: test {{ ansible_check_mode | lower }} = false && /tmp/tailscale-install.sh
   args:
     creates: /usr/bin/tailscale
+  check_mode: false
+  register: __tailscale_install
+  failed_when: ansible_check_mode == false and __tailscale_install.rc != 0
+  changed_when: not ansible_check_mode

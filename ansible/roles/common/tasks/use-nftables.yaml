@@ -1,24 +1,21 @@
 ---
-- name: Gather service facts
+- name: use-nftables | Gather service facts
   ansible.builtin.service_facts:
 
-- name: Stop and disable firewalld
-  when: "'firewalld.service' in ansible_facts.services"
-  become: true
+- name: use-nftables | Stop and disable firewalld
+  when: "'firewalld.service' in ansible_facts['services']"
   ansible.builtin.systemd_service:
     name: firewalld
     state: stopped
     enabled: false
     masked: true
 
-- name: Install nftables
-  become: true
+- name: use-nftables | Install nftables
   ansible.builtin.package:
     name: nftables
     state: present
 
-- name: Start and enable nftables
-  become: true
+- name: use-nftables | Start and enable nftables
   ansible.builtin.systemd_service:
     name: nftables
     state: started

@@ -1,75 +1,12 @@
 ---
 - name: Install required packages
-  become: true
   ansible.builtin.package:
     name:
       - squid
       - keepalived
     state: present
 
-- name: Set first host fact
-  ansible.builtin.set_fact:
-    _squid_first_host: "{{ groups['proxy_server'] | sort | first }}"
-  run_once: true
-
-- name: Generate squid CA cert on first host
-  become: true
-  when: inventory_hostname == _squid_first_host
-  ansible.builtin.command: >-
-    openssl req -new -newkey rsa:2048 -days 3650 -nodes -x509
-    -keyout {{ squid_ca_key_path }}
-    -out {{ squid_ca_cert_path }}
-    -subj "/CN={{ squid_ca_common_name }}"
-  args:
-    creates: "{{ squid_ca_cert_path }}"
-  changed_when: true
-  no_log: true
-
-- name: Slurp squid CA cert from first host
-  become: true
-  when: inventory_hostname == _squid_first_host
-  ansible.builtin.slurp:
-    src: "{{ squid_ca_cert_path }}"
-  register: _squid_ca_cert
-  no_log: true
-
-- name: Slurp squid CA key from first host
-  become: true
-  when: inventory_hostname == _squid_first_host
-  ansible.builtin.slurp:
-    src: "{{ squid_ca_key_path }}"
-  register: _squid_ca_key
-  no_log: true
-
-- name: Set squid CA facts for all hosts
-  ansible.builtin.set_fact:
-    _squid_ca_cert_b64: "{{ hostvars[_squid_first_host]['_squid_ca_cert']['content'] }}"
-    _squid_ca_key_b64: "{{ hostvars[_squid_first_host]['_squid_ca_key']['content'] }}"
-
-- name: Deploy squid CA cert
-  become: true
-  ansible.builtin.copy:
-    content: "{{ _squid_ca_cert_b64 | b64decode }}"
-    dest: "{{ squid_ca_cert_path }}"
-    owner: root
-    group: root
-    mode: "0640"
-  notify: Restart squid
-  no_log: true
-
-- name: Deploy squid CA key
-  become: true
-  ansible.builtin.copy:
-    content: "{{ _squid_ca_key_b64 | b64decode }}"
-    dest: "{{ squid_ca_key_path }}"
-    owner: squid
-    group: squid
-    mode: "0640"
-  notify: Restart squid
-  no_log: true
-
 - name: Create keepalived directory
-  become: true
   ansible.builtin.file:
     path: /etc/keepalived
     state: directory
@@ -78,7 +15,6 @@
     mode: "0755"
 
 - name: Deploy keepalived configuration
-  become: true
   ansible.builtin.template:
     src: keepalived.conf.j2
     dest: /etc/keepalived/keepalived.conf
@@ -88,14 +24,12 @@
   notify: Restart keepalived
 
 - name: Enable and start keepalived
-  become: true
   ansible.builtin.systemd_service:
     name: keepalived
     state: started
     enabled: true
 
 - name: Deploy squid configuration
-  become: true
   ansible.builtin.template:
     src: squid.conf.j2
     dest: /etc/squid/squid.conf
@@ -105,15 +39,16 @@
   notify: Restart squid
 
 - name: Initialize squid cache directory
-  become: true
-  ansible.builtin.command: squid -z
+  ansible.builtin.shell: test {{ ansible_check_mode | lower }} = false && squid -z
   args:
     creates: "{{ squid_cache_dir }}/swap.state"
-  changed_when: false
+  check_mode: false
+  register: __squid_init_cache
+  failed_when: ansible_check_mode == false and __squid_init_cache.rc != 0
+  changed_when: not ansible_check_mode
 
 - name: Enable and start squid
-  become: true
-  ansible.builtin.systemd:
+  ansible.builtin.systemd_service:
     name: squid
     daemon_reload: true
     enabled: true

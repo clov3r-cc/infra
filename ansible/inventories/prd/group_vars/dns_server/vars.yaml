@@ -8,8 +8,8 @@ lego_cloudflare_api_token: "{{ vault_lego_cloudflare_api_token }}"
 
 adguard_version: "0.107.73"  # 初回インストール時のバージョン（以降はAdGuard Homeの自動更新に委ねる）
 adguard_listen_addr: "{{ ansible_host }}"
-adguard_http_port: 8080
-adguard_https_port: 9443
+adguard_http_port: 80
+adguard_https_port: 443
 adguard_admin_username: lucky
 adguard_upstream_dns:
   - 192.168.20.18  # FW-DMZ-NODE-01

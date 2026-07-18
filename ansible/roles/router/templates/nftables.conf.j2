@@ -1,7 +1,7 @@
 #!/usr/sbin/nft -f
-
+# {{ ansible_managed }}
 {# ------------------------------------------------------------------ #}
-{# Macros                                                              #}
+{# Macros                                                             #}
 {# ------------------------------------------------------------------ #}
 
 {%- macro port_expr(port) -%}
@@ -77,7 +77,7 @@ FQDN__{{ fqdn | replace('.', '_') | replace('-', '_') }}
 {%- endmacro -%}
 
 {# ------------------------------------------------------------------ #}
-{# Collect unique FQDNs from all rulesets                              #}
+{# Collect unique FQDNs from all rulesets                             #}
 {# ------------------------------------------------------------------ #}
 
 {%- set fqdn_ns = namespace(items=[]) -%}
@@ -93,22 +93,10 @@ FQDN__{{ fqdn | replace('.', '_') | replace('-', '_') }}
 
 flush ruleset
 
-{% if squid_dnat_ip is defined %}
-{% set dns_servers_group = fw_address_groups | selectattr('name', 'equalto', 'DNS_SERVERS') | first %}
-table ip nat {
-    chain prerouting {
-        type nat hook prerouting priority 0;
-        ip saddr { {{ dns_servers_group.addresses | join(', ') }} } return
-        tcp dport 80 dnat to {{ squid_dnat_ip }}:{{ squid_dnat_http_port | default(3129) }}
-        tcp dport 443 dnat to {{ squid_dnat_ip }}:{{ squid_dnat_https_port | default(3130) }}
-    }
-}
-{% endif %}
-
 table ip filter {
 
     # ---------------------------------------------------------------- #
-    # Network groups                                                    #
+    # Network groups                                                   #
     # ---------------------------------------------------------------- #
 {% for group in fw_network_groups %}
     set {{ group.name }} {
@@ -119,7 +107,7 @@ table ip filter {
 {% endfor %}
 
     # ---------------------------------------------------------------- #
-    # Address groups                                                    #
+    # Address groups                                                   #
     # ---------------------------------------------------------------- #
 {% for group in fw_address_groups %}
     set {{ group.name }} {
@@ -129,7 +117,7 @@ table ip filter {
 {% endfor %}
 
     # ---------------------------------------------------------------- #
-    # Domain group sets  (populated by dnsmasq nftset)                 #
+    # Domain group sets  (populated by nftset-warmup timer)             #
     # ---------------------------------------------------------------- #
 {% for group in fw_domain_groups | default([]) %}
     set {{ group.name }} {
@@ -139,7 +127,7 @@ table ip filter {
 {% endfor %}
 
     # ---------------------------------------------------------------- #
-    # FQDN sets  (populated by dnsmasq nftset)                         #
+    # FQDN sets  (populated by nftset-warmup timer)                    #
     # ---------------------------------------------------------------- #
 {% for fqdn in fqdn_ns.items %}
     set {{ fqdn_set_name(fqdn) }} {
@@ -150,7 +138,7 @@ table ip filter {
 {% endfor %}
 
     # ---------------------------------------------------------------- #
-    # Ruleset chains                                                    #
+    # Ruleset chains                                                   #
     # ---------------------------------------------------------------- #
 {% for ruleset in fw_rulesets %}
     chain {{ ruleset.name }} {
@@ -167,7 +155,7 @@ table ip filter {
 {% endfor %}
 
     # ---------------------------------------------------------------- #
-    # Base chains                                                       #
+    # Base chains                                                      #
     # ---------------------------------------------------------------- #
     chain input {
         type filter hook input priority 0; policy drop;

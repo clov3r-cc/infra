@@ -4,3 +4,4 @@ dns_nameservers:
   - 192.168.20.24  # AdGuardHome (prd-dpx-02)
 ntp_servers:
   - 192.168.20.1
+proxy_server_url: http://192.168.20.22:3128

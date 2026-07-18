@@ -1,8 +1,13 @@
 ---
 - name: Configure Zabbix servers
-  hosts: zabbix_server. zabbix_server__qdevice
+  hosts: zabbix_server, zabbix_server__qdevice
+  become: true
   gather_facts: true
+  tags: [zabbix-server, zabbix, ha]
   roles:
-    - common
-    - ondrejhome.pcs-modules-2
-    - zabbix_server
+    - role: common
+      tags: [common]
+    - role: ondrejhome.pcs-modules-2
+      tags: [pcs-modules, ha]
+    - role: zabbix_server
+      tags: [zabbix, ha, drbd, pacemaker]

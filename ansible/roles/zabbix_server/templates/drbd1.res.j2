@@ -1,9 +1,10 @@
+# {{ ansible_managed }}
 resource drbd1 {
   device minor 1;
   disk /dev/vdb1;
   meta-disk internal;
 
-{% for host in groups['zabbix_server'] %}
+{% for host in zabbix_server_ha_hosts %}
   on {{ host }} {
     node-id {{ hostvars[host]['host_index'] }};
     address {{ hostvars[host]['heartbeat_nw_ip'] }}:7789;

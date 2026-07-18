@@ -1,12 +1,10 @@
 ---
-- name: Remove cloud-init sudoers file
-  become: true
+- name: hardening | Remove cloud-init sudoers file
   ansible.builtin.file:
     path: /etc/sudoers.d/90-cloud-init-users
     state: absent
 
-- name: Install libpam-ssh-agent-auth
-  become: true
+- name: hardening | Install libpam-ssh-agent-auth
   ansible.builtin.apt:
     name: libpam-ssh-agent-auth
     state: present

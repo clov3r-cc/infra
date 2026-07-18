@@ -1,14 +1,15 @@
 ---
-- name: Configure DNS servers
-  hosts: dns_server
+- name: Configure DNS and Proxy servers
+  hosts: dns_server, proxy_server
+  become: true
   gather_facts: true
+  tags: [dns-proxy, dns, proxy, certificate]
   roles:
-    - common
-    - lego
-    - adguard
-
-- name: Configure Proxy servers
-  hosts: proxy_server
-  gather_facts: true
-  roles:
-    - squid
+    - role: common
+      tags: [common]
+    - role: lego
+      tags: [lego, certificate]
+    - role: adguard
+      tags: [adguard, dns]
+    - role: squid
+      tags: [squid, proxy]

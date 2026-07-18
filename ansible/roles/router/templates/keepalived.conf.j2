@@ -1,8 +1,9 @@
+# {{ ansible_managed }}
 global_defs {
   router_id {{ inventory_hostname }}
 }
 
-{% for instance in keepalived_vrrp_instances %}
+{% for instance in router_keepalived_vrrp_instances %}
 vrrp_instance {{ instance.name }} {
   interface {{ instance.interface }}
   state {{ "MASTER" if host_index == 1 else "BACKUP" }}
@@ -11,7 +12,7 @@ vrrp_instance {{ instance.name }} {
   advert_int 1
   authentication {
     auth_type PASS
-    auth_pass {{ keepalived_password }}
+    auth_pass {{ router_keepalived_password }}
   }
   virtual_ipaddress {
 {% for vip in instance.virtual_ipaddresses %}
