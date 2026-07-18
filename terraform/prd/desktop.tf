@@ -152,6 +152,14 @@ resource "proxmox_vm_qemu" "desktop" {
   }
 }
 
+resource "ansible_group" "desktop" {
+  name = "desktop"
+  variables = {
+    ansible_user                 = local.machine_user
+    ansible_ssh_private_key_file = local.ansible_ssh_private_key_path
+  }
+}
+
 resource "ansible_group" "zabbix_server__qdevice" {
   name = "zabbix_server__qdevice"
 }
