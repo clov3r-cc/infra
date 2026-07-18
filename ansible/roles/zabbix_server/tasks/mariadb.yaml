@@ -1,5 +1,6 @@
 ---
 - name: mariadb | Add MariaDB GPG key
+  when: "inventory_hostname in groups['zabbix_server__ha']"
   environment:
     https_proxy: "{{ proxy_server_url }}"
   ansible.builtin.rpm_key:
@@ -7,6 +8,7 @@
     state: present
 
 - name: mariadb | Add MariaDB repository
+  when: "inventory_hostname in groups['zabbix_server__ha']"
   ansible.builtin.yum_repository:
     name: mariadb
     description: MariaDB
@@ -16,7 +18,7 @@
     enabled: true
 
 - name: mariadb | Install MariaDB
-  when: "inventory_hostname in groups['zabbix_server__ha'] or 'zabbix_server__single' in group_names"
+  when: "inventory_hostname in groups['zabbix_server__ha']"
   ansible.builtin.package:
     name:
       - MariaDB-client
