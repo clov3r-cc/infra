@@ -1,0 +1,2 @@
+---
+zabbix_server_hacluster_password: "{{ vault_zabbix_server_hacluster_password }}"
