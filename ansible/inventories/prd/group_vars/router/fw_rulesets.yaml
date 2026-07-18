@@ -410,6 +410,15 @@ fw_rulesets:
         destination:
           address_group: WAN_GATEWAY
           port: 123
+      - number: 212
+        action: accept
+        description: Allow NTP from DESKTOP to WAN_GATEWAY
+        protocol: udp
+        source:
+          address_group: DESKTOP
+        destination:
+          address_group: WAN_GATEWAY
+          port: 123
   - name: INTERNAL-TO-DMZ
     default_action: drop
     default_log: true
@@ -456,6 +465,15 @@ fw_rulesets:
         protocol: tcp
         source:
           address_group: NAS_SERVERS
+        destination:
+          address_group: DNS_PROXY_VIP
+          port: 3128
+      - number: 36
+        action: accept
+        description: Allow Squid explicit proxy from DESKTOP to DNS_PROXY_VIP
+        protocol: tcp
+        source:
+          address_group: DESKTOP
         destination:
           address_group: DNS_PROXY_VIP
           port: 3128

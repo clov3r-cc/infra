@@ -215,6 +215,7 @@ Tailscale の通信要件: [What firewall ports should I open to use Tailscale?]
 |  200  |  `NAS-SERVERS`   |    TCP     |     443      |      any       | NAS HTTPS API         |
 |  210  | `ZABBIX-SERVERS` |    UDP     |     123      | `WAN-GATEWAY`  | NTP                   |
 |  211  |  `NAS-SERVERS`   |    UDP     |     123      | `WAN-GATEWAY`  | NTP           |
+|  212  |    `DESKTOP`     |    UDP     |     123      | `WAN-GATEWAY`  | NTP           |
 
 ### 6.8. INTERNAL → DMZ
 
@@ -225,6 +226,7 @@ Tailscale の通信要件: [What firewall ports should I open to use Tailscale?]
 |  12   |    `DESKTOP`     |  UDP/TCP   |      53      |  `DNS-SERVERS`  | DNS               |
 |  30   | `ZABBIX-SERVERS` |    TCP     |     3128     | `DNS-PROXY-VIP` | 非透過 HTTP proxy |
 |  35   |  `NAS-SERVERS`   |    TCP     |     3128     | `DNS-PROXY-VIP` | 非透過 HTTP proxy |
+|  36   |    `DESKTOP`     |    TCP     |     3128     | `DNS-PROXY-VIP` | 非透過 HTTP proxy |
 
 ### 6.9. INTERNAL → LOCAL
 
