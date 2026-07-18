@@ -24,3 +24,38 @@
     name: hacluster
     password: "{{ zabbix_server_hacluster_password | password_hash('sha512') }}"
   changed_when: false
+
+- name: pacemaker_qdevice | Check if qnetd NSS cert DB is initialized
+  when: "inventory_hostname in groups['zabbix_server__qdevice']"
+  ansible.builtin.stat:
+    path: /etc/corosync/qnetd/nssdb/cert9.db
+  register: qnetd_certdb
+
+- name: pacemaker_qdevice | Initialize qnetd NSS certificate database
+  when:
+    - inventory_hostname in groups['zabbix_server__qdevice']
+    - not qnetd_certdb.stat.exists
+  block:
+    - name: pacemaker_qdevice | Remove stale NSS cert database
+      ansible.builtin.file:
+        path: /etc/corosync/qnetd/nssdb
+        state: absent
+
+    - name: pacemaker_qdevice | Run certutil init
+      ansible.builtin.command:
+        cmd: corosync-qnetd-certutil -i
+        creates: /etc/corosync/qnetd/nssdb
+
+- name: pacemaker_qdevice | Enable and start pcsd
+  when: "inventory_hostname in groups['zabbix_server__qdevice']"
+  ansible.builtin.systemd_service:
+    name: pcsd
+    state: started
+    enabled: true
+
+- name: pacemaker_qdevice | Enable and start corosync-qnetd
+  when: "inventory_hostname in groups['zabbix_server__qdevice']"
+  ansible.builtin.systemd_service:
+    name: corosync-qnetd
+    state: started
+    enabled: true

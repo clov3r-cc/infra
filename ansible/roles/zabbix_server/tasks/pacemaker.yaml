@@ -1,4 +1,15 @@
 ---
+- name: repos | Ensure cluster hostname resolution
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  ansible.builtin.blockinfile:
+    path: /etc/hosts
+    marker: "# {mark} ANSIBLE MANAGED: pacemaker cluster nodes"
+    block: |
+      {% for host in groups['zabbix_server__ha'] %}
+      {{ hostvars[host]['ansible_facts']['default_ipv4']['address'] }} {{ hostvars[host]['ansible_facts']['fqdn'] }} {{ host }}
+      {% endfor %}
+    state: present
+
 - name: repos | Enable HighAvailability repository
   ansible.builtin.yum_repository:
     name: highavailability
@@ -44,21 +55,21 @@
     __fence_pve_local_zip: "/tmp/fence_pve_{{ __zabbix_server_fence_pve_release.json.tag_name }}.zip"
     __fence_pve_local_dir: "/tmp/fence_pve_{{ __zabbix_server_fence_pve_release.json.tag_name }}"
   block:
-    - name: Download fence_pve zip to controller
+    - name: pacemaker | Download fence_pve zip to controller
       delegate_to: localhost
       ansible.builtin.get_url:
         url: "{{ __fence_pve_zip_url }}"
         dest: "{{ __fence_pve_local_zip }}"
         mode: "0644"
 
-    - name: Create extraction directory on controller
+    - name: pacemaker | Create extraction directory on controller
       delegate_to: localhost
       ansible.builtin.file:
         path: "{{ __fence_pve_local_dir }}"
         state: directory
         mode: "0755"
 
-    - name: Extract fence_pve on controller
+    - name: pacemaker | Extract fence_pve on controller
       delegate_to: localhost
       ansible.builtin.unarchive:
         src: "{{ __fence_pve_local_zip }}"
@@ -66,7 +77,7 @@
         include:
           - fence_pve
 
-    - name: Copy fence_pve to server
+    - name: pacemaker | Copy fence_pve to server
       ansible.builtin.copy:
         src: "{{ __fence_pve_local_dir }}/fence_pve"
         dest: /usr/sbin/fence_pve
@@ -75,7 +86,7 @@
         group: root
       notify: Restart pacemaker
 
-    - name: Record installed fence_pve version
+    - name: pacemaker | Record installed fence_pve version
       ansible.builtin.copy:
         content: "{{ __zabbix_server_fence_pve_release.json.tag_name }}"
         dest: /usr/local/share/fence_pve_version
@@ -142,14 +153,72 @@
     state: started
     enabled: true
 
-# pcsd は使用しない
-- name: pacemaker | Disable, stop and mask pcsd
+- name: pacemaker | Enable and start pcsd
   when: "inventory_hostname in groups['zabbix_server__ha']"
   ansible.builtin.systemd_service:
     name: pcsd
-    state: stopped
-    enabled: false
-    masked: true
+    state: started
+    enabled: true
+
+- name: pacemaker | Authenticate cluster nodes
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  vars:
+    __targets: >-
+      {{
+        groups['zabbix_server__ha']
+        + (
+          [hostvars[groups['zabbix_server__qdevice'][0]]['heartbeat_nw_ip']]
+          if (groups['zabbix_server__qdevice'] | default([]) | length > 0)
+          else []
+        )
+      }}
+  pcs_auth:
+    node_name: "{{ __targets | join(' ') }}"
+    username: hacluster
+    password: "{{ zabbix_server_hacluster_password }}"
+  run_once: true
+  no_log: true
+
+- name: pacemaker | Add qdevice to cluster
+  when:
+    - inventory_hostname in groups['zabbix_server__ha']
+    - groups['zabbix_server__qdevice'] | default([]) | length > 0
+  vars:
+    __qdevice_ip: "{{ hostvars[groups['zabbix_server__qdevice'][0]]['heartbeat_nw_ip'] }}"
+  block:
+    - name: pacemaker | Check if qdevice certificates exist
+      ansible.builtin.stat:
+        path: /etc/corosync/qdevice/net/nssdb/qdevice-net-node.p12
+      register: __qdevice_cert
+
+    - name: pacemaker | Initialize qdevice certificates
+      when: not __qdevice_cert.stat.exists
+      block:
+        - name: pacemaker | Remove qdevice to trigger fresh setup
+          pcs_quorum_qdevice:
+            state: absent
+          run_once: true
+
+        - name: pacemaker | Add qdevice with certificate exchange
+          pcs_quorum_qdevice:
+            qdevice: "{{ __qdevice_ip }}"
+            algorithm: ffsplit
+          run_once: true
+
+    - name: pacemaker | Verify qdevice configuration
+      pcs_quorum_qdevice:
+        qdevice: "{{ __qdevice_ip }}"
+        algorithm: ffsplit
+      run_once: true
+
+- name: pacemaker | Enable and start corosync-qdevice
+  when:
+    - inventory_hostname in groups['zabbix_server__ha']
+    - groups['zabbix_server__qdevice'] | default([]) | length > 0
+  ansible.builtin.systemd_service:
+    name: corosync-qdevice
+    state: started
+    enabled: true
 
 - name: pacemaker | Configure STONITH resource
   when: "inventory_hostname in groups['zabbix_server__ha']"
@@ -182,17 +251,4 @@
     score: "-INFINITY"
     constraint_id: "loc-fence-{{ item }}"
   loop: "{{ groups['zabbix_server__ha'] }}"
-  run_once: true
-
-# DRBD デバイスのマウントを Pacemaker で管理する
-- name: pacemaker | Configure DRBD filesystem resource
-  when: "inventory_hostname in groups['zabbix_server__ha']"
-  pcs_resource:
-    name: drbd-fs
-    resource_class: ocf
-    resource_type: "ocf:heartbeat:Filesystem"
-    options: >-
-      device=/dev/drbd1
-      directory=/mnt/drbd1
-      fstype=ext4
   run_once: true

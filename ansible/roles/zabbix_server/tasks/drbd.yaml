@@ -48,17 +48,14 @@
       - drbd9x-utils
     state: present
 
-- name: drbd | Unmask drbd service
-  when: "inventory_hostname in groups['zabbix_server__ha']"
-  ansible.builtin.command: systemctl unmask drbd
-  changed_when: false
-
 - name: drbd | Enable and start drbd
   when: "inventory_hostname in groups['zabbix_server__ha']"
   ansible.builtin.systemd_service:
     name: drbd
     state: started
     enabled: true
+    # DRBD may be masked by default
+    masked: false
 
 - name: drbd | Deploy DRBD configuration
   when: "inventory_hostname in groups['zabbix_server__ha']"
@@ -181,4 +178,15 @@
     state: directory
     mode: '0755'
 
-# DRBD デバイスのマウントは Pacemaker が管理するためここでは実施しない
+# DRBD デバイスのマウントは Pacemaker が管理する
+- name: drbd | Configure DRBD filesystem resource
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  pcs_resource:
+    name: drbd-fs
+    resource_class: ocf
+    resource_type: "ocf:heartbeat:Filesystem"
+    options: >-
+      device=/dev/drbd1
+      directory=/mnt/drbd1
+      fstype=ext4
+  run_once: true
