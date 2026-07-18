@@ -17,6 +17,26 @@
     group: root
     mode: "0700"
 
+- name: nftables | Ensure nftables.service drop-in directory exists
+  ansible.builtin.file:
+    path: /etc/systemd/system/nftables.service.d
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: nftables | Deploy nftables.service drop-in for post-reload warmup
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/nftables.service.d/warmup.conf
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      [Service]
+      ExecStartPost=/usr/local/sbin/nftset-warmup
+      ExecReloadPost=/usr/local/sbin/nftset-warmup
+  notify: Reload systemd daemon
+
 - name: nftables | Deploy nftset-warmup systemd service
   ansible.builtin.copy:
     dest: /etc/systemd/system/nftset-warmup.service
