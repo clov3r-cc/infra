@@ -5,8 +5,8 @@
   gather_facts: true
   tags: [zabbix-server, zabbix, ha]
   roles:
-    # - role: common
-    #   tags: [common]
+    - role: common
+      tags: [common]
     - role: ondrejhome.pcs-modules-2
       tags: [pcs-modules, ha]
     - role: zabbix_server
