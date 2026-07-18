@@ -174,7 +174,7 @@
 - name: drbd | Create /mnt/drbd1 directory to use mount point
   when: "inventory_hostname in groups['zabbix_server__ha']"
   ansible.builtin.file:
-    path: /mnt/drbd1
+    path: "{{ zabbix_server_drbd_mount_point }}"
     state: directory
     mode: '0755'
 
@@ -187,6 +187,34 @@
     resource_type: "ocf:heartbeat:Filesystem"
     options: >-
       device=/dev/drbd1
-      directory=/mnt/drbd1
+      directory={{ zabbix_server_drbd_mount_point }}
       fstype=ext4
+      --group zabbix-server
   run_once: true
+
+- name: drbd | Determine node running drbd-fs resource
+  when: inventory_hostname == groups['zabbix_server__ha'][0]
+  ansible.builtin.command: pcs resource status drbd-fs
+  register: __zabbix_server_pcs_drbd_status
+  changed_when: false
+  failed_when: false
+  run_once: true
+
+- name: drbd | Set drbd_active_node fact
+  when: inventory_hostname == groups['zabbix_server__ha'][0]
+  ansible.builtin.set_fact:
+    drbd_active_node: >-
+      {{
+        (__zabbix_server_pcs_drbd_status.stdout | regex_search('Started\s+(\S+)', '\1') | first)
+        | default(groups['zabbix_server__ha'][0], true)
+      }}
+  run_once: true
+
+- name: drbd | Wait for DRBD mount
+  when: inventory_hostname == hostvars[groups['zabbix_server__ha'][0]]['drbd_active_node']
+  ansible.builtin.command: mountpoint {{ zabbix_server_drbd_mount_point }}
+  register: __zabbix_server_drbd_mount
+  changed_when: false
+  retries: 30
+  delay: 2
+  until: __zabbix_server_drbd_mount.rc == 0

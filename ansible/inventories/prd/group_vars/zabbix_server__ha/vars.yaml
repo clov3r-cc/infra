@@ -3,3 +3,5 @@ zabbix_server_hacluster_password: "{{ vault_zabbix_server_hacluster_password }}"
 zabbix_server_pve_stonith_ipaddr: "192.168.22.2"
 zabbix_server_pve_stonith_api_token: "stonith@pve!zabbix-stonith"
 zabbix_server_pve_stonith_api_token_secret: "{{ vault_zabbix_server_pve_stonith_api_token_secret }}"
+zabbix_server_drbd_mount_point: /mnt/drbd1
+zabbix_server_mariadb_datadir: "{{ zabbix_server_drbd_mount_point }}/mysql"
