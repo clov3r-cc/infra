@@ -3,6 +3,7 @@ collections:
   - name: ansible.netcommon
   - name: ansible.posix
   - name: community.general
+  - name: community.mysql
 
 roles:
   - name: ondrejhome.pcs-modules-2

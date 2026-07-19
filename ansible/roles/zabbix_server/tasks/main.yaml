@@ -9,3 +9,5 @@
   ansible.builtin.import_tasks: drbd.yaml
 - name: Setup MariaDB
   ansible.builtin.import_tasks: mariadb.yaml
+- name: Setup Zabbix Server
+  ansible.builtin.import_tasks: zabbix-server.yaml
