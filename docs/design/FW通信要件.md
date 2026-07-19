@@ -104,6 +104,7 @@ nftables を使用し、IPv4 ゾーンベースファイアウォールで実装
 | `EASYLIST`               | `easylist.to`                                                                                                                                                                                       | AdGuardHome フィルタリスト                         |
 | `DEBIAN-MIRRORS`         | `deb.debian.org, security.debian.org, debian.map.fastly.net`                                                                                                                                        | Debian パッケージミラー                            |
 | `TAILSCALE-DERP-CAPTIVE` | `derp7e.tailscale.com, derp7f.tailscale.com, derp7g.tailscale.com, derp7h.tailscale.com`                                                                                                            | Tailscale キャプティブポータル検出用 DERP ドメイン |
+| `ZABBIX-MIRRORS`         | `repo.zabbix.com`                                                                                                                                                                                   | Zabbix リポジトリー                                |
 
 ## 5. ルール番号規則
 
@@ -171,7 +172,8 @@ Tailscale の通信要件: [What firewall ports should I open to use Tailscale?]
 |  45   |   `DNS-SERVERS`   |   accept   |    TCP     |     any      |     443      |      `LETSENCRYPT`       | Let's Encrypt ACME API                          |
 |  46   |   `DNS-SERVERS`   |   accept   |    TCP     |     any      |     443      |     `CLOUDFLARE-API`     | Cloudflare API (DNS-01 チャレンジ)              |
 |  47   |   `DNS-SERVERS`   |   accept   |    TCP     |     any      |     443      |        `EASYLIST`        | AdGuardHome フィルタリストダウンロード          |
-|  50   |   `DNS-SERVERS`   |   accept   | TCP / UDP  |     any      |      53      |     `CLOUDFLARE-IPS`     | SSL 証明書更新に伴う DNS チャレンジ             |
+|  50   |   `DNS-SERVERS`   |   accept   |    TCP     |     any      |     443      |     `ZABBIX-MIRRORS`     | Zabbix リポジトリ                               |
+|  51   |   `DNS-SERVERS`   |   accept   | TCP / UDP  |     any      |      53      |     `CLOUDFLARE-IPS`     | SSL 証明書更新に伴う DNS チャレンジ             |
 |  200  | `TAILSCALE-NODES` |   accept   |    UDP     |     any      |     123      |      `WAN-GATEWAY`       | NTP                                             |
 |  201  |   `DNS-SERVERS`   |   accept   |    UDP     |     any      |     123      |      `WAN-GATEWAY`       | NTP                                             |
 |  950  | `TAILSCALE-NODES` |    drop    |    TCP     |     any      |      80      | `TAILSCALE-DERP-CAPTIVE` | Tailscale キャプティブポータル検出 (ログ抑制)   |
@@ -197,7 +199,7 @@ Tailscale の通信要件: [What firewall ports should I open to use Tailscale?]
 |  10   | `TAILSCALE-NODES` |    ICMP    |      -       |   `NAS-SERVERS`   | ICMP         |
 |  15   | `TAILSCALE-NODES` |    UDP     | 33434-33534  |   `NAS-SERVERS`   | traceroute   |
 |  20   | `TAILSCALE-NODES` |    TCP     |      22      | `ZABBIX-SERVERS`  | SSH          |
-|  25   | `TAILSCALE-NODES` |    TCP     |      22      |    `DESKTOP`      | SSH          |
+|  25   | `TAILSCALE-NODES` |    TCP     |      22      |     `DESKTOP`     | SSH          |
 |  30   | `TAILSCALE-NODES` |    TCP     |      22      | `ACCESS-SWITCHES` | SSH          |
 |  40   | `TAILSCALE-NODES` |    TCP     |     9999     |   `NAS-SERVERS`   | NAS サービス |
 
@@ -212,8 +214,8 @@ Tailscale の通信要件: [What firewall ports should I open to use Tailscale?]
 | Rule  |      送信元      | プロトコル | 送信先ポート | 送信先アドレス |     目的      |
 | :---: | :--------------: | :--------: | :----------: | :------------: | ------------- |
 |  10   |  `NAS-SERVERS`   |    ICMP    |      -       |      any       | ICMP          |
-|  200  |  `NAS-SERVERS`   |    TCP     |     443      |      any       | NAS HTTPS API         |
-|  210  | `ZABBIX-SERVERS` |    UDP     |     123      | `WAN-GATEWAY`  | NTP                   |
+|  200  |  `NAS-SERVERS`   |    TCP     |     443      |      any       | NAS HTTPS API |
+|  210  | `ZABBIX-SERVERS` |    UDP     |     123      | `WAN-GATEWAY`  | NTP           |
 |  211  |  `NAS-SERVERS`   |    UDP     |     123      | `WAN-GATEWAY`  | NTP           |
 |  212  |    `DESKTOP`     |    UDP     |     123      | `WAN-GATEWAY`  | NTP           |
 
@@ -244,6 +246,7 @@ Tailscale の通信要件: [What firewall ports should I open to use Tailscale?]
 |  20   |   -    |  UDP/TCP   |      53      |  `WAN-GATEWAY`   | DNS                            |
 |  30   |   -    |    TCP     |     443      |     `GITHUB`     | イメージ・バイナリダウンロード |
 |  35   |   -    |    TCP     |     443      | `DEBIAN-MIRRORS` | Debian パッケージ取得          |
+|  36   |   -    |    TCP     |     443      | `ZABBIX-MIRRORS` | Zabbix リポジトリ              |
 |  40   |   -    |    ICMP    |      -       |       any        | ICMP                           |
 |  45   |   -    |    UDP     | 33434-33534  |       any        | traceroute                     |
 |  50   |   -    | Proto 112  |      -       | `VRRP-MULTICAST` | VRRP                           |

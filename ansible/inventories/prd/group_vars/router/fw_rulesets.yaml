@@ -204,6 +204,15 @@ fw_rulesets:
           port: "80,443"
       - number: 50
         action: accept
+        description: Allow HTTPS from DNS_SERVERS to Zabbix repo
+        protocol: tcp
+        source:
+          address_group: DNS_SERVERS
+        destination:
+          domain_group: ZABBIX_MIRRORS
+          port: 443
+      - number: 51
+        action: accept
         description: Allow DNS from DNS_SERVERS to Cloudflare for SSL cert renewal DNS challenge
         protocol: tcp_udp
         source:
@@ -536,6 +545,13 @@ fw_rulesets:
         protocol: tcp
         destination:
           domain_group: DEBIAN_MIRRORS
+          port: 443
+      - number: 36
+        action: accept
+        description: Allow HTTPS to Zabbix repo
+        protocol: tcp
+        destination:
+          domain_group: ZABBIX_MIRRORS
           port: 443
       - number: 40
         action: accept

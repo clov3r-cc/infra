@@ -48,6 +48,9 @@ fw_domain_groups:
       - derp7f.tailscale.com
       - derp7g.tailscale.com
       - derp7h.tailscale.com
+  - name: ZABBIX_MIRRORS
+    domains:
+      - repo.zabbix.com
 
 fw_network_groups:
   - name: HOME_CLIENTS
