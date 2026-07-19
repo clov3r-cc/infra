@@ -34,7 +34,7 @@
     content: |
       [Service]
       ExecStartPost=/usr/local/sbin/nftset-warmup
-      ExecReloadPost=/usr/local/sbin/nftset-warmup
+      ExecReload=/usr/sbin/nft -f /etc/nftables.conf && /usr/local/sbin/nftset-warmup
   notify: Reload systemd daemon
 
 - name: nftables | Deploy nftset-warmup systemd service
