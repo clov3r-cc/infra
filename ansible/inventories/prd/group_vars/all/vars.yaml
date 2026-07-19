@@ -1,2 +1,9 @@
 ---
 pkg_upgrade_calendar: "{{ ['Mon', 'Tue'][host_index % 2] }} *-*-* 02:00:00"
+
+# lego common settings
+lego_version: "4.33.0"  # 初回インストール時のバージョン
+lego_path: /etc/lego
+lego_email: me@clov3r.cc
+lego_dns_provider: cloudflare
+lego_cloudflare_api_token: "{{ vault_lego_cloudflare_api_token }}"

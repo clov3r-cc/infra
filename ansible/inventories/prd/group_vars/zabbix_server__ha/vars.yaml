@@ -6,3 +6,10 @@ zabbix_server_pve_stonith_api_token_secret: "{{ vault_zabbix_server_pve_stonith_
 zabbix_server_drbd_mount_point: /mnt/drbd1
 zabbix_server_mariadb_datadir: "{{ zabbix_server_drbd_mount_point }}/mysql"
 zabbix_server_db_password: "{{ vault_zabbix_server_db_password }}"
+
+# lego TLS certificates
+lego_domains:
+  - "prd-zbx.labo.clov3r.cc"
+lego_renew_hook: "systemctl reload nginx"
+lego_notify_handlers:
+  - Reload nginx
