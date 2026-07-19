@@ -14,3 +14,8 @@
   check_mode: false
   changed_when: not ansible_check_mode
 
+- name: Restart zabbix-agent
+  ansible.builtin.systemd_service:
+    name: zabbix-agent
+    state: restarted
+

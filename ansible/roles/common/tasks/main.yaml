@@ -25,3 +25,5 @@
   ansible.builtin.import_tasks: qemu-guest-agent.yaml
 - name: Configure NTP
   ansible.builtin.import_tasks: ntp.yaml
+- name: Install Zabbix agent
+  ansible.builtin.import_tasks: zabbix-agent.yaml

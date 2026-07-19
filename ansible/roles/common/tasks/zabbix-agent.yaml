@@ -1,0 +1,33 @@
+---
+- name: zabbix-agent | Install Zabbix repository (RedHat)
+  when: ansible_facts['os_family'] == 'RedHat'
+  ansible.builtin.dnf:
+    name: https://repo.zabbix.com/zabbix/7.0/alma/10/x86_64/zabbix-release-latest-7.0.el10.noarch.rpm
+    state: present
+    disable_gpg_check: true
+
+- name: zabbix-agent | Install Zabbix repository (Debian)
+  when: ansible_facts['os_family'] == 'Debian'
+  ansible.builtin.apt:
+    deb: https://repo.zabbix.com/zabbix/7.0/debian/pool/main/z/zabbix-release/zabbix-release_latest_7.0+debian13_all.deb
+    state: present
+
+- name: zabbix-agent | Install zabbix-agent
+  ansible.builtin.package:
+    name: zabbix-agent
+    state: present
+
+- name: zabbix-agent | Deploy configuration
+  ansible.builtin.template:
+    src: zabbix_agentd.conf.d.j2
+    dest: /etc/zabbix/zabbix_agentd.conf.d/ansible.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart zabbix-agent
+
+- name: zabbix-agent | Start and enable zabbix-agent
+  ansible.builtin.systemd_service:
+    name: zabbix-agent
+    state: started
+    enabled: true
