@@ -17,6 +17,14 @@
     name: zabbix-agent
     state: present
 
+- name: zabbix-agent | Ensure config directory exists
+  ansible.builtin.file:
+    path: /etc/zabbix/zabbix_agentd.conf.d
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
 - name: zabbix-agent | Deploy configuration
   ansible.builtin.template:
     src: zabbix_agentd.conf.d.j2
