@@ -4,6 +4,16 @@ fw_domain_groups:
     domains:
       - mirrors.almalinux.org
       - repo.almalinux.org
+      - ftp.udx.icscoe.jp
+      - ftp.iij.ad.jp
+      - ftp.jaist.ac.jp
+      - ftp.sakura.ad.jp
+      - ftp.riken.jp
+      - ftp.yz.yamagata-u.ac.jp
+      - mirror.nishi.network
+      - mirror.hashy0917.net
+      - mirrors.krnk.org
+      - mirrors.xtom.jp
       - alma.acidman.thelefty.org
   - name: ELREPO_MIRRORS
     domains:
