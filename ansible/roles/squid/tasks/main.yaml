@@ -45,7 +45,6 @@
   check_mode: false
   register: __squid_init_cache
   failed_when: ansible_check_mode == false and __squid_init_cache.rc != 0
-  changed_when: not ansible_check_mode
 
 - name: Enable and start squid
   ansible.builtin.systemd_service:
