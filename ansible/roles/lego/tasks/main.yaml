@@ -13,6 +13,8 @@
   when: not __lego_binary.stat.exists
   block:
     - name: lego | Download lego archive
+      environment:
+        https_proxy: "{{ proxy_server_url | default('') }}"
       ansible.builtin.get_url:
         url: "https://github.com/go-acme/lego/releases/download/v{{ lego_version }}/lego_v{{ lego_version }}_linux_amd64.tar.gz"
         dest: /tmp/lego.tar.gz
@@ -77,6 +79,7 @@
     executable: /bin/bash
   environment:
     CF_DNS_API_TOKEN: "{{ lego_cloudflare_api_token }}"
+    https_proxy: "{{ proxy_server_url | default('') }}"
   when: not __lego_cert_result.stat.exists
   loop: "{{ __lego_certs.results }}"
   loop_control:
