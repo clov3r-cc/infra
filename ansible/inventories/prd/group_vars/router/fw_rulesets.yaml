@@ -410,6 +410,14 @@ fw_rulesets:
           address_group: NAS_SERVERS
         destination:
           port: 443
+      - number: 205
+        action: accept
+        description: Allow DNS from ZABBIX_SERVERS to WAN
+        protocol: tcp_udp
+        source:
+          address_group: ZABBIX_SERVERS
+        destination:
+          port: 53
       - number: 210
         action: accept
         description: Allow NTP from ZABBIX_SERVERS to WAN_GATEWAY

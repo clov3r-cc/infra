@@ -5,10 +5,10 @@
   gather_facts: true
   tags: [zabbix-server, zabbix, ha]
   roles:
-    - role: lego
-      tags: [lego, tls]
     - role: common
       tags: [common]
+    - role: lego
+      tags: [lego, tls]
     - role: ondrejhome.pcs-modules-2
       tags: [pcs-modules, ha]
     - role: zabbix_server

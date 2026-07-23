@@ -217,6 +217,7 @@ Tailscale の通信要件: [What firewall ports should I open to use Tailscale?]
 | :---: | :--------------: | :--------: | :----------: | :------------: | ------------- |
 |  10   |  `NAS-SERVERS`   |    ICMP    |      -       |      any       | ICMP          |
 |  200  |  `NAS-SERVERS`   |    TCP     |     443      |      any       | NAS HTTPS API |
+|  205  | `ZABBIX-SERVERS` |  UDP/TCP   |      53      |      any       | DNS (lego DNS-01) |
 |  210  | `ZABBIX-SERVERS` |    UDP     |     123      | `WAN-GATEWAY`  | NTP           |
 |  211  |  `NAS-SERVERS`   |    UDP     |     123      | `WAN-GATEWAY`  | NTP           |
 |  212  |    `DESKTOP`     |    UDP     |     123      | `WAN-GATEWAY`  | NTP           |

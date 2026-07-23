@@ -1,6 +1,8 @@
 ---
 - name: zabbix-agent | Install Zabbix repository (RedHat)
   when: ansible_facts['os_family'] == 'RedHat'
+  environment:
+     https_proxy: "{{ proxy_server_url | default('') }}"
   ansible.builtin.dnf:
     name: https://repo.zabbix.com/zabbix/7.0/alma/10/x86_64/zabbix-release-latest-7.0.el10.noarch.rpm
     state: present
@@ -19,7 +21,7 @@
 
 - name: zabbix-agent | Ensure config directory exists
   ansible.builtin.file:
-    path: /etc/zabbix/zabbix_agentd.conf.d
+    path: /etc/zabbix/zabbix_agentd.d
     state: directory
     owner: root
     group: root
@@ -27,8 +29,8 @@
 
 - name: zabbix-agent | Deploy configuration
   ansible.builtin.template:
-    src: zabbix_agentd.conf.d.j2
-    dest: /etc/zabbix/zabbix_agentd.conf.d/ansible.conf
+    src: zabbix_agentd.d.j2
+    dest: /etc/zabbix/zabbix_agentd.d/ansible.conf
     owner: root
     group: root
     mode: '0644'
