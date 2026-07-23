@@ -252,3 +252,16 @@
     constraint_id: "loc-fence-{{ item }}"
   loop: "{{ groups['zabbix_server__ha'] }}"
   run_once: true
+
+- name: pacemaker | Add VIP to Pacemaker
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  pcs_resource:
+    name: virtual-ip
+    resource_class: ocf
+    resource_type: "ocf:heartbeat:IPaddr2"
+    options: >-
+      ip={{ zabbix_server_vip.split('/')[0] }}
+      cidr_netmask={{ zabbix_server_vip.split('/')[1] }}
+      op monitor interval="30s"
+      --group zabbix-server-group
+  run_once: true

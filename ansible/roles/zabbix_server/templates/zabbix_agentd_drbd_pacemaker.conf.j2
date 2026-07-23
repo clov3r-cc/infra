@@ -1,0 +1,28 @@
+# {{ ansible_managed }}
+# DRBD + Pacemaker monitoring UserParameters for Zabbix Agent
+
+# === DRBD Monitoring ===
+# Connection state: Connected, StandAlone, WFConnection, etc.
+UserParameter=drbd.connection[*],drbdadm cstate ${1:-drbd1}
+# Filesystem mount existence (1 = mounted, 0 = not mounted)
+UserParameter=vfs.fs.exists[*],mountpoint -q "$1" && echo 1 || echo 0
+# Disk state: UpToDate/UpToDate, etc.
+UserParameter=drbd.disk_state[*],drbdadm dstate ${1:-drbd1}
+# Role: Primary/Secondary, etc.
+UserParameter=drbd.role[*],drbdadm role ${1:-drbd1}
+# Out-of-sync sectors (0 = fully synced)
+UserParameter=drbd.out_of_sync[*],drbdsetup status ${1:-drbd1} --statistics 2>/dev/null | grep -oP 'out-of-sync\s+\K\d+' || echo 0
+
+# === Pacemaker Cluster Monitoring ===
+# Number of online nodes
+UserParameter=pacemaker.nodes.online,crm_mon -1 2>/dev/null | grep -oP '\d+ node' | grep -oP '\d+' || echo 0
+# Number of standby/unclean/offline nodes (case-insensitive)
+UserParameter=pacemaker.nodes.standby,crm_mon -1 2>/dev/null | grep -ciE 'OFFLINE|standby|unclean'
+# Designated Controller node name
+UserParameter=pacemaker.dc,crm_mon -1 2>/dev/null | awk '/Current DC:/{match($$0,/Current DC:[[:space:]]*([^[:space:](]+)/,a); print a[1]}' || echo 'none'
+# Quorum status (1 = has quorum, 0 = no quorum)
+UserParameter=pacemaker.quorum,crm_mon -1 2>/dev/null | grep -ci 'quorum'
+# Failed Resource Actions count
+UserParameter=pacemaker.resources.failed,crm_mon -1 2>/dev/null | awk '/Failed Resource Actions/{found=1;next}found && /^[[:space:]]*\*/{count++} END{print count+0}' || echo 0
+# Number of Started resources in the specified resource group
+UserParameter=pacemaker.group.status[*],crm_mon -1R 2>/dev/null | awk -v grp="$1" 'BEGIN{c=0}/Resource Group: /{in_group=($$0~grp)}in_group&&/:.*Started/{c++}/^$$/{in_group=0}END{print c+0}' || echo 0

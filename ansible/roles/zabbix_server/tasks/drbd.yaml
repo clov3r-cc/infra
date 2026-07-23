@@ -179,7 +179,7 @@
     mode: '0755'
 
 # DRBD デバイスのマウントは Pacemaker が管理する
-- name: drbd | Configure DRBD filesystem resource
+- name: drbd | Add DRBD filesystem to Pacemaker
   when: "inventory_hostname in groups['zabbix_server__ha']"
   pcs_resource:
     name: drbd-fs
@@ -189,7 +189,7 @@
       device=/dev/drbd1
       directory={{ zabbix_server_drbd_mount_point }}
       fstype=ext4
-      --group zabbix-server
+      --group zabbix-server-group
   run_once: true
 
 - name: drbd | Determine node running drbd-fs resource

@@ -34,7 +34,7 @@
     group: mysql
     mode: '0755'
 
-- name: mariadb | Configure MariaDB server
+- name: mariadb | Deploy MariaDB server config
   when: "inventory_hostname in groups['zabbix_server__ha']"
   # zz- prefix ensures the file is read last in /etc/my.cnf.d/ (alphabetic order)
   ansible.builtin.template:
@@ -47,27 +47,22 @@
   ansible.builtin.command:
     cmd: mariadb-install-db --user=mysql --skip-test-db
     creates: "{{ zabbix_server_mariadb_datadir }}/mysql/user.MAI"
-  changed_when: true
 
 - name: mariadb | Install semanage tool
+  when: "inventory_hostname in groups['zabbix_server__ha']"
   ansible.builtin.package:
     name: policycoreutils-python-utils
     state: present
 
-- name: mariadb | Set SELinux context for MariaDB datadir
+- name: mariadb | Add SELinux fcontext rule for datadir
   when: inventory_hostname == hostvars[groups['zabbix_server__ha'][0]]['drbd_active_node']
-  block:
-    - name: mariadb | Add SELinux fcontext rule for datadir
-      ansible.builtin.command:
-        cmd: semanage fcontext -a -t mysqld_db_t "{{ zabbix_server_mariadb_datadir }}(/.*)?"
-      register: __zabbix_server_mariadb_semanage
-      failed_when: false
-      changed_when: __zabbix_server_mariadb_semanage.rc == 0
+  ansible.builtin.command:
+    cmd: semanage fcontext -a -t mysqld_db_t "{{ zabbix_server_mariadb_datadir }}(/.*)?"
 
-    - name: mariadb | Apply SELinux context to datadir
-      ansible.builtin.command:
-        cmd: restorecon -Rv "{{ zabbix_server_mariadb_datadir }}"
-      changed_when: true
+- name: mariadb | Apply SELinux context to datadir
+  when: inventory_hostname == hostvars[groups['zabbix_server__ha'][0]]['drbd_active_node']
+  ansible.builtin.command:
+    cmd: restorecon -Rv "{{ zabbix_server_mariadb_datadir }}"
 
 # systemd に操作させず、Pacemaker が管理する
 - name: mariadb | Stop and disable mariadb
@@ -77,7 +72,7 @@
     state: stopped
     enabled: false
 
-- name: mariadb | Configure MariaDB pacemaker resource
+- name: mariadb | Add MariaDB to Pacemaker
   when: "inventory_hostname in groups['zabbix_server__ha']"
   pcs_resource:
     name: mariadb
@@ -87,5 +82,5 @@
       datadir={{ zabbix_server_mariadb_datadir }}
       op monitor interval="60s" timeout="30s"
       meta target-role="Started" is-managed="true"
-      --group zabbix-server
+      --group zabbix-server-group
   run_once: true

@@ -11,3 +11,5 @@
   ansible.builtin.import_tasks: mariadb.yaml
 - name: Setup Zabbix Server
   ansible.builtin.import_tasks: zabbix-server.yaml
+- name: Setup Zabbix Agent custom monitoring (DRBD + Pacemaker)
+  ansible.builtin.import_tasks: zabbix-agent-custom.yaml

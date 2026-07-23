@@ -1,0 +1,17 @@
+---
+- name: zabbix-agent-custom | Add zabbix user to haclient group
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  ansible.builtin.user:
+    name: zabbix
+    groups: haclient
+    append: true
+
+- name: zabbix-agent-custom | Deploy DRBD/Pacemaker UserParameter config
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  ansible.builtin.template:
+    src: zabbix_agentd_drbd_pacemaker.conf.j2
+    dest: /etc/zabbix/zabbix_agentd.d/drbd_pacemaker.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart zabbix-agent
