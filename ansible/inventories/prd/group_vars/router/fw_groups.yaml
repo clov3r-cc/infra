@@ -140,6 +140,9 @@ fw_address_groups:
   - name: DESKTOP
     addresses:
       - 192.168.22.10
+  - name: ZABBIX_VIP
+    addresses:
+      - 192.168.22.7
   - name: DNS_PROXY_VIP
     addresses:
       - 192.168.20.22

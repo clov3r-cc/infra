@@ -86,6 +86,7 @@ nftables を使用し、IPv4 ゾーンベースファイアウォールで実装
 | `FW-INTERNAL-NODES` | 192.168.22.4, 192.168.22.5   | FW 01/02 (INTERNAL) |
 | `NAS-SERVERS`       | 192.168.22.6                 | NAS サーバ          |
 | `ZABBIX-SERVERS`    | 192.168.22.8, 192.168.22.9   | Zabbix サーバ       |
+| `ZABBIX-VIP`        | 192.168.22.7                 | Zabbix Server VIP   |
 | `DESKTOP`           | 192.168.22.10                | デスクトップ        |
 | `DNS-PROXY-VIP`     | 192.168.20.22                | DNS/Proxy VIP       |
 | `VRRP-MULTICAST`    | 224.0.0.18                   | VRRP マルチキャスト |
@@ -202,6 +203,7 @@ Tailscale の通信要件: [What firewall ports should I open to use Tailscale?]
 |  25   | `TAILSCALE-NODES` |    TCP     |      22      |     `DESKTOP`     | SSH          |
 |  30   | `TAILSCALE-NODES` |    TCP     |      22      | `ACCESS-SWITCHES` | SSH          |
 |  40   | `TAILSCALE-NODES` |    TCP     |     9999     |   `NAS-SERVERS`   | NAS サービス |
+|  200  | `TAILSCALE-NODES` |    TCP     |     443      | `ZABBIX-VIP`      | Zabbix HTTPS    |
 
 ### 6.6. SERVICE → LOCAL
 

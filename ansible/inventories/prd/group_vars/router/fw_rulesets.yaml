@@ -382,6 +382,15 @@ fw_rulesets:
         destination:
           address_group: NAS_SERVERS
           port: 9999
+      - number: 200
+        action: accept
+        description: Allow HTTPS from TAILSCALE_NODES to ZABBIX_VIP
+        protocol: tcp
+        source:
+          address_group: TAILSCALE_NODES
+        destination:
+          address_group: ZABBIX_VIP
+          port: 443
 
   - name: INTERNAL-TO-WAN
     default_action: drop
