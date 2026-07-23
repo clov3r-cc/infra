@@ -1,0 +1,218 @@
+zabbix_export:
+  version: '7.0'
+  template_groups:
+    - uuid: d7499a44661641dfbf848a21729401d5
+      name: Templates/Applications
+  templates:
+    - uuid: 7673e17f498c40078601de088b2848a5
+      template: 'Template App Pacemaker by Zabbix active'
+      name: 'Template App Pacemaker by Zabbix active'
+      description: |
+        Pacemaker/Corosync HA cluster health monitoring.
+        Monitors node status, quorum, DC, failed actions, and cluster processes.
+        Requires UserParameter definitions in zabbix_agentd_drbd_pacemaker.conf.
+      groups:
+        - name: Templates/Applications
+      items:
+        - uuid: feb4b1af09914a079efe3f30d3cd5e94
+          name: 'Pacemaker: Actions log (move/start/stop/promote/demote)'
+          type: ZABBIX_ACTIVE
+          key: 'log[/var/log/pacemaker/pacemaker.log,pacemaker-schedulerd.*notice: Actions: (Move|Start|Stop),,,skip,,]'
+          delay: 30s
+          history: 7d
+          value_type: LOG
+          trends: '0'
+          description: 'Captures Pacemaker scheduler action lines (Move, Start, Stop) which indicate resource state transitions.'
+          tags:
+            - tag: component
+              value: pacemaker
+          triggers:
+            - uuid: ab7cba779a894407b3922c4f4f7cb6f6
+              expression: 'find(/Template App Pacemaker by Zabbix active/log[/var/log/pacemaker/pacemaker.log,pacemaker-schedulerd.*notice: Actions: (Move|Start|Stop),,,skip,,],#1,,"Actions: Move")=1 and nodata(/Template App Pacemaker by Zabbix active/log[/var/log/pacemaker/pacemaker.log,pacemaker-schedulerd.*notice: Actions: (Move|Start|Stop),,,skip,,],1m)=0'
+              name: 'Pacemaker: Resource Moved on {HOST.HOST}'
+              event_name: 'Pacemaker: Resource Moved on {HOST.HOST}'
+              priority: INFO
+              description: 'A Pacemaker scheduler Move action was detected. Check /var/log/pacemaker/pacemaker.log for details.'
+              tags:
+                - tag: component
+                  value: pacemaker
+            - uuid: 52121ae198504a6ab711fed8cc2eadce
+              expression: 'find(/Template App Pacemaker by Zabbix active/log[/var/log/pacemaker/pacemaker.log,pacemaker-schedulerd.*notice: Actions: (Move|Start|Stop),,,skip,,],#1,,"Actions: Stop")=1'
+              recovery_mode: RECOVERY_EXPRESSION
+              recovery_expression: 'find(/Template App Pacemaker by Zabbix active/log[/var/log/pacemaker/pacemaker.log,pacemaker-schedulerd.*notice: Actions: (Move|Start|Stop),,,skip,,],#1,,"Actions: Start")=1'
+              name: 'Pacemaker: Resource Stopped on {HOST.HOST}'
+              event_name: 'Pacemaker: Resource Stopped on {HOST.HOST}'
+              priority: WARNING
+              description: 'A Pacemaker scheduler action (Move, Start, Stop, Promote, Demote) was detected. Check /var/log/pacemaker/pacemaker.log for details.'
+              type: MULTIPLE
+              tags:
+                - tag: component
+                  value: pacemaker
+        - uuid: 5082b70d42474037acfda697b9d86f42
+          name: 'Pacemaker: DC node'
+          type: ZABBIX_ACTIVE
+          key: pacemaker.dc
+          delay: 3m
+          history: 7d
+          value_type: TEXT
+          trends: '0'
+          description: 'Name of the Designated Controller node.'
+          tags:
+            - tag: component
+              value: pacemaker
+        - uuid: d129d25e65a3445d8b24cf38a3b5cb3a
+          name: 'Pacemaker: Online nodes count'
+          type: ZABBIX_ACTIVE
+          key: pacemaker.nodes.online
+          history: 7d
+          description: 'Number of online cluster nodes reported by crm_mon.'
+          tags:
+            - tag: component
+              value: pacemaker
+          triggers:
+            - uuid: a0bb9a5910dc48b3b4a5710a34a8e9da
+              expression: 'last(/Template App Pacemaker by Zabbix active/pacemaker.nodes.online)<{$CLUSTER.EXPECTED_NODES}'
+              name: 'Pacemaker: Not enough online nodes on {HOST.HOST}'
+              event_name: 'Pacemaker: Not enough online nodes on {HOST.HOST}'
+              priority: HIGH
+              description: 'One or more cluster nodes are offline. Expected: {$CLUSTER.EXPECTED_NODES} nodes.'
+              tags:
+                - tag: component
+                  value: pacemaker
+        - uuid: 1c93d8ed7e674f98b38099d7908c02bb
+          name: 'Pacemaker: Offline/Standby nodes count'
+          type: ZABBIX_ACTIVE
+          key: pacemaker.nodes.standby
+          history: 7d
+          description: 'Number of offline, standby or unclean cluster nodes.'
+          tags:
+            - tag: component
+              value: pacemaker
+        - uuid: 00b27051e90a4b39846a5352a755985d
+          name: 'Pacemaker: Quorum status'
+          type: ZABBIX_ACTIVE
+          key: pacemaker.quorum
+          history: 7d
+          description: '1 = has quorum, 0 = no quorum (cluster may split-brain).'
+          tags:
+            - tag: component
+              value: pacemaker
+          triggers:
+            - uuid: 94c612c6873d492ab5f08428273e5a76
+              expression: 'last(/Template App Pacemaker by Zabbix active/pacemaker.quorum)=0'
+              name: 'Pacemaker: Quorum lost on {HOST.HOST}'
+              event_name: 'Pacemaker: Quorum lost on {HOST.HOST}'
+              priority: DISASTER
+              description: 'Cluster has lost quorum. This may indicate a split-brain or multiple node failures.'
+              tags:
+                - tag: component
+                  value: pacemaker
+        - uuid: 3d0fa9ffb9864efba06110523bfe4e9c
+          name: 'Pacemaker: Failed Resource Actions'
+          type: ZABBIX_ACTIVE
+          key: pacemaker.resources.failed
+          history: 7d
+          description: 'Number of failed resource actions reported by crm_mon.'
+          tags:
+            - tag: component
+              value: pacemaker
+          triggers:
+            - uuid: da5a3e61860641f1ac9cbc02873e5ab2
+              expression: 'last(/Template App Pacemaker by Zabbix active/pacemaker.resources.failed)>0'
+              name: 'Pacemaker: Failed Resource Actions on {HOST.HOST}'
+              event_name: 'Pacemaker: Failed Resource Actions on {HOST.HOST}'
+              priority: HIGH
+              description: 'There are failed resource actions. Check "pcs status" or "crm_mon -1" for details.'
+              tags:
+                - tag: component
+                  value: pacemaker
+        - uuid: fb6c368cf5c14afcafdbeaec453ea601
+          name: 'Corosync-QDevice process'
+          type: ZABBIX_ACTIVE
+          key: 'proc.num[corosync-qdevice]'
+          delay: 2m
+          history: 7d
+          description: 'Number of running corosync-qdevice processes (qnetd client). 0 if qdevice is not configured.'
+          tags:
+            - tag: component
+              value: corosync
+          triggers:
+            - uuid: 58f9f84ae44748d78402d82884a4441c
+              expression: 'last(/Template App Pacemaker by Zabbix active/proc.num[corosync-qdevice])=0 and {$QDEVICE.ENABLED}=1'
+              name: 'Corosync QDevice process is not running on {HOST.HOST}'
+              event_name: 'Corosync QDevice process is not running on {HOST.HOST}'
+              priority: AVERAGE
+              description: 'Corosync QDevice (external quorum agent) is not running while QDevice is expected.'
+              tags:
+                - tag: component
+                  value: corosync
+        - uuid: 7fb1b46a92a94ea99b3bf6d9192fd336
+          name: 'Corosync process'
+          type: ZABBIX_ACTIVE
+          key: 'proc.num[corosync]'
+          history: 7d
+          description: 'Number of running corosync processes.'
+          tags:
+            - tag: component
+              value: corosync
+          triggers:
+            - uuid: f29af200bfa04194bc42ae3d131f8e05
+              expression: 'last(/Template App Pacemaker by Zabbix active/proc.num[corosync])=0'
+              name: 'Corosync process is not running on {HOST.HOST}'
+              event_name: 'Corosync process is not running on {HOST.HOST}'
+              priority: HIGH
+              description: 'Corosync cluster communication service is not running. Cluster communication is disrupted.'
+              tags:
+                - tag: component
+                  value: corosync
+        - uuid: e0d48e9ad58c48f19b1041f553560a62
+          name: 'Pacemaker daemon process'
+          type: ZABBIX_ACTIVE
+          key: 'proc.num[pacemakerd]'
+          history: 7d
+          description: 'Number of running pacemakerd processes.'
+          tags:
+            - tag: component
+              value: pacemaker
+          triggers:
+            - uuid: c5fdb9d9a6854ce5b7a68b16ffc8301e
+              expression: 'last(/Template App Pacemaker by Zabbix active/proc.num[pacemakerd])=0'
+              name: 'Pacemaker daemon is not running on {HOST.HOST}'
+              event_name: 'Pacemaker daemon is not running on {HOST.HOST}'
+              priority: DISASTER
+              description: 'Pacemaker cluster manager is not running. High availability is unavailable.'
+              tags:
+                - tag: component
+                  value: pacemaker
+        - uuid: 478aaf88128540558cfa267823b7573f
+          name: 'PCSD process'
+          type: ZABBIX_ACTIVE
+          key: 'proc.num[pcsd]'
+          history: 7d
+          description: 'Number of running pcsd processes.'
+          tags:
+            - tag: component
+              value: pacemaker
+          triggers:
+            - uuid: 1b1eb71a31e240ad9105a13f6776ccfa
+              expression: 'last(/Template App Pacemaker by Zabbix active/proc.num[pcsd])=0'
+              name: 'PCSD process is not running on {HOST.HOST}'
+              event_name: 'PCSD process is not running on {HOST.HOST}'
+              priority: WARNING
+              description: 'PCSD (Pacemaker Configuration System Daemon) is not running.'
+              tags:
+                - tag: component
+                  value: pacemaker
+      macros:
+        - macro: '{$CLUSTER.EXPECTED_NODES}'
+          value: '2'
+          description: 'Expected number of online cluster nodes.'
+        - macro: '{$PACEMAKER.EXPECTED_RESOURCES}'
+          value: '6'
+          description: 'Expected number of started resources in the Pacemaker group.'
+        - macro: '{$PACEMAKER.GROUP}'
+          value: zabbix-server-group
+          description: 'Pacemaker resource group name to monitor.'
+        - macro: '{$QDEVICE.ENABLED}'
+          value: '0'
+          description: 'Set to 1 if QDevice (corosync-qdevice) is configured for external quorum.'

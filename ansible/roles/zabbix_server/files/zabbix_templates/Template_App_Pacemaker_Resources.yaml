@@ -1,0 +1,113 @@
+zabbix_export:
+  version: '7.0'
+  template_groups:
+    - uuid: d7499a44661641dfbf848a21729401d5
+      name: Templates/Applications
+  templates:
+    - uuid: 2dc06241f47e4eaba6feea9fd811419e
+      template: 'Template App Pacemaker Resources by Zabbix active'
+      name: 'Template App Pacemaker Resources by Zabbix active'
+      description: |
+        Zabbix HA stack resource monitoring.
+        Monitors Pacemaker group resource state, DRBD mount, and process counts
+        for MariaDB, PHP-FPM, Zabbix Server, and Nginx.
+        
+        Process count items collect data but triggers report via Pacemaker
+        group state. This template complements the Pacemaker cluster template.
+      groups:
+        - name: Templates/Applications
+      items:
+        - uuid: 448b37e5860840b7a29219c19762578f
+          name: 'Pacemaker: Group started resources'
+          type: ZABBIX_ACTIVE
+          key: 'pacemaker.group.status[{$PACEMAKER.GROUP}]'
+          delay: 30s
+          history: 7d
+          description: 'Number of currently Started resources in the Pacemaker group {$PACEMAKER.GROUP}. Expected: {$PACEMAKER.EXPECTED_RESOURCES}.'
+          tags:
+            - tag: component
+              value: pacemaker
+          triggers:
+            - uuid: 06cd30135a574683b2c58a727b0e984f
+              expression: 'last(/Template App Pacemaker Resources by Zabbix active/pacemaker.group.status[{$PACEMAKER.GROUP}])<{$PACEMAKER.EXPECTED_RESOURCES}'
+              name: 'Pacemaker: {{$PACEMAKER.GROUP}} group not fully started on {HOST.HOST}'
+              event_name: 'Pacemaker: {{$PACEMAKER.GROUP}} group not fully started on {HOST.HOST}'
+              priority: DISASTER
+              description: 'One or more resources in {[$PACEMAKER.GROUP]} are not in Started state. Expected: {$PACEMAKER.EXPECTED_RESOURCES} running.'
+              tags:
+                - tag: component
+                  value: pacemaker
+        - uuid: 8096001b1d114f0bb4a189d47d0b71c5
+          name: 'mariadbd process count'
+          type: ZABBIX_ACTIVE
+          key: 'proc.num[mariadbd]'
+          history: 7d
+          description: 'MariaDB server process count. Expected on the active Pacemaker node.'
+          tags:
+            - tag: component
+              value: mariadb
+        - uuid: e0d5ada7d8194d9f8aedda3166eb1a47
+          name: 'nginx process count'
+          type: ZABBIX_ACTIVE
+          key: 'proc.num[nginx]'
+          history: 7d
+          description: 'Nginx process count. Expected on the active Pacemaker node.'
+          tags:
+            - tag: component
+              value: nginx
+        - uuid: f39c46b71ea743b39623bd9bbd87e299
+          name: 'php-fpm process count'
+          type: ZABBIX_ACTIVE
+          key: 'proc.num[php-fpm]'
+          history: 7d
+          description: 'PHP-FPM process count. Expected on the active Pacemaker node.'
+          tags:
+            - tag: component
+              value: php
+        - uuid: 83b2d66cee684a97affda28206130eb1
+          name: 'zabbix_server process count'
+          type: ZABBIX_ACTIVE
+          key: 'proc.num[zabbix_server]'
+          history: 7d
+          description: 'Zabbix Server process count. Expected on the active Pacemaker node.'
+          tags:
+            - tag: component
+              value: zabbix
+        - uuid: 32874a34916346f58f50bde43acd84ec
+          name: 'DRBD mount: existence'
+          key: 'vfs.fs.exists[{$DRBD.MOUNT}]'
+          history: 7d
+          description: 'Whether the DRBD filesystem is mounted. 1 = mounted, 0 = not mounted.'
+          tags:
+            - tag: component
+              value: drbd
+        - uuid: afeae63e7f9d4285b3564cbe831fd9cb
+          name: 'DRBD mount: free space'
+          key: 'vfs.fs.size[{$DRBD.MOUNT},free]'
+          delay: 5m
+          history: 7d
+          units: B
+          description: 'Free disk space on the DRBD mount point in bytes.'
+          tags:
+            - tag: component
+              value: drbd
+        - uuid: 6103ad22a4754c8597b67dacb24fa057
+          name: 'DRBD mount: free space percentage'
+          key: 'vfs.fs.size[{$DRBD.MOUNT},pfree]'
+          delay: 5m
+          history: 7d
+          units: '%'
+          description: 'Free disk space percentage on the DRBD mount point.'
+          tags:
+            - tag: component
+              value: drbd
+      macros:
+        - macro: '{$DRBD.MOUNT}'
+          value: /mnt/drbd1
+          description: 'DRBD filesystem mount point path.'
+        - macro: '{$PACEMAKER.EXPECTED_RESOURCES}'
+          value: '6'
+          description: 'Expected number of started resources in the Pacemaker group.'
+        - macro: '{$PACEMAKER.GROUP}'
+          value: zabbix-server-group
+          description: 'Pacemaker resource group name to monitor.'
