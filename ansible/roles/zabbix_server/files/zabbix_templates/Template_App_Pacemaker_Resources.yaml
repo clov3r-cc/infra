@@ -9,11 +9,9 @@ zabbix_export:
       name: 'Template App Pacemaker Resources by Zabbix active'
       description: |
         Zabbix HA stack resource monitoring.
-        Monitors Pacemaker group resource state, DRBD mount, and process counts
-        for MariaDB, PHP-FPM, Zabbix Server, and Nginx.
-        
-        Process count items collect data but triggers report via Pacemaker
-        group state. This template complements the Pacemaker cluster template.
+        Monitors Pacemaker group resource state via LLD (Low-Level Discovery).
+        Discovers resources in the {$PACEMAKER.GROUP} and creates per-resource
+        items and triggers. Replaces the legacy hardcoded per-process items.
       groups:
         - name: Templates/Applications
       items:
@@ -23,91 +21,65 @@ zabbix_export:
           key: 'pacemaker.group.status[{$PACEMAKER.GROUP}]'
           delay: 30s
           history: 7d
-          description: 'Number of currently Started resources in the Pacemaker group {$PACEMAKER.GROUP}. Expected: {$PACEMAKER.EXPECTED_RESOURCES}.'
+          description: 'Number of currently Started resources in the Pacemaker group {$PACEMAKER.GROUP}. Compared against the total resource count.'
           tags:
             - tag: component
               value: pacemaker
-          triggers:
-            - uuid: 06cd30135a574683b2c58a727b0e984f
-              expression: 'last(/Template App Pacemaker Resources by Zabbix active/pacemaker.group.status[{$PACEMAKER.GROUP}])<{$PACEMAKER.EXPECTED_RESOURCES}'
-              name: 'Pacemaker: {{$PACEMAKER.GROUP}} group not fully started on {HOST.HOST}'
-              event_name: 'Pacemaker: {{$PACEMAKER.GROUP}} group not fully started on {HOST.HOST}'
-              priority: DISASTER
-              description: 'One or more resources in {[$PACEMAKER.GROUP]} are not in Started state. Expected: {$PACEMAKER.EXPECTED_RESOURCES} running.'
+        - uuid: 9f78ad64ffbd4ad0864f6323c3d1a428
+          name: 'Pacemaker: Group total resources'
+          type: ZABBIX_ACTIVE
+          key: 'pacemaker.group.total[{$PACEMAKER.GROUP}]'
+          delay: 30s
+          history: 7d
+          description: 'Total number of resources in the Pacemaker group {$PACEMAKER.GROUP} (regardless of state).'
+          tags:
+            - tag: component
+              value: pacemaker
+      discovery_rules:
+        - uuid: 54cfc354b8144c19a341669cae96ed8f
+          name: 'Pacemaker: Resource Discovery'
+          type: ZABBIX_ACTIVE
+          key: 'pacemaker.resources.discover[{$PACEMAKER.GROUP}]'
+          delay: 1h
+          filter:
+            conditions:
+              - macro: '{#RESOURCE.NAME}'
+                value: '^(.*)$'
+                formulaid: A
+          item_prototypes:
+            - uuid: 42ede3aa436448b5a745496f0e8f38ac
+              name: 'Pacemaker: resource {#RESOURCE.NAME} state'
+              type: ZABBIX_ACTIVE
+              key: 'pacemaker.resource.state[{#RESOURCE.NAME}]'
+              delay: 30s
+              history: 7d
+              value_type: CHAR
+              trends: '0'
+              description: 'Current state of Pacemaker resource {#RESOURCE.NAME}.'
               tags:
                 - tag: component
                   value: pacemaker
-        - uuid: 8096001b1d114f0bb4a189d47d0b71c5
-          name: 'mariadbd process count'
-          type: ZABBIX_ACTIVE
-          key: 'proc.num[mariadbd]'
-          history: 7d
-          description: 'MariaDB server process count. Expected on the active Pacemaker node.'
-          tags:
-            - tag: component
-              value: mariadb
-        - uuid: e0d5ada7d8194d9f8aedda3166eb1a47
-          name: 'nginx process count'
-          type: ZABBIX_ACTIVE
-          key: 'proc.num[nginx]'
-          history: 7d
-          description: 'Nginx process count. Expected on the active Pacemaker node.'
-          tags:
-            - tag: component
-              value: nginx
-        - uuid: f39c46b71ea743b39623bd9bbd87e299
-          name: 'php-fpm process count'
-          type: ZABBIX_ACTIVE
-          key: 'proc.num[php-fpm]'
-          history: 7d
-          description: 'PHP-FPM process count. Expected on the active Pacemaker node.'
-          tags:
-            - tag: component
-              value: php
-        - uuid: 83b2d66cee684a97affda28206130eb1
-          name: 'zabbix_server process count'
-          type: ZABBIX_ACTIVE
-          key: 'proc.num[zabbix_server]'
-          history: 7d
-          description: 'Zabbix Server process count. Expected on the active Pacemaker node.'
-          tags:
-            - tag: component
-              value: zabbix
-        - uuid: 32874a34916346f58f50bde43acd84ec
-          name: 'DRBD mount: existence'
-          key: 'vfs.fs.exists[{$DRBD.MOUNT}]'
-          history: 7d
-          description: 'Whether the DRBD filesystem is mounted. 1 = mounted, 0 = not mounted.'
-          tags:
-            - tag: component
-              value: drbd
-        - uuid: afeae63e7f9d4285b3564cbe831fd9cb
-          name: 'DRBD mount: free space'
-          key: 'vfs.fs.size[{$DRBD.MOUNT},free]'
-          delay: 5m
-          history: 7d
-          units: B
-          description: 'Free disk space on the DRBD mount point in bytes.'
-          tags:
-            - tag: component
-              value: drbd
-        - uuid: 6103ad22a4754c8597b67dacb24fa057
-          name: 'DRBD mount: free space percentage'
-          key: 'vfs.fs.size[{$DRBD.MOUNT},pfree]'
-          delay: 5m
-          history: 7d
-          units: '%'
-          description: 'Free disk space percentage on the DRBD mount point.'
-          tags:
-            - tag: component
-              value: drbd
+              trigger_prototypes:
+                - uuid: 98700f9ba76f496ebe96eb62109dc5b4
+                  expression: 'last(/Template App Pacemaker Resources by Zabbix active/pacemaker.resource.state[{#RESOURCE.NAME}])<>"Started"'
+                  name: 'Pacemaker: resource {#RESOURCE.NAME} has unexpected state ({ITEM.LASTVALUE}) on {HOST.HOST}'
+                  event_name: 'Pacemaker: resource {#RESOURCE.NAME} has unexpected state ({ITEM.LASTVALUE}) on {HOST.HOST}'
+                  priority: DISASTER
+                  description: 'Resource {#RESOURCE.NAME} is in {ITEM.LASTVALUE} state. Expected: Started, Promoted, or Master.'
+                  tags:
+                    - tag: component
+                      value: pacemaker
       macros:
-        - macro: '{$DRBD.MOUNT}'
-          value: /mnt/drbd1
-          description: 'DRBD filesystem mount point path.'
-        - macro: '{$PACEMAKER.EXPECTED_RESOURCES}'
-          value: '6'
-          description: 'Expected number of started resources in the Pacemaker group.'
         - macro: '{$PACEMAKER.GROUP}'
           value: zabbix-server-group
           description: 'Pacemaker resource group name to monitor.'
+  triggers:
+    - uuid: 06cd30135a574683b2c58a727b0e984f
+      expression: 'last(/Template App Pacemaker Resources by Zabbix active/pacemaker.group.status[{$PACEMAKER.GROUP}])<last(/Template App Pacemaker Resources by Zabbix active/pacemaker.group.total[{$PACEMAKER.GROUP}])'
+      name: 'Pacemaker: {{$PACEMAKER.GROUP}} group not fully started on {HOST.HOST}'
+      event_name: 'Pacemaker: {{$PACEMAKER.GROUP}} group not fully started on {HOST.HOST}'
+      priority: DISASTER
+      description: 'One or more resources in {[$PACEMAKER.GROUP]} are not in Started state. Expected all resources to be Started.'
+      tags:
+        - tag: component
+          value: pacemaker

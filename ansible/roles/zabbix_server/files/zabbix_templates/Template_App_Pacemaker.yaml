@@ -15,36 +15,24 @@ zabbix_export:
         - name: Templates/Applications
       items:
         - uuid: feb4b1af09914a079efe3f30d3cd5e94
-          name: 'Pacemaker: Actions log (move/start/stop/promote/demote)'
+          name: 'Pacemaker: Resource moved'
           type: ZABBIX_ACTIVE
-          key: 'log[/var/log/pacemaker/pacemaker.log,pacemaker-schedulerd.*notice: Actions: (Move|Start|Stop),,,skip,,]'
+          key: 'log[/var/log/pacemaker/pacemaker.log,pacemaker-schedulerd.*notice: Actions: Move,,,skip,,]'
           delay: 30s
           history: 7d
           value_type: LOG
           trends: '0'
-          description: 'Captures Pacemaker scheduler action lines (Move, Start, Stop) which indicate resource state transitions.'
+          description: 'Captures Pacemaker scheduler action lines (Move) which indicate resource state transitions.'
           tags:
             - tag: component
               value: pacemaker
           triggers:
             - uuid: ab7cba779a894407b3922c4f4f7cb6f6
-              expression: 'find(/Template App Pacemaker by Zabbix active/log[/var/log/pacemaker/pacemaker.log,pacemaker-schedulerd.*notice: Actions: (Move|Start|Stop),,,skip,,],#1,,"Actions: Move")=1 and nodata(/Template App Pacemaker by Zabbix active/log[/var/log/pacemaker/pacemaker.log,pacemaker-schedulerd.*notice: Actions: (Move|Start|Stop),,,skip,,],1m)=0'
+              expression: 'find(/Template App Pacemaker by Zabbix active/log[/var/log/pacemaker/pacemaker.log,pacemaker-schedulerd.*notice: Actions: Move,,,skip,,],#1,,"Actions: Move")=1 and nodata(/Template App Pacemaker by Zabbix active/log[/var/log/pacemaker/pacemaker.log,pacemaker-schedulerd.*notice: Actions: Move,,,skip,,],1m)=0'
               name: 'Pacemaker: Resource Moved on {HOST.HOST}'
               event_name: 'Pacemaker: Resource Moved on {HOST.HOST}'
               priority: INFO
               description: 'A Pacemaker scheduler Move action was detected. Check /var/log/pacemaker/pacemaker.log for details.'
-              tags:
-                - tag: component
-                  value: pacemaker
-            - uuid: 52121ae198504a6ab711fed8cc2eadce
-              expression: 'find(/Template App Pacemaker by Zabbix active/log[/var/log/pacemaker/pacemaker.log,pacemaker-schedulerd.*notice: Actions: (Move|Start|Stop),,,skip,,],#1,,"Actions: Stop")=1'
-              recovery_mode: RECOVERY_EXPRESSION
-              recovery_expression: 'find(/Template App Pacemaker by Zabbix active/log[/var/log/pacemaker/pacemaker.log,pacemaker-schedulerd.*notice: Actions: (Move|Start|Stop),,,skip,,],#1,,"Actions: Start")=1'
-              name: 'Pacemaker: Resource Stopped on {HOST.HOST}'
-              event_name: 'Pacemaker: Resource Stopped on {HOST.HOST}'
-              priority: WARNING
-              description: 'A Pacemaker scheduler action (Move, Start, Stop, Promote, Demote) was detected. Check /var/log/pacemaker/pacemaker.log for details.'
-              type: MULTIPLE
               tags:
                 - tag: component
                   value: pacemaker
@@ -94,6 +82,8 @@ zabbix_export:
           key: pacemaker.quorum
           history: 7d
           description: '1 = has quorum, 0 = no quorum (cluster may split-brain).'
+          valuemap:
+            name: 'Quorum status'
           tags:
             - tag: component
               value: pacemaker
@@ -207,12 +197,14 @@ zabbix_export:
         - macro: '{$CLUSTER.EXPECTED_NODES}'
           value: '2'
           description: 'Expected number of online cluster nodes.'
-        - macro: '{$PACEMAKER.EXPECTED_RESOURCES}'
-          value: '6'
-          description: 'Expected number of started resources in the Pacemaker group.'
-        - macro: '{$PACEMAKER.GROUP}'
-          value: zabbix-server-group
-          description: 'Pacemaker resource group name to monitor.'
         - macro: '{$QDEVICE.ENABLED}'
           value: '0'
           description: 'Set to 1 if QDevice (corosync-qdevice) is configured for external quorum.'
+      valuemaps:
+        - uuid: 9edc01270d944dcaba6c85daf20a2820
+          name: 'Quorum status'
+          mappings:
+            - value: '1'
+              newvalue: 'Has quorum'
+            - value: '0'
+              newvalue: 'No quorum'

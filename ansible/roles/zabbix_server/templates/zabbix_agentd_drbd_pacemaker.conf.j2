@@ -4,8 +4,6 @@
 # === DRBD Monitoring ===
 # Connection state: Connected, StandAlone, WFConnection, etc.
 UserParameter=drbd.connection[*],drbdadm cstate ${1:-drbd1}
-# Filesystem mount existence (1 = mounted, 0 = not mounted)
-UserParameter=vfs.fs.exists[*],mountpoint -q "$1" && echo 1 || echo 0
 # Disk state: UpToDate/UpToDate, etc.
 UserParameter=drbd.disk_state[*],drbdadm dstate ${1:-drbd1}
 # Role: Primary/Secondary, etc.
@@ -26,3 +24,12 @@ UserParameter=pacemaker.quorum,crm_mon -1 2>/dev/null | grep -ci 'quorum'
 UserParameter=pacemaker.resources.failed,crm_mon -1 2>/dev/null | awk '/Failed Resource Actions/{found=1;next}found && /^[[:space:]]*\*/{count++} END{print count+0}' || echo 0
 # Number of Started resources in the specified resource group
 UserParameter=pacemaker.group.status[*],crm_mon -1R 2>/dev/null | awk -v grp="$1" 'BEGIN{c=0}/Resource Group: /{in_group=($$0~grp)}in_group&&/:.*Started/{c++}/^$$/{in_group=0}END{print c+0}' || echo 0
+
+# Total number of resources in the specified resource group
+UserParameter=pacemaker.group.total[*],pcs resource status 2>/dev/null | awk -v grp="$1" 'BEGIN{c=0}/Resource Group: /{g=($$0~grp)}g && !/Resource Group:/ && !/^[[:space:]]*$$/{c++}/^$$/{g=0}END{print c+0}' || echo 0
+
+# LLD: Discover all resources in the specified Pacemaker resource group
+UserParameter=pacemaker.resources.discover[*],pcs resource status 2>/dev/null | awk -v grp="$1" 'BEGIN{printf "{\"data\":["} /Resource Group: /{g=($$0~grp)}g && !/Resource Group:/ && !/^[[:space:]]*$$/{printf "%s{\"{% raw %}{#RESOURCE.NAME}{% endraw %}\":\"%s\"}",sep,$$2;sep=","}/^$$/{g=0}END{printf "]}"}' || echo '{"data":[]}'
+
+# Individual resource state in the specified group
+UserParameter=pacemaker.resource.state[*],pcs resource status 2>/dev/null | awk -v res="$1" '$$2==res{if($$5~"disabled")print "Disabled";else print $$4;exit}' || echo 'unknown'
