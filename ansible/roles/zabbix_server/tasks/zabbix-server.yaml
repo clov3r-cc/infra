@@ -133,6 +133,24 @@
           ssl_certificate     /etc/lego/certificates/{{ zabbix_server_fqdn }}.crt;
           ssl_certificate_key /etc/lego/certificates/{{ zabbix_server_fqdn }}.key;
 
+- name: zabbix-server | Ensure systemd drop-in directory exists
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  ansible.builtin.file:
+    path: /etc/systemd/system/zabbix-server.service.d
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: zabbix-server | Deploy systemd proxy drop-in
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  ansible.builtin.template:
+    src: zabbix-server-proxy.conf.j2
+    dest: /etc/systemd/system/zabbix-server.service.d/proxy.conf
+    owner: root
+    group: root
+    mode: '0644'
+
 # systemd に操作させず、Pacemaker が管理する
 - name: zabbix-server | Stop and disable php-fpm
   when: "inventory_hostname in groups['zabbix_server__ha']"

@@ -1,0 +1,5 @@
+# {{ ansible_managed }}
+[Service]
+Environment="http_proxy={{ proxy_server_url }}"
+Environment="https_proxy={{ proxy_server_url }}"
+Environment="no_proxy={{ proxy_no_proxy | default('192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,.labo.clov3r.cc,localhost') }}"
