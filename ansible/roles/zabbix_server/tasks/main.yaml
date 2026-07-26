@@ -13,3 +13,5 @@
   ansible.builtin.import_tasks: zabbix-server.yaml
 - name: Setup Zabbix Agent custom monitoring (DRBD + Pacemaker)
   ansible.builtin.import_tasks: zabbix-agent-custom.yaml
+- name: Setup SNMP trap reception
+  ansible.builtin.import_tasks: snmp.yaml

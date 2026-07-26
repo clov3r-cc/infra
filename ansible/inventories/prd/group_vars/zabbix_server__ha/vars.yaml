@@ -10,6 +10,11 @@ zabbix_server_db_password: "{{ vault_zabbix_server_db_password }}"
 zabbix_server_name: prd-zbx
 zabbix_server_fqdn: "{{ zabbix_server_name }}.labo.clov3r.cc"
 
+# SNMP trap reception
+snmp_auth_password: "{{ vault_snmp_auth_password }}"
+snmp_priv_password: "{{ vault_snmp_priv_password }}"
+prd_acc_02_engineid: "80000009030074860BC9A8C0"
+
 # lego TLS certificates
 lego_domains:
   - "{{ zabbix_server_fqdn }}"

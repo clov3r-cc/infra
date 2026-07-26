@@ -1,0 +1,4 @@
+createUser -e {{ prd_acc_02_engineid }} zabbix SHA {{ snmp_auth_password }} AES {{ snmp_priv_password }}
+authuser log,execute,net zabbix priv
+
+perl do "/usr/local/bin/zabbix_trap_receiver.pl";
