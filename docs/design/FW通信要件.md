@@ -99,13 +99,14 @@ nftables を使用し、IPv4 ゾーンベースファイアウォールで実装
 | `ELREPO-MIRRORS`         | `www.elrepo.org, elrepo.org, mirrors.elrepo.org, mirrors.coreix.net, mirror.rackspace.com, linux-mirrors.fnal.gov`                                                                                  | ELRepo パッケージミラー                            |
 | `COPR`                   | `copr.fedorainfracloud.org, download.copr.fedorainfracloud.org`                                                                                                                                     | COPR パッケージリポジトリ                          |
 | `ADGUARD`                | `static.adtidy.org, adguardteam.github.io`                                                                                                                                                          | AdGuardHome アップデート・フィルタリスト           |
-| `GITHUB`                 | `github.com, objects.githubusercontent.com`                                                                                                                                                         | GitHub                                             |
+| `GITHUB`                 | `github.com, objects.githubusercontent.com, raw.githubusercontent.com`                                                                                       | GitHub                                             |
 | `LETSENCRYPT`            | `acme-v02.api.letsencrypt.org`                                                                                                                                                                      | Let's Encrypt ACME                                 |
 | `CLOUDFLARE-API`         | `api.cloudflare.com`                                                                                                                                                                                | Cloudflare API                                     |
 | `EASYLIST`               | `easylist.to`                                                                                                                                                                                       | AdGuardHome フィルタリスト                         |
 | `DEBIAN-MIRRORS`         | `deb.debian.org, security.debian.org, debian.map.fastly.net`                                                                                                                                        | Debian パッケージミラー                            |
 | `TAILSCALE-DERP-CAPTIVE` | `derp7e.tailscale.com, derp7f.tailscale.com, derp7g.tailscale.com, derp7h.tailscale.com`                                                                                                            | Tailscale キャプティブポータル検出用 DERP ドメイン |
 | `ZABBIX-MIRRORS`         | `repo.zabbix.com`                                                                                                                                                                                   | Zabbix リポジトリー                                |
+| `DISCORD`                | `discord.com`                                                                                                                                                                                       | Discord                                            |
 
 ## 5. ルール番号規則
 
@@ -175,6 +176,7 @@ Tailscale の通信要件: [What firewall ports should I open to use Tailscale?]
 |  47   |   `DNS-SERVERS`   |   accept   |    TCP     |     any      |     443      |        `EASYLIST`        | AdGuardHome フィルタリストダウンロード          |
 |  50   |   `DNS-SERVERS`   |   accept   |    TCP     |     any      |     443      |     `ZABBIX-MIRRORS`     | Zabbix リポジトリ                               |
 |  51   |   `DNS-SERVERS`   |   accept   | TCP / UDP  |     any      |      53      |     `CLOUDFLARE-IPS`     | SSL 証明書更新に伴う DNS チャレンジ             |
+|  52   |   `DNS-SERVERS`   |   accept   |    TCP     |     any      |     443      |        `DISCORD`         | Discord API・Web                                |
 |  200  | `TAILSCALE-NODES` |   accept   |    UDP     |     any      |     123      |      `WAN-GATEWAY`       | NTP                                             |
 |  201  |   `DNS-SERVERS`   |   accept   |    UDP     |     any      |     123      |      `WAN-GATEWAY`       | NTP                                             |
 |  950  | `TAILSCALE-NODES` |    drop    |    TCP     |     any      |      80      | `TAILSCALE-DERP-CAPTIVE` | Tailscale キャプティブポータル検出 (ログ抑制)   |
@@ -204,6 +206,8 @@ Tailscale の通信要件: [What firewall ports should I open to use Tailscale?]
 |  30   | `TAILSCALE-NODES` |    TCP     |      22      | `ACCESS-SWITCHES` | SSH          |
 |  40   | `TAILSCALE-NODES` |    TCP     |     9999     |   `NAS-SERVERS`   | NAS サービス |
 |  200  | `TAILSCALE-NODES` |    TCP     |     443      | `ZABBIX-VIP`      | Zabbix HTTPS    |
+|  205  |  `DNS-SERVERS`   |    TCP     |    10051     |   `ZABBIX-VIP`   | Zabbix agent active check |
+|  206  | `TAILSCALE-NODES` |    TCP     |    10051     |   `ZABBIX-VIP`   | Zabbix agent active check |
 
 ### 6.6. SERVICE → LOCAL
 
@@ -217,6 +221,7 @@ Tailscale の通信要件: [What firewall ports should I open to use Tailscale?]
 | :---: | :--------------: | :--------: | :----------: | :------------: | ------------- |
 |  10   |  `NAS-SERVERS`   |    ICMP    |      -       |      any       | ICMP          |
 |  200  |  `NAS-SERVERS`   |    TCP     |     443      |      any       | NAS HTTPS API |
+|  202  | `ZABBIX-SERVERS` |    TCP     |     8006     |  `PVE-NODES`   | Zabbix Proxmox API monitoring |
 |  205  | `ZABBIX-SERVERS` |  UDP/TCP   |      53      |      any       | DNS (lego DNS-01) |
 |  210  | `ZABBIX-SERVERS` |    UDP     |     123      | `WAN-GATEWAY`  | NTP           |
 |  211  |  `NAS-SERVERS`   |    UDP     |     123      | `WAN-GATEWAY`  | NTP           |
@@ -224,20 +229,26 @@ Tailscale の通信要件: [What firewall ports should I open to use Tailscale?]
 
 ### 6.8. INTERNAL → DMZ
 
-| Rule  |      送信元      | プロトコル | 送信先ポート | 送信先アドレス  |       目的        |
-| :---: | :--------------: | :--------: | :----------: | :-------------: | ----------------- |
-|  10   | `ZABBIX-SERVERS` |  UDP/TCP   |      53      |  `DNS-SERVERS`  | DNS               |
-|  11   |  `NAS-SERVERS`   |  UDP/TCP   |      53      |  `DNS-SERVERS`  | DNS               |
-|  12   |    `DESKTOP`     |  UDP/TCP   |      53      |  `DNS-SERVERS`  | DNS               |
+| Rule  |      送信元      | プロトコル | 送信先ポート |  送信先アドレス   |              目的               |
+| :---: | :--------------: | :--------: | :----------: | :---------------: | ------------------------------- |
+|  15   | `ZABBIX-SERVERS` |    ICMP    |      -       |   `DNS-SERVERS`   | Zabbix network discovery ICMP   |
+|  16   | `ZABBIX-SERVERS` |    ICMP    |      -       | `TAILSCALE-NODES` | Zabbix network discovery ICMP   |
 |  30   | `ZABBIX-SERVERS` |    TCP     |     3128     | `DNS-PROXY-VIP` | 非透過 HTTP proxy |
 |  35   |  `NAS-SERVERS`   |    TCP     |     3128     | `DNS-PROXY-VIP` | 非透過 HTTP proxy |
 |  36   |    `DESKTOP`     |    TCP     |     3128     | `DNS-PROXY-VIP` | 非透過 HTTP proxy |
+|  200  | `ZABBIX-SERVERS` |    TCP     |    10050     |  `DNS-SERVERS`  | Zabbix agent passive check |
+|  201  | `ZABBIX-SERVERS` |    TCP     |    10050     | `TAILSCALE-NODES` | Zabbix agent passive check |
+|  210  | `ZABBIX-SERVERS` |  UDP/TCP   |      53      |   `DNS-SERVERS`  | DNS               |
+|  211  |  `NAS-SERVERS`   |  UDP/TCP   |      53      |  `DNS-SERVERS`  | DNS               |
+|  212  |    `DESKTOP`     |  UDP/TCP   |      53      |  `DNS-SERVERS`  | DNS               |
 
 ### 6.9. INTERNAL → LOCAL
 
 | Rule  |       送信元        | アクション | プロトコル | 送信先ポート |  送信先アドレス  |              目的               |
 | :---: | :-----------------: | :--------: | :--------: | :----------: | :--------------: | ------------------------------- |
 |  10   | `FW-INTERNAL-NODES` |   accept   | Proto 112  |      -       |        -         | VRRP                            |
+|  20   | `ZABBIX-SERVERS`    |   accept   |    ICMP    |      -       |        -         | Zabbix network discovery ICMP   |
+|  200  | `ZABBIX-SERVERS`    |   accept   |    TCP     |    10050     |        -         | Zabbix agent passive check      |
 |  950  |    `NAS-SERVERS`    |    drop    |    UDP     |     137      | ブロードキャスト | NetBIOS Name Service (ログ抑制) |
 |  951  |    `NAS-SERVERS`    |    drop    |    UDP     |     138      | ブロードキャスト | NetBIOS Datagram (ログ抑制)     |
 
@@ -277,5 +288,6 @@ Tailscale の通信要件: [What firewall ports should I open to use Tailscale?]
 |  10   |   -    | Proto 112  |      -       | `VRRP-MULTICAST` | VRRP       |
 |  20   |   -    |    ICMP    |      -       |       any        | ICMP       |
 |  25   |   -    |    UDP     | 33434-33534  |       any        | traceroute |
+|  200  |   -    |    TCP     |    10051     |   `ZABBIX-VIP`   | Zabbix agent active check |
 
 > **Note**: VRRP（Proto 112）はマルチキャスト（224.0.0.18）を使った双方向独立送信のため、セッション追跡ができません。そのため 各ゾーン発着それぞれ両方向に明示的なルールが必要です。

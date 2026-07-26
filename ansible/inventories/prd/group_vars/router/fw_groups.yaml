@@ -38,6 +38,7 @@ fw_domain_groups:
     domains:
       - github.com
       - objects.githubusercontent.com
+      - raw.githubusercontent.com
   - name: LETSENCRYPT
     domains:
       - acme-v02.api.letsencrypt.org
@@ -61,6 +62,9 @@ fw_domain_groups:
   - name: ZABBIX_MIRRORS
     domains:
       - repo.zabbix.com
+  - name: DISCORD
+    domains:
+      - discord.com
 
 fw_network_groups:
   - name: HOME_CLIENTS
