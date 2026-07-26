@@ -1,17 +1,20 @@
 zabbix_export:
   version: '7.0'
   template_groups:
+    - uuid: 0899051eeec74aa88d82d8bcf3c6fda9
+      name: Cusotmized
     - uuid: d7499a44661641dfbf848a21729401d5
       name: Templates/Applications
   templates:
     - uuid: 7673e17f498c40078601de088b2848a5
-      template: 'Template App Pacemaker by Zabbix active'
-      name: 'Template App Pacemaker by Zabbix active'
+      template: Pacemaker
+      name: Pacemaker
       description: |
         Pacemaker/Corosync HA cluster health monitoring.
         Monitors node status, quorum, DC, failed actions, and cluster processes.
         Requires UserParameter definitions in zabbix_agentd_drbd_pacemaker.conf.
       groups:
+        - name: Cusotmized
         - name: Templates/Applications
       items:
         - uuid: feb4b1af09914a079efe3f30d3cd5e94
@@ -28,7 +31,7 @@ zabbix_export:
               value: pacemaker
           triggers:
             - uuid: ab7cba779a894407b3922c4f4f7cb6f6
-              expression: 'find(/Template App Pacemaker by Zabbix active/log[/var/log/pacemaker/pacemaker.log,pacemaker-schedulerd.*notice: Actions: Move,,,skip,,],#1,,"Actions: Move")=1 and nodata(/Template App Pacemaker by Zabbix active/log[/var/log/pacemaker/pacemaker.log,pacemaker-schedulerd.*notice: Actions: Move,,,skip,,],1m)=0'
+              expression: 'find(/Pacemaker/log[/var/log/pacemaker/pacemaker.log,pacemaker-schedulerd.*notice: Actions: Move,,,skip,,],#1,,"Actions: Move")=1 and nodata(/Pacemaker/log[/var/log/pacemaker/pacemaker.log,pacemaker-schedulerd.*notice: Actions: Move,,,skip,,],1m)=0'
               name: 'Pacemaker: Resource Moved on {HOST.HOST}'
               event_name: 'Pacemaker: Resource Moved on {HOST.HOST}'
               priority: INFO
@@ -59,7 +62,7 @@ zabbix_export:
               value: pacemaker
           triggers:
             - uuid: a0bb9a5910dc48b3b4a5710a34a8e9da
-              expression: 'last(/Template App Pacemaker by Zabbix active/pacemaker.nodes.online)<{$CLUSTER.EXPECTED_NODES}'
+              expression: 'last(/Pacemaker/pacemaker.nodes.online)<{$CLUSTER.EXPECTED_NODES}'
               name: 'Pacemaker: Not enough online nodes on {HOST.HOST}'
               event_name: 'Pacemaker: Not enough online nodes on {HOST.HOST}'
               priority: HIGH
@@ -89,7 +92,7 @@ zabbix_export:
               value: pacemaker
           triggers:
             - uuid: 94c612c6873d492ab5f08428273e5a76
-              expression: 'last(/Template App Pacemaker by Zabbix active/pacemaker.quorum)=0'
+              expression: last(/Pacemaker/pacemaker.quorum)=0
               name: 'Pacemaker: Quorum lost on {HOST.HOST}'
               event_name: 'Pacemaker: Quorum lost on {HOST.HOST}'
               priority: DISASTER
@@ -108,7 +111,7 @@ zabbix_export:
               value: pacemaker
           triggers:
             - uuid: da5a3e61860641f1ac9cbc02873e5ab2
-              expression: 'last(/Template App Pacemaker by Zabbix active/pacemaker.resources.failed)>0'
+              expression: last(/Pacemaker/pacemaker.resources.failed)>0
               name: 'Pacemaker: Failed Resource Actions on {HOST.HOST}'
               event_name: 'Pacemaker: Failed Resource Actions on {HOST.HOST}'
               priority: HIGH
@@ -128,7 +131,7 @@ zabbix_export:
               value: corosync
           triggers:
             - uuid: 58f9f84ae44748d78402d82884a4441c
-              expression: 'last(/Template App Pacemaker by Zabbix active/proc.num[corosync-qdevice])=0 and {$QDEVICE.ENABLED}=1'
+              expression: 'last(/Pacemaker/proc.num[corosync-qdevice])=0 and {$QDEVICE.ENABLED}=1'
               name: 'Corosync QDevice process is not running on {HOST.HOST}'
               event_name: 'Corosync QDevice process is not running on {HOST.HOST}'
               priority: AVERAGE
@@ -147,7 +150,7 @@ zabbix_export:
               value: corosync
           triggers:
             - uuid: f29af200bfa04194bc42ae3d131f8e05
-              expression: 'last(/Template App Pacemaker by Zabbix active/proc.num[corosync])=0'
+              expression: 'last(/Pacemaker/proc.num[corosync])=0'
               name: 'Corosync process is not running on {HOST.HOST}'
               event_name: 'Corosync process is not running on {HOST.HOST}'
               priority: HIGH
@@ -166,7 +169,7 @@ zabbix_export:
               value: pacemaker
           triggers:
             - uuid: c5fdb9d9a6854ce5b7a68b16ffc8301e
-              expression: 'last(/Template App Pacemaker by Zabbix active/proc.num[pacemakerd])=0'
+              expression: 'last(/Pacemaker/proc.num[pacemakerd])=0'
               name: 'Pacemaker daemon is not running on {HOST.HOST}'
               event_name: 'Pacemaker daemon is not running on {HOST.HOST}'
               priority: DISASTER
@@ -185,7 +188,7 @@ zabbix_export:
               value: pacemaker
           triggers:
             - uuid: 1b1eb71a31e240ad9105a13f6776ccfa
-              expression: 'last(/Template App Pacemaker by Zabbix active/proc.num[pcsd])=0'
+              expression: 'last(/Pacemaker/proc.num[pcsd])=0'
               name: 'PCSD process is not running on {HOST.HOST}'
               event_name: 'PCSD process is not running on {HOST.HOST}'
               priority: WARNING

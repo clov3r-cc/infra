@@ -1,18 +1,21 @@
 zabbix_export:
   version: '7.0'
   template_groups:
+    - uuid: 0899051eeec74aa88d82d8bcf3c6fda9
+      name: Cusotmized
     - uuid: d7499a44661641dfbf848a21729401d5
       name: Templates/Applications
   templates:
     - uuid: 2dc06241f47e4eaba6feea9fd811419e
-      template: 'Template App Pacemaker Resources by Zabbix active'
-      name: 'Template App Pacemaker Resources by Zabbix active'
+      template: 'Pacemaker Resources'
+      name: 'Pacemaker Resources'
       description: |
         Zabbix HA stack resource monitoring.
         Monitors Pacemaker group resource state via LLD (Low-Level Discovery).
         Discovers resources in the {$PACEMAKER.GROUP} and creates per-resource
         items and triggers. Replaces the legacy hardcoded per-process items.
       groups:
+        - name: Cusotmized
         - name: Templates/Applications
       items:
         - uuid: 448b37e5860840b7a29219c19762578f
@@ -61,7 +64,7 @@ zabbix_export:
                   value: pacemaker
               trigger_prototypes:
                 - uuid: 98700f9ba76f496ebe96eb62109dc5b4
-                  expression: 'last(/Template App Pacemaker Resources by Zabbix active/pacemaker.resource.state[{#RESOURCE.NAME}])<>"Started"'
+                  expression: 'last(/Pacemaker Resources/pacemaker.resource.state[{#RESOURCE.NAME}])<>"Started"'
                   name: 'Pacemaker: resource {#RESOURCE.NAME} has unexpected state ({ITEM.LASTVALUE}) on {HOST.HOST}'
                   event_name: 'Pacemaker: resource {#RESOURCE.NAME} has unexpected state ({ITEM.LASTVALUE}) on {HOST.HOST}'
                   priority: DISASTER
@@ -75,7 +78,7 @@ zabbix_export:
           description: 'Pacemaker resource group name to monitor.'
   triggers:
     - uuid: 06cd30135a574683b2c58a727b0e984f
-      expression: 'last(/Template App Pacemaker Resources by Zabbix active/pacemaker.group.status[{$PACEMAKER.GROUP}])<last(/Template App Pacemaker Resources by Zabbix active/pacemaker.group.total[{$PACEMAKER.GROUP}])'
+      expression: 'last(/Pacemaker Resources/pacemaker.group.status[{$PACEMAKER.GROUP}])<last(/Pacemaker Resources/pacemaker.group.total[{$PACEMAKER.GROUP}])'
       name: 'Pacemaker: {{$PACEMAKER.GROUP}} group not fully started on {HOST.HOST}'
       event_name: 'Pacemaker: {{$PACEMAKER.GROUP}} group not fully started on {HOST.HOST}'
       priority: DISASTER
