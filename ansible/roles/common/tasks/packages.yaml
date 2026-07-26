@@ -6,6 +6,8 @@
       # 言語表示を最適化するため導入
       - glibc-all-langpacks
       - langpacks-en
+      # nc コマンド
+      - nc
       # vim をデフォルトのエディタとして使用
       - vim-enhanced
       # zip ファイルの展開に使用
@@ -18,6 +20,8 @@
     name:
       # 言語表示を最適化するため導入
       - locales-all
+      # nc コマンド
+      - netcat-openbsd
       # vim をデフォルトのエディタとして使用
       - vim
       # zip ファイルの展開に使用
