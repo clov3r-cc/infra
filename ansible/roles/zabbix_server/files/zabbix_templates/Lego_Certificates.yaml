@@ -1,0 +1,103 @@
+zabbix_export:
+  version: '7.0'
+  template_groups:
+    - uuid: 0899051eeec74aa88d82d8bcf3c6fda9
+      name: Cusotmized
+    - uuid: d7499a44661641dfbf848a21729401d5
+      name: Templates/Applications
+  templates:
+    - uuid: 51dc874aa5e84df3bd75c955cfec2e26
+      template: 'Lego Certificates'
+      name: 'Lego Certificates'
+      description: |
+        Lego-issued SSL/TLS certificate monitoring via LLD (Low-Level Discovery).
+        Auto-discovers certificates under {$LEGO.CERT_PATH} (default: /etc/lego/certificates)
+        and creates per-certificate items and triggers for expiry tracking.
+        Requires UserParameter definitions in zabbix_agentd_lego.conf.
+      groups:
+        - name: Cusotmized
+        - name: Templates/Applications
+      discovery_rules:
+        - uuid: f0d5ecfa2e204fdcb1f9a65eefc90ea7
+          name: 'Lego: Certificate Discovery'
+          type: ZABBIX_ACTIVE
+          key: 'lego.cert.discover[{$LEGO.CERT_PATH}]'
+          delay: 1h
+          filter:
+            conditions:
+              - macro: '{#CERT.DOMAIN}'
+                value: '^(.*)$'
+                formulaid: A
+          item_prototypes:
+            - uuid: 17e112c6abe84c76a3904d0960caeddc
+              name: 'Lego: certificate {#CERT.DOMAIN} expiry'
+              type: ZABBIX_ACTIVE
+              key: 'lego.cert.expiry[{$LEGO.CERT_PATH},{#CERT.DOMAIN}]'
+              delay: 1h
+              history: 7d
+              units: days
+              description: 'Days remaining until certificate {#CERT.DOMAIN} expires. 0 means expired.'
+              tags:
+                - tag: component
+                  value: lego
+              trigger_prototypes:
+                - uuid: 95d5625416a74658972419a7e112f634
+                  expression: 'last(/Lego Certificates/lego.cert.expiry[{$LEGO.CERT_PATH},{#CERT.DOMAIN}])<=0'
+                  name: 'Lego: certificate {#CERT.DOMAIN} has expired on {HOST.HOST}'
+                  event_name: 'Lego: certificate {#CERT.DOMAIN} has expired on {HOST.HOST}'
+                  priority: DISASTER
+                  description: 'Certificate {#CERT.DOMAIN} has expired. Renew immediately.'
+                  tags:
+                    - tag: component
+                      value: lego
+                - uuid: 378f317142674eaca01a81ca0b584626
+                  expression: 'last(/Lego Certificates/lego.cert.expiry[{$LEGO.CERT_PATH},{#CERT.DOMAIN}])>0 and last(/Lego Certificates/lego.cert.expiry[{$LEGO.CERT_PATH},{#CERT.DOMAIN}])<=7'
+                  name: 'Lego: certificate {#CERT.DOMAIN} expires in <= 7 days on {HOST.HOST}'
+                  event_name: 'Lego: certificate {#CERT.DOMAIN} expires in <= 7 days on {HOST.HOST}'
+                  priority: HIGH
+                  description: 'Certificate {#CERT.DOMAIN} will expire within 7 days.'
+                  tags:
+                    - tag: component
+                      value: lego
+                - uuid: fd1137644b0647c594cea489af8c45e3
+                  expression: 'last(/Lego Certificates/lego.cert.expiry[{$LEGO.CERT_PATH},{#CERT.DOMAIN}])>7 and last(/Lego Certificates/lego.cert.expiry[{$LEGO.CERT_PATH},{#CERT.DOMAIN}])<=14'
+                  name: 'Lego: certificate {#CERT.DOMAIN} expires in <= 14 days on {HOST.HOST}'
+                  event_name: 'Lego: certificate {#CERT.DOMAIN} expires in <= 14 days on {HOST.HOST}'
+                  priority: AVERAGE
+                  description: 'Certificate {#CERT.DOMAIN} will expire within 14 days.'
+                  tags:
+                    - tag: component
+                      value: lego
+                - uuid: c6e0210799b34594a2c210078d6be0be
+                  expression: 'last(/Lego Certificates/lego.cert.expiry[{$LEGO.CERT_PATH},{#CERT.DOMAIN}])>14 and last(/Lego Certificates/lego.cert.expiry[{$LEGO.CERT_PATH},{#CERT.DOMAIN}])<=30'
+                  name: 'Lego: certificate {#CERT.DOMAIN} expires in <= 30 days on {HOST.HOST}'
+                  event_name: 'Lego: certificate {#CERT.DOMAIN} expires in <= 30 days on {HOST.HOST}'
+                  priority: WARNING
+                  description: 'Certificate {#CERT.DOMAIN} will expire within 30 days.'
+                  tags:
+                    - tag: component
+                      value: lego
+            - uuid: 77ddf83331204fd8956e3ea15871a16c
+              name: 'Lego: certificate {#CERT.DOMAIN} valid'
+              type: ZABBIX_ACTIVE
+              key: 'lego.cert.valid[{$LEGO.CERT_PATH},{#CERT.DOMAIN}]'
+              delay: 1h
+              history: 7d
+              description: 'Certificate {#CERT.DOMAIN} validity status. 1 = valid, 0 = expired or error.'
+              valuemap:
+                name: 'Certificate status'
+              tags:
+                - tag: component
+                  value: lego
+      macros:
+        - macro: '{$LEGO.CERT_PATH}'
+          value: /etc/lego/certificates
+          description: 'Path to lego certificate directory (containing .crt and .key files).'
+      valuemaps:
+        - uuid: d475e391a6d0412a8ae2d30accc0bf4d
+          name: 'Certificate status'
+          mappings:
+            - value: '1'
+              newvalue: Valid
+            - value: '0'
+              newvalue: Expired

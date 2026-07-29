@@ -11,6 +11,15 @@
       - python3-PyMySQL
     state: present
 
+- name: zabbix-server | Deploy logrotate config with SELinux restorecon
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  ansible.builtin.template:
+    src: zabbix-server.logrotate.j2
+    dest: /etc/logrotate.d/zabbix-server
+    owner: root
+    group: root
+    mode: '0644'
+
 - name: zabbix-server | Create zabbix database
   when: inventory_hostname == hostvars[groups['zabbix_server__ha'][0]]['drbd_active_node']
   community.mysql.mysql_db:
@@ -71,6 +80,13 @@
   when: "inventory_hostname in groups['zabbix_server__ha']"
   ansible.posix.seboolean:
     name: httpd_can_connect_zabbix
+    state: on
+    persistent: true
+
+- name: zabbix-server | Enable SELinux boolean for Zabbix network connections
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  ansible.posix.seboolean:
+    name: zabbix_can_network
     state: on
     persistent: true
 

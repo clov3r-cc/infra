@@ -19,9 +19,24 @@
     name: zabbix-agent
     state: present
 
+- name: zabbix-agent | Restore SELinux labels on log directory (RedHat)
+  when: ansible_facts['os_family'] == 'RedHat'
+  ansible.builtin.command: restorecon -R /var/log/zabbix/
+  changed_when: false
+
+- name: zabbix-agent | Deploy logrotate config with SELinux restorecon (RedHat)
+  when: ansible_facts['os_family'] == 'RedHat'
+  ansible.builtin.template:
+    src: zabbix-agent.logrotate.j2
+    dest: /etc/logrotate.d/zabbix-agent
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart zabbix-agent
+
 - name: zabbix-agent | Ensure config directory exists
   ansible.builtin.file:
-    path: /etc/zabbix/zabbix_agentd.d
+    path: "{{ zabbix_agentd_conf_dir }}"
     state: directory
     owner: root
     group: root
@@ -30,7 +45,7 @@
 - name: zabbix-agent | Deploy configuration
   ansible.builtin.template:
     src: zabbix_agentd.d.j2
-    dest: /etc/zabbix/zabbix_agentd.d/ansible.conf
+    dest: "{{ zabbix_agentd_conf_dir }}/ansible.conf"
     owner: root
     group: root
     mode: '0644'

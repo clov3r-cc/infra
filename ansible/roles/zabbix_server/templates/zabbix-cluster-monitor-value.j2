@@ -1,0 +1,27 @@
+#!/usr/bin/bash
+set -u
+
+state_dir=/run/zabbix/cluster-monitor
+metric=${1:-}
+resource=${2:-}
+
+case "$metric" in
+  drbd.connection|drbd.disk_state|drbd.role|drbd.out_of_sync|pacemaker.nodes.online|pacemaker.nodes.standby|pacemaker.dc|pacemaker.quorum|pacemaker.resources.failed|pacemaker.resources.discover|pacemaker.group.status|pacemaker.group.total)
+    file="$state_dir/$metric"
+    ;;
+  pacemaker.resource.state)
+    case "$resource" in
+      virtual-ip|drbd-fs|mariadb|php-fpm|zabbix-server|nginx|snmpd|snmptrapd)
+        file="$state_dir/pacemaker.resource.state.$resource"
+        ;;
+      *)
+        exit 1
+        ;;
+    esac
+    ;;
+  *)
+    exit 1
+    ;;
+esac
+
+test -r "$file" && /usr/bin/cat "$file"

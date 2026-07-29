@@ -7,3 +7,6 @@ lego_path: /etc/lego
 lego_email: me@clov3r.cc
 lego_dns_provider: cloudflare
 lego_cloudflare_api_token: "{{ vault_lego_cloudflare_api_token }}"
+
+# zabbix-agent common settings
+zabbix_agentd_conf_dir: /etc/zabbix/zabbix_agentd.d

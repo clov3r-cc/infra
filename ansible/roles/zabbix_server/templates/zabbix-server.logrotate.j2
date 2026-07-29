@@ -1,0 +1,13 @@
+{{ ansible_managed }}
+/var/log/zabbix/zabbix_server.log {
+    weekly
+    rotate 12
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 0664 zabbix zabbix
+    postrotate
+        /usr/sbin/restorecon -R /var/log/zabbix >/dev/null 2>&1 || true
+    endscript
+}

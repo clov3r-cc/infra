@@ -45,7 +45,7 @@
     state: directory
     owner: root
     group: root
-    mode: "0700"
+    mode: "0755"
 
 - name: Deploy lego environment file
   ansible.builtin.template:
@@ -90,6 +90,14 @@
   changed_when: not ansible_check_mode
   notify: "{{ lego_notify_handlers | default(['Reload nginx']) }}"
 
+- name: lego | Ensure certificates are readable for monitoring
+  ansible.builtin.shell:
+    cmd: |
+      chmod 755 "{{ lego_path }}/certificates"
+      chmod 644 "{{ lego_path }}/certificates"/*.crt
+  when: __lego_domains | length > 0
+  changed_when: false
+
 - name: Deploy lego renew systemd service
   ansible.builtin.template:
     src: lego-renew.service.j2
@@ -120,3 +128,22 @@
     daemon_reload: true
     enabled: true
     state: started
+
+- name: lego | Deploy certificate discovery script
+  ansible.builtin.copy:
+    src: lego_discover.sh
+    dest: /usr/local/bin/lego_discover.sh
+    owner: root
+    group: root
+    mode: '0755'
+  when: __lego_domains | length > 0
+
+- name: lego | Deploy Zabbix agent UserParameter config for certificate monitoring
+  ansible.builtin.template:
+    src: zabbix_agentd_lego.conf.j2
+    dest: "{{ zabbix_agentd_conf_dir }}/lego.conf"
+    owner: root
+    group: root
+    mode: '0644'
+  when: __lego_domains | length > 0
+  notify: Restart zabbix-agent

@@ -6,11 +6,136 @@
     groups: haclient
     append: true
 
+- name: zabbix-agent-custom | Install SELinux tools for custom module build
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  ansible.builtin.package:
+    name:
+      - checkpolicy
+      - policycoreutils-python-utils
+    state: present
+
+- name: zabbix-agent-custom | Deploy custom SELinux module for agent cluster access
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  ansible.builtin.copy:
+    src: selinux/zabbix_agent_cluster_drbd.te
+    dest: /tmp/zabbix_agent_cluster_drbd.te
+    owner: root
+    group: root
+    mode: '0600'
+  register: __zabbix_agent_selinux_te
+
+- name: zabbix-agent-custom | Check loaded SELinux modules
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  ansible.builtin.command: semodule -l
+  register: __zabbix_agent_selinux_modules
+  changed_when: false
+
+- name: zabbix-agent-custom | Compile custom SELinux module
+  when:
+    - "inventory_hostname in groups['zabbix_server__ha']"
+    - >-
+      __zabbix_agent_selinux_te is changed or
+      'zabbix_agent_cluster_drbd' not in __zabbix_agent_selinux_modules.stdout_lines
+  ansible.builtin.command: checkmodule -M -m -o /tmp/zabbix_agent_cluster_drbd.mod /tmp/zabbix_agent_cluster_drbd.te
+
+- name: zabbix-agent-custom | Package custom SELinux module
+  when:
+    - "inventory_hostname in groups['zabbix_server__ha']"
+    - >-
+      __zabbix_agent_selinux_te is changed or
+      'zabbix_agent_cluster_drbd' not in __zabbix_agent_selinux_modules.stdout_lines
+  ansible.builtin.command: semodule_package -o /tmp/zabbix_agent_cluster_drbd.pp -m /tmp/zabbix_agent_cluster_drbd.mod
+
+- name: zabbix-agent-custom | Load custom SELinux module
+  when:
+    - "inventory_hostname in groups['zabbix_server__ha']"
+    - >-
+      __zabbix_agent_selinux_te is changed or
+      'zabbix_agent_cluster_drbd' not in __zabbix_agent_selinux_modules.stdout_lines
+  ansible.builtin.command: semodule -i /tmp/zabbix_agent_cluster_drbd.pp
+  notify: Restart zabbix-agent
+
+- name: zabbix-agent-custom | Disable unused zabbix_run_sudo SELinux boolean
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  ansible.posix.seboolean:
+    name: zabbix_run_sudo
+    state: false
+    persistent: true
+
+- name: zabbix-agent-custom | Remove obsolete cluster monitoring sudoers
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  ansible.builtin.file:
+    dest: /etc/sudoers.d/zabbix-agent-cluster
+    state: absent
+
+- name: zabbix-agent-custom | Create cluster monitor state directory
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  ansible.builtin.file:
+    path: /run/zabbix/cluster-monitor
+    state: directory
+    owner: root
+    group: zabbix
+    mode: '0750'
+
+- name: zabbix-agent-custom | Deploy privileged cluster state collector
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  ansible.builtin.template:
+    src: zabbix-cluster-monitor.sh.j2
+    dest: /usr/local/sbin/zabbix-cluster-monitor
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: zabbix-agent-custom | Deploy cluster state reader
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  ansible.builtin.template:
+    src: zabbix-cluster-monitor-value.j2
+    dest: /usr/local/bin/zabbix-cluster-value
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: zabbix-agent-custom | Deploy cluster state collector service
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  ansible.builtin.template:
+    src: zabbix-cluster-monitor.service.j2
+    dest: /etc/systemd/system/zabbix-cluster-monitor.service
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: zabbix-agent-custom | Deploy cluster state collector timer
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  ansible.builtin.template:
+    src: zabbix-cluster-monitor.timer.j2
+    dest: /etc/systemd/system/zabbix-cluster-monitor.timer
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: zabbix-agent-custom | Reload systemd units
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+
+- name: zabbix-agent-custom | Run initial cluster state collection
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  ansible.builtin.systemd_service:
+    name: zabbix-cluster-monitor.service
+    state: started
+
+- name: zabbix-agent-custom | Enable cluster state collection timer
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  ansible.builtin.systemd_service:
+    name: zabbix-cluster-monitor.timer
+    enabled: true
+    state: started
+
 - name: zabbix-agent-custom | Deploy DRBD/Pacemaker UserParameter config
   when: "inventory_hostname in groups['zabbix_server__ha']"
   ansible.builtin.template:
     src: zabbix_agentd_drbd_pacemaker.conf.j2
-    dest: /etc/zabbix/zabbix_agentd.d/drbd_pacemaker.conf
+    dest: "{{ zabbix_agentd_conf_dir }}/drbd_pacemaker.conf"
     owner: root
     group: root
     mode: '0644'

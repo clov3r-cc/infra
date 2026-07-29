@@ -1,0 +1,15 @@
+module zabbix_agent_cluster_drbd 1.0.0;
+
+require {
+    type zabbix_agent_t;
+    type cluster_var_log_t;
+    type kernel_t;
+    class file { read open };
+    class unix_stream_socket connectto;
+}
+
+# Allow reading cluster logs for Pacemaker "LogWatch" item.
+allow zabbix_agent_t cluster_var_log_t:file { read open };
+
+# Allow Zabbix agent to connect to kernel for "system.run[who -b]" / similar.
+allow zabbix_agent_t kernel_t:unix_stream_socket connectto;
