@@ -1,0 +1,223 @@
+---
+- name: zabbix-server | Install zabbix-server
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  ansible.builtin.package:
+    name:
+      - zabbix-server-mysql
+      - zabbix-web-mysql
+      - zabbix-nginx-conf
+      - zabbix-sql-scripts
+      - zabbix-selinux-policy
+      - python3-PyMySQL
+    state: present
+
+- name: zabbix-server | Deploy logrotate config with SELinux restorecon
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  ansible.builtin.template:
+    src: zabbix-server.logrotate.j2
+    dest: /etc/logrotate.d/zabbix-server
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: zabbix-server | Create zabbix database
+  when: inventory_hostname == hostvars[groups['zabbix_server__ha'][0]]['drbd_active_node']
+  community.mysql.mysql_db:
+    login_unix_socket: /var/lib/mysql/mysql.sock
+    name: zabbix
+    encoding: utf8mb4
+    collation: utf8mb4_bin
+    state: present
+
+- name: zabbix-server | Create zabbix user and grant privileges
+  when: inventory_hostname == hostvars[groups['zabbix_server__ha'][0]]['drbd_active_node']
+  community.mysql.mysql_user:
+    login_unix_socket: /var/lib/mysql/mysql.sock
+    name: zabbix
+    host: localhost
+    password: '{{ zabbix_server_db_password }}'
+    priv: 'zabbix.*:ALL'
+    state: present
+
+- name: zabbix-server | Check if Zabbix schema already imported
+  when: inventory_hostname == hostvars[groups['zabbix_server__ha'][0]]['drbd_active_node']
+  community.mysql.mysql_query:
+    login_unix_socket: /var/lib/mysql/mysql.sock
+    login_db: zabbix
+    query: SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'zabbix'
+  register: __zabbix_server_schema_check
+
+- name: zabbix-server | Set log_bin_trust_function_creators
+  when:
+    - inventory_hostname == hostvars[groups['zabbix_server__ha'][0]]['drbd_active_node']
+    - __zabbix_server_schema_check.query_result[0][0]['COUNT(*)'] | int == 0
+  community.mysql.mysql_variables:
+    login_unix_socket: /var/lib/mysql/mysql.sock
+    variable: log_bin_trust_function_creators
+    value: 1
+
+- name: zabbix-server | Import Zabbix schema
+  when:
+    - inventory_hostname == hostvars[groups['zabbix_server__ha'][0]]['drbd_active_node']
+    - __zabbix_server_schema_check.query_result[0][0]['COUNT(*)'] | int == 0
+  community.mysql.mysql_db:
+    login_unix_socket: /var/lib/mysql/mysql.sock
+    name: zabbix
+    state: import
+    target: /usr/share/zabbix-sql-scripts/mysql/server.sql.gz
+    use_shell: true
+
+- name: zabbix-server | Disable log_bin_trust_function_creators
+  when:
+    - inventory_hostname == hostvars[groups['zabbix_server__ha'][0]]['drbd_active_node']
+    - __zabbix_server_schema_check.query_result[0][0]['COUNT(*)'] | int == 0
+  community.mysql.mysql_variables:
+    login_unix_socket: /var/lib/mysql/mysql.sock
+    variable: log_bin_trust_function_creators
+    value: 0
+
+- name: zabbix-server | Enable SELinux boolean for httpd to connect to Zabbix
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  ansible.posix.seboolean:
+    name: httpd_can_connect_zabbix
+    state: on
+    persistent: true
+
+- name: zabbix-server | Enable SELinux boolean for Zabbix network connections
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  ansible.posix.seboolean:
+    name: zabbix_can_network
+    state: on
+    persistent: true
+
+- name: zabbix-server | Ensure zabbix_server.d is writable by zabbix user
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  ansible.builtin.file:
+    path: /etc/zabbix/zabbix_server.d
+    state: directory
+    owner: zabbix
+    group: zabbix
+    mode: '0750'
+
+- name: zabbix-server | Deploy database password config
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  ansible.builtin.copy:
+    content: |
+      DBPassword={{ zabbix_server_db_password }}
+    dest: /etc/zabbix/zabbix_server.d/DBPassword.conf
+    owner: zabbix
+    group: zabbix
+    mode: '0640'
+
+- name: zabbix-server | Deploy zabbix web config
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  ansible.builtin.template:
+    src: zabbix.conf.php.j2
+    dest: /etc/zabbix/web/zabbix.conf.php
+    owner: apache
+    group: apache
+    mode: '0600'
+
+- name: zabbix-server | Configure listen port in zabbix nginx config
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  ansible.builtin.lineinfile:
+    path: /etc/nginx/conf.d/zabbix.conf
+    regexp: '^#?\s*listen'
+    line: '        listen 443 ssl;'
+
+- name: zabbix-server | Enable http2 in zabbix nginx config
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  ansible.builtin.lineinfile:
+    path: /etc/nginx/conf.d/zabbix.conf
+    insertafter: '^        listen 443 ssl;'
+    line: '        http2 on;'
+
+- name: zabbix-server | Configure server_name in zabbix nginx config
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  ansible.builtin.lineinfile:
+    path: /etc/nginx/conf.d/zabbix.conf
+    regexp: '^#?\s*server_name'
+    line: '        server_name {{ zabbix_server_fqdn }};'
+
+- name: zabbix-server | Add SSL certificate directives
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  ansible.builtin.blockinfile:
+    path: /etc/nginx/conf.d/zabbix.conf
+    insertafter: '^        server_name'
+    marker: "# {mark} ANSIBLE MANAGED: SSL settings"
+    block: |2
+          ssl_certificate     /etc/lego/certificates/{{ zabbix_server_fqdn }}.crt;
+          ssl_certificate_key /etc/lego/certificates/{{ zabbix_server_fqdn }}.key;
+
+- name: zabbix-server | Ensure systemd drop-in directory exists
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  ansible.builtin.file:
+    path: /etc/systemd/system/zabbix-server.service.d
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: zabbix-server | Deploy systemd proxy drop-in
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  ansible.builtin.template:
+    src: zabbix-server-proxy.conf.j2
+    dest: /etc/systemd/system/zabbix-server.service.d/proxy.conf
+    owner: root
+    group: root
+    mode: '0644'
+
+# systemd に操作させず、Pacemaker が管理する
+- name: zabbix-server | Stop and disable php-fpm
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  ansible.builtin.systemd_service:
+    name: php-fpm
+    state: stopped
+    enabled: false
+
+- name: zabbix-server | Stop and disable zabbix-server
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  ansible.builtin.systemd_service:
+    name: zabbix-server
+    state: stopped
+    enabled: false
+
+- name: zabbix-server | Stop and disable nginx
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  ansible.builtin.systemd_service:
+    name: nginx
+    state: stopped
+    enabled: false
+
+- name: zabbix-server | Add php-fpm to Pacemaker
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  pcs_resource:
+    name: php-fpm
+    resource_class: systemd
+    resource_type: systemd:php-fpm
+    options: >-
+      op monitor interval="60s"
+      --group zabbix-server-group
+  run_once: true
+
+- name: zabbix-server | Add zabbix-server to Pacemaker
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  pcs_resource:
+    name: zabbix-server
+    resource_class: systemd
+    resource_type: systemd:zabbix-server
+    options: >-
+      op monitor interval="60s"
+      --group zabbix-server-group
+  run_once: true
+
+- name: zabbix-server | Add nginx to Pacemaker
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  pcs_resource:
+    name: nginx
+    resource_class: systemd
+    resource_type: systemd:nginx
+    options: >-
+      op monitor interval="60s"
+      --group zabbix-server-group
+  run_once: true

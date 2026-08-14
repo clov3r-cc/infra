@@ -1,0 +1,6 @@
+$FileCreateMode 0640
+$FileGroup zabbix
+
+$template ZbxTrapFormat,"%msg%"
+local6.* /var/log/snmptrap/snmptrap.log;ZbxTrapFormat
+& stop

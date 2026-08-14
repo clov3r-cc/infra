@@ -1,4 +1,9 @@
 ---
+- name: Validate lego domain configuration
+  ansible.builtin.fail:
+    msg: "Either lego_domain or lego_domains must be defined"
+  when: lego_domain is not defined and lego_domains is not defined
+
 - name: Check if lego binary exists
   ansible.builtin.stat:
     path: /usr/local/bin/lego
@@ -8,6 +13,8 @@
   when: not __lego_binary.stat.exists
   block:
     - name: lego | Download lego archive
+      environment:
+        https_proxy: "{{ proxy_server_url | default('') }}"
       ansible.builtin.get_url:
         url: "https://github.com/go-acme/lego/releases/download/v{{ lego_version }}/lego_v{{ lego_version }}_linux_amd64.tar.gz"
         dest: /tmp/lego.tar.gz
@@ -38,7 +45,7 @@
     state: directory
     owner: root
     group: root
-    mode: "0700"
+    mode: "0755"
 
 - name: Deploy lego environment file
   ansible.builtin.template:
@@ -48,32 +55,48 @@
     group: root
     mode: "0600"
 
-- name: Check if certificate already exists
-  ansible.builtin.stat:
-    path: "{{ lego_path }}/certificates/{{ lego_domain }}.crt"
-  register: __lego_cert
+# lego_domains (list) と lego_domain (string) の両方に対応
+- name: Normalize domains list
+  ansible.builtin.set_fact:
+    __lego_domains: "{{ lego_domains | default([lego_domain]) }}"
 
-- name: Obtain initial certificate
+- name: Check if certificates already exist
+  ansible.builtin.stat:
+    path: "{{ lego_path }}/certificates/{{ item }}.crt"
+  loop: "{{ __lego_domains }}"
+  register: __lego_certs
+
+- name: Obtain initial certificates
   ansible.builtin.shell:
     cmd: >-
       test {{ ansible_check_mode | lower }} = false && /usr/local/bin/lego
       --path {{ lego_path }}
       --email {{ lego_email }}
       --dns {{ lego_dns_provider }}
-      --domains {{ lego_domain }}
+      --domains {{ __lego_cert_result.item }}
       --accept-tos
       run
     executable: /bin/bash
   environment:
     CF_DNS_API_TOKEN: "{{ lego_cloudflare_api_token }}"
-  when: not __lego_cert.stat.exists
+    https_proxy: "{{ proxy_server_url | default('') }}"
+  when: not __lego_cert_result.stat.exists
+  loop: "{{ __lego_certs.results }}"
+  loop_control:
+    loop_var: __lego_cert_result
   check_mode: false
-  register: __lego_obtain_cert
-  failed_when: ansible_check_mode == false and __lego_obtain_cert.rc != 0
+  register: __lego_obtain_certs
+  failed_when: ansible_check_mode == false and (__lego_cert_result.rc | default(0)) != 0
   changed_when: not ansible_check_mode
-  notify:
-    - Reload nginx
-    - Restart AdGuardHome
+  notify: "{{ lego_notify_handlers | default(['Reload nginx']) }}"
+
+- name: lego | Ensure certificates are readable for monitoring
+  ansible.builtin.shell:
+    cmd: |
+      chmod 755 "{{ lego_path }}/certificates"
+      chmod 644 "{{ lego_path }}/certificates"/*.crt
+  when: __lego_domains | length > 0
+  changed_when: false
 
 - name: Deploy lego renew systemd service
   ansible.builtin.template:
@@ -105,3 +128,22 @@
     daemon_reload: true
     enabled: true
     state: started
+
+- name: lego | Deploy certificate discovery script
+  ansible.builtin.copy:
+    src: lego_discover.sh
+    dest: /usr/local/bin/lego_discover.sh
+    owner: root
+    group: root
+    mode: '0755'
+  when: __lego_domains | length > 0
+
+- name: lego | Deploy Zabbix agent UserParameter config for certificate monitoring
+  ansible.builtin.template:
+    src: zabbix_agentd_lego.conf.j2
+    dest: "{{ zabbix_agentd_conf_dir }}/lego.conf"
+    owner: root
+    group: root
+    mode: '0644'
+  when: __lego_domains | length > 0
+  notify: Restart zabbix-agent

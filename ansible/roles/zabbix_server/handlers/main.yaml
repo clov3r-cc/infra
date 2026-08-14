@@ -13,3 +13,14 @@
   ansible.builtin.systemd_service:
     name: pacemaker
     state: restarted
+
+- name: Restart rsyslog
+  ansible.builtin.systemd_service:
+    name: rsyslog
+    state: restarted
+
+- name: Restart snmptrapd
+  ansible.builtin.shell: pcs resource restart snmptrapd
+  listen: Restart snmptrapd
+
+

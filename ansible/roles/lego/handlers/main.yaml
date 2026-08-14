@@ -5,6 +5,7 @@
     state: reloaded
 
 - name: Restart AdGuardHome
+  when: "'dns_server' in group_names"
   ansible.builtin.systemd_service:
     name: AdGuardHome
     state: restarted

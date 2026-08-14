@@ -2,6 +2,7 @@
 # www.elrepo.org が User-Agent なしのリクエストに 406 を返すため、
 # rpm_key ではなく get_url で一度ダウンロードしてから読み込ませる。
 - name: drbd | Download ELRepo GPG key
+  when: "inventory_hostname in groups['zabbix_server__ha']"
   environment:
     https_proxy: "{{ proxy_server_url }}"
   ansible.builtin.get_url:
@@ -10,12 +11,14 @@
     mode: '0644'
 
 - name: drbd | Add ELRepo GPG key
+  when: "inventory_hostname in groups['zabbix_server__ha']"
   ansible.builtin.rpm_key:
     key: /tmp/RPM-GPG-KEY-v2-elrepo.org
     state: present
 
 # 公式 ELRepo リポジトリも mirrorlist は http:// のため合わせる。
 - name: drbd | Add ELRepo repository
+  when: "inventory_hostname in groups['zabbix_server__ha']"
   ansible.builtin.yum_repository:
     name: elrepo
     description: ELRepo.org Community Enterprise Linux Repository
@@ -25,7 +28,7 @@
     enabled: true
 
 - name: drbd | Create a new ext4 primary partition
-  when: "inventory_hostname in zabbix_server_ha_hosts"
+  when: "inventory_hostname in groups['zabbix_server__ha']"
   community.general.parted:
     device: /dev/vdb
     number: 1
@@ -38,34 +41,31 @@
     resize: false
 
 - name: drbd | Install DRBD
-  when: "inventory_hostname in zabbix_server_ha_hosts"
+  when: "inventory_hostname in groups['zabbix_server__ha']"
   ansible.builtin.package:
     name:
       - kmod-drbd9x
       - drbd9x-utils
     state: present
 
-- name: drbd | Unmask drbd service
-  when: "inventory_hostname in zabbix_server_ha_hosts"
-  ansible.builtin.command: systemctl unmask drbd
-  changed_when: false
-
 - name: drbd | Enable and start drbd
-  when: "inventory_hostname in zabbix_server_ha_hosts"
+  when: "inventory_hostname in groups['zabbix_server__ha']"
   ansible.builtin.systemd_service:
     name: drbd
     state: started
     enabled: true
+    # DRBD may be masked by default
+    masked: false
 
 - name: drbd | Deploy DRBD configuration
-  when: "inventory_hostname in zabbix_server_ha_hosts"
+  when: "inventory_hostname in groups['zabbix_server__ha']"
   ansible.builtin.template:
     src: drbd1.res.j2
     dest: /etc/drbd.d/drbd1.res
     mode: '0644'
 
 - name: drbd | Check if DRBD connection is configured
-  when: "inventory_hostname in zabbix_server_ha_hosts"
+  when: "inventory_hostname in groups['zabbix_server__ha']"
   ansible.builtin.command: drbdadm cstate drbd1
   register: __zabbix_server_drbd_cstate
   check_mode: false
@@ -73,14 +73,14 @@
   changed_when: false
 
 - name: drbd | Check if DRBD was previously initialized
-  when: "inventory_hostname in zabbix_server_ha_hosts"
+  when: "inventory_hostname in groups['zabbix_server__ha']"
   ansible.builtin.stat:
     path: /etc/drbd.d/.drbd1-initialized
   register: __zabbix_server_drbd_initialized
 
 - name: drbd | Initialize DRBD device metadata
   when:
-    - inventory_hostname in zabbix_server_ha_hosts
+    - inventory_hostname in groups['zabbix_server__ha']
     - __zabbix_server_drbd_cstate.rc != 0
     - not __zabbix_server_drbd_initialized.stat.exists
   ansible.builtin.shell: test {{ ansible_check_mode | lower }} = false && drbdadm create-md drbd1 --force
@@ -91,7 +91,7 @@
 
 - name: drbd | Mark DRBD as initialized
   when:
-    - inventory_hostname in zabbix_server_ha_hosts
+    - inventory_hostname in groups['zabbix_server__ha']
     - not __zabbix_server_drbd_initialized.stat.exists
   ansible.builtin.file:
     path: /etc/drbd.d/.drbd1-initialized
@@ -99,7 +99,7 @@
     mode: '0644'
 
 - name: drbd | Start DRBD device
-  when: "inventory_hostname in zabbix_server_ha_hosts and __zabbix_server_drbd_cstate.rc != 0"
+  when: "inventory_hostname in groups['zabbix_server__ha'] and __zabbix_server_drbd_cstate.rc != 0"
   ansible.builtin.shell: test {{ ansible_check_mode | lower }} = false && drbdadm up drbd1
   check_mode: false
   register: __zabbix_server_start_drbd_dev
@@ -107,13 +107,13 @@
   changed_when: not ansible_check_mode
 
 - name: drbd | Wait for DRBD connection
-  when: "inventory_hostname in zabbix_server_ha_hosts"
+  when: "inventory_hostname in groups['zabbix_server__ha']"
   ansible.builtin.command: drbdadm wait-connect drbd1
   check_mode: false
   changed_when: false
 
 - name: drbd | Check if DRBD disk is synced
-  when: "inventory_hostname in zabbix_server_ha_hosts"
+  when: "inventory_hostname in groups['zabbix_server__ha']"
   ansible.builtin.command: drbdadm dstate drbd1
   register: __zabbix_server_drbd_dstate
   check_mode: false
@@ -122,7 +122,7 @@
 
 - name: drbd | Initial DRBD sync setup
   when:
-    - inventory_hostname in zabbix_server_ha_hosts
+    - inventory_hostname in groups['zabbix_server__ha']
     - __zabbix_server_drbd_dstate.stdout != 'UpToDate/UpToDate'
   block:
     - name: drbd | Make all nodes secondary
@@ -133,7 +133,7 @@
       changed_when: not ansible_check_mode
 
     - name: drbd | Sync disk at first node
-      when: inventory_hostname == zabbix_server_ha_hosts[0]
+      when: inventory_hostname == groups['zabbix_server__ha'][0]
       ansible.builtin.shell: test {{ ansible_check_mode | lower }} = false && drbdadm primary drbd1 --force
       check_mode: false
       register: __zabbix_server_sync_disk
@@ -146,7 +146,7 @@
       changed_when: false
 
     - name: drbd | Check if filesystem exists on DRBD device
-      when: inventory_hostname == zabbix_server_ha_hosts[0]
+      when: inventory_hostname == groups['zabbix_server__ha'][0]
       ansible.builtin.command: blkid /dev/drbd1
       register: __zabbix_server_drbd_blkid
       check_mode: false
@@ -155,7 +155,7 @@
 
     - name: drbd | Create filesystem on DRBD device
       when:
-        - inventory_hostname == zabbix_server_ha_hosts[0]
+        - inventory_hostname == groups['zabbix_server__ha'][0]
         - __zabbix_server_drbd_blkid.rc != 0
       community.general.filesystem:
         dev: /dev/drbd1
@@ -172,10 +172,49 @@
       changed_when: not ansible_check_mode
 
 - name: drbd | Create /mnt/drbd1 directory to use mount point
-  when: "inventory_hostname in zabbix_server_ha_hosts"
+  when: "inventory_hostname in groups['zabbix_server__ha']"
   ansible.builtin.file:
-    path: /mnt/drbd1
+    path: "{{ zabbix_server_drbd_mount_point }}"
     state: directory
     mode: '0755'
 
-# DRBD デバイスのマウントは Pacemaker が管理するためここでは実施しない
+# DRBD デバイスのマウントは Pacemaker が管理する
+- name: drbd | Add DRBD filesystem to Pacemaker
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  pcs_resource:
+    name: drbd-fs
+    resource_class: ocf
+    resource_type: "ocf:heartbeat:Filesystem"
+    options: >-
+      device=/dev/drbd1
+      directory={{ zabbix_server_drbd_mount_point }}
+      fstype=ext4
+      --group zabbix-server-group
+  run_once: true
+
+- name: drbd | Determine node running drbd-fs resource
+  when: inventory_hostname == groups['zabbix_server__ha'][0]
+  ansible.builtin.command: pcs resource status drbd-fs
+  register: __zabbix_server_pcs_drbd_status
+  changed_when: false
+  failed_when: false
+  run_once: true
+
+- name: drbd | Set drbd_active_node fact
+  when: inventory_hostname == groups['zabbix_server__ha'][0]
+  ansible.builtin.set_fact:
+    drbd_active_node: >-
+      {{
+        (__zabbix_server_pcs_drbd_status.stdout | regex_search('Started\s+(\S+)', '\1') | first)
+        | default(groups['zabbix_server__ha'][0], true)
+      }}
+  run_once: true
+
+- name: drbd | Wait for DRBD mount
+  when: inventory_hostname == hostvars[groups['zabbix_server__ha'][0]]['drbd_active_node']
+  ansible.builtin.command: mountpoint {{ zabbix_server_drbd_mount_point }}
+  register: __zabbix_server_drbd_mount
+  changed_when: false
+  retries: 30
+  delay: 2
+  until: __zabbix_server_drbd_mount.rc == 0

@@ -1,25 +1,17 @@
 ---
-- name: repos | Add HighAvailability JP mirrors
-  ansible.builtin.blockinfile:
-    path: /etc/yum.repos.d/almalinux-jp-mirrors.repo
-    marker: "# {mark} ANSIBLE MANAGED - jp-highavailability"
-    block: |
-      [jp-highavailability]
-      name=AlmaLinux {{ ansible_facts['distribution_major_version'] }} - HighAvailability (JP Mirrors)
-      baseurl=http://ftp.jaist.ac.jp/pub/Linux/almalinux/$releasever/HighAvailability/$basearch/os/
-             http://ftp.sakura.ad.jp/almalinux/$releasever/HighAvailability/$basearch/os/
-             http://ftp.yz.yamagata-u.ac.jp/pub/linux/almalinux/$releasever/HighAvailability/$basearch/os/
-             http://mirrors.xtom.jp/almalinux/$releasever/HighAvailability/$basearch/os/
-             http://ftp.udx.icscoe.jp/Linux/almalinux/$releasever/HighAvailability/$basearch/os/
-             http://ftp.iij.ad.jp/pub/linux/almalinux/$releasever/HighAvailability/$basearch/os/
-             http://ftp.riken.jp/Linux/almalinux/$releasever/HighAvailability/$basearch/os/
-      enabled=1
-      gpgcheck=1
-      gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-AlmaLinux-{{ ansible_facts['distribution_major_version'] }}
-      module_hotfixes=1
+- name: repos | Enable HighAvailability repository
+  ansible.builtin.yum_repository:
+    name: highavailability
+    file: almalinux-highavailability
+    description: AlmaLinux $releasever - HighAvailability
+    mirrorlist: https://mirrors.almalinux.org/mirrorlist/$releasever/highavailability
+    gpgcheck: true
+    gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-AlmaLinux-{{ ansible_facts['distribution_major_version'] }}
+    enabled: true
+    module_hotfixes: true
 
-- name: pacemaker_qdevice | Install Pacemaker
-  when: "inventory_hostname in groups[zabbix_server_qdevice_group]"
+- name: pacemaker_qdevice | Install Pacemaker QDevice
+  when: "inventory_hostname in groups['zabbix_server__qdevice']"
   ansible.builtin.package:
     name:
       - corosync-qnetd
@@ -27,8 +19,43 @@
     state: present
 
 - name: pacemaker_qdevice | Set hacluster user password
-  when: "inventory_hostname in groups[zabbix_server_qdevice_group]"
+  when: "inventory_hostname in groups['zabbix_server__qdevice']"
   ansible.builtin.user:
     name: hacluster
     password: "{{ zabbix_server_hacluster_password | password_hash('sha512') }}"
   changed_when: false
+
+- name: pacemaker_qdevice | Check if qnetd NSS cert DB is initialized
+  when: "inventory_hostname in groups['zabbix_server__qdevice']"
+  ansible.builtin.stat:
+    path: /etc/corosync/qnetd/nssdb/cert9.db
+  register: qnetd_certdb
+
+- name: pacemaker_qdevice | Initialize qnetd NSS certificate database
+  when:
+    - inventory_hostname in groups['zabbix_server__qdevice']
+    - not qnetd_certdb.stat.exists
+  block:
+    - name: pacemaker_qdevice | Remove stale NSS cert database
+      ansible.builtin.file:
+        path: /etc/corosync/qnetd/nssdb
+        state: absent
+
+    - name: pacemaker_qdevice | Run certutil init
+      ansible.builtin.command:
+        cmd: corosync-qnetd-certutil -i
+        creates: /etc/corosync/qnetd/nssdb
+
+- name: pacemaker_qdevice | Enable and start pcsd
+  when: "inventory_hostname in groups['zabbix_server__qdevice']"
+  ansible.builtin.systemd_service:
+    name: pcsd
+    state: started
+    enabled: true
+
+- name: pacemaker_qdevice | Enable and start corosync-qnetd
+  when: "inventory_hostname in groups['zabbix_server__qdevice']"
+  ansible.builtin.systemd_service:
+    name: corosync-qnetd
+    state: started
+    enabled: true

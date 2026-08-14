@@ -1,0 +1,7 @@
+[Unit]
+Description=Collect Pacemaker and DRBD state for Zabbix
+After=corosync.service pacemaker.service zabbix-agent.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/zabbix-cluster-monitor

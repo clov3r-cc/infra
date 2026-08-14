@@ -40,11 +40,20 @@ logging {
 
 quorum {
   provider: corosync_votequorum
-  two_node: 1
+{% if groups['zabbix_server__qdevice'] is defined and groups['zabbix_server__qdevice'] | length > 0 %}
+  device {
+    model: net
+    votes: 1
+    algorithm: ffsplit
+    net {
+      host: {{ hostvars[groups['zabbix_server__qdevice'][0]]['heartbeat_nw_ip'] }}
+    }
+  }
+{% endif %}
 }
 
 nodelist {
-{% for host in zabbix_server_ha_hosts %}
+{% for host in groups['zabbix_server__ha'] %}
   node {
     name: {{ host }}
     nodeid: {{ hostvars[host]['host_index'] }}

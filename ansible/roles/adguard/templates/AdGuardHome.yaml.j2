@@ -79,7 +79,7 @@ dns:
     enabled: true
 tls:
   enabled: true
-  server_name: {{ lego_domain }}
+  server_name: "{{ lego_domains | default([lego_domain]) | first }}"
   force_https: true
   port_https: {{ adguard_https_port }}
   port_dns_over_tls: 853
@@ -89,8 +89,8 @@ tls:
   allow_unencrypted_doh: false
   certificate_chain: ""
   private_key: ""
-  certificate_path: /etc/lego/certificates/{{ lego_domain }}.crt
-  private_key_path: /etc/lego/certificates/{{ lego_domain }}.key
+  certificate_path: "/etc/lego/certificates/{{ lego_domains | default([lego_domain]) | first }}.crt"
+  private_key_path: "/etc/lego/certificates/{{ lego_domains | default([lego_domain]) | first }}.key"
   strict_sni_check: false
 querylog:
   dir_path: ""

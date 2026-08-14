@@ -1,0 +1,35 @@
+# {{ ansible_managed }}
+# DRBD + Pacemaker monitoring UserParameters for Zabbix Agent
+
+# === DRBD Monitoring ===
+# Connection state: Connected, StandAlone, WFConnection, etc.
+UserParameter=drbd.connection[*],/usr/local/bin/zabbix-cluster-value drbd.connection "$1"
+# Disk state: UpToDate/UpToDate, etc.
+UserParameter=drbd.disk_state[*],/usr/local/bin/zabbix-cluster-value drbd.disk_state "$1"
+# Role: Primary/Secondary, etc.
+UserParameter=drbd.role[*],/usr/local/bin/zabbix-cluster-value drbd.role "$1"
+# Out-of-sync sectors (0 = fully synced)
+UserParameter=drbd.out_of_sync[*],/usr/local/bin/zabbix-cluster-value drbd.out_of_sync "$1"
+
+# === Pacemaker Cluster Monitoring ===
+# Number of online nodes
+UserParameter=pacemaker.nodes.online,/usr/local/bin/zabbix-cluster-value pacemaker.nodes.online
+# Number of standby/unclean/offline nodes (case-insensitive)
+UserParameter=pacemaker.nodes.standby,/usr/local/bin/zabbix-cluster-value pacemaker.nodes.standby
+# Designated Controller node name
+UserParameter=pacemaker.dc,/usr/local/bin/zabbix-cluster-value pacemaker.dc
+# Quorum status (1 = has quorum, 0 = no quorum)
+UserParameter=pacemaker.quorum,/usr/local/bin/zabbix-cluster-value pacemaker.quorum
+# Failed Resource Actions count
+UserParameter=pacemaker.resources.failed,/usr/local/bin/zabbix-cluster-value pacemaker.resources.failed
+# Number of Started resources in the specified resource group
+UserParameter=pacemaker.group.status[*],/usr/local/bin/zabbix-cluster-value pacemaker.group.status "$1"
+
+# Total number of resources in the specified resource group
+UserParameter=pacemaker.group.total[*],/usr/local/bin/zabbix-cluster-value pacemaker.group.total "$1"
+
+# LLD: Discover all resources in the specified Pacemaker resource group
+UserParameter=pacemaker.resources.discover[*],/usr/local/bin/zabbix-cluster-value pacemaker.resources.discover "$1"
+
+# Individual resource state in the specified group
+UserParameter=pacemaker.resource.state[*],/usr/local/bin/zabbix-cluster-value pacemaker.resource.state "$1"

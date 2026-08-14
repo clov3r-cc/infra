@@ -204,6 +204,15 @@ fw_rulesets:
           port: "80,443"
       - number: 50
         action: accept
+        description: Allow HTTPS from DNS_SERVERS to Zabbix repo
+        protocol: tcp
+        source:
+          address_group: DNS_SERVERS
+        destination:
+          domain_group: ZABBIX_MIRRORS
+          port: 443
+      - number: 51
+        action: accept
         description: Allow DNS from DNS_SERVERS to Cloudflare for SSL cert renewal DNS challenge
         protocol: tcp_udp
         source:
@@ -211,6 +220,15 @@ fw_rulesets:
         destination:
           network_group: CLOUDFLARE_IPS
           port: 53
+      - number: 52
+        action: accept
+        description: Allow HTTPS to discord.com from DNS_SERVERS
+        protocol: tcp
+        source:
+          address_group: DNS_SERVERS
+        destination:
+          domain_group: DISCORD
+          port: 443
       - number: 200
         action: accept
         description: Allow NTP from TAILSCALE_NODES to WAN_GATEWAY
@@ -373,6 +391,33 @@ fw_rulesets:
         destination:
           address_group: NAS_SERVERS
           port: 9999
+      - number: 200
+        action: accept
+        description: Allow HTTPS from TAILSCALE_NODES to ZABBIX_VIP
+        protocol: tcp
+        source:
+          address_group: TAILSCALE_NODES
+        destination:
+          address_group: ZABBIX_VIP
+          port: 443
+      - number: 205
+        action: accept
+        description: Allow Zabbix active check from DNS_SERVERS to ZABBIX_VIP
+        protocol: tcp
+        source:
+          address_group: DNS_SERVERS
+        destination:
+          address_group: ZABBIX_VIP
+          port: 10051
+      - number: 206
+        action: accept
+        description: Allow Zabbix active check from TAILSCALE_NODES to ZABBIX_VIP
+        protocol: tcp
+        source:
+          address_group: TAILSCALE_NODES
+        destination:
+          address_group: ZABBIX_VIP
+          port: 10051
 
   - name: INTERNAL-TO-WAN
     default_action: drop
@@ -392,6 +437,23 @@ fw_rulesets:
           address_group: NAS_SERVERS
         destination:
           port: 443
+      - number: 202
+        action: accept
+        description: Allow Zabbix Proxmox API monitoring from ZABBIX_SERVERS to PVE_NODES
+        protocol: tcp
+        source:
+          address_group: ZABBIX_SERVERS
+        destination:
+          address_group: PVE_NODES
+          port: 8006
+      - number: 205
+        action: accept
+        description: Allow DNS from ZABBIX_SERVERS to WAN
+        protocol: tcp_udp
+        source:
+          address_group: ZABBIX_SERVERS
+        destination:
+          port: 53
       - number: 210
         action: accept
         description: Allow NTP from ZABBIX_SERVERS to WAN_GATEWAY
@@ -410,37 +472,35 @@ fw_rulesets:
         destination:
           address_group: WAN_GATEWAY
           port: 123
+      - number: 212
+        action: accept
+        description: Allow NTP from DESKTOP to WAN_GATEWAY
+        protocol: udp
+        source:
+          address_group: DESKTOP
+        destination:
+          address_group: WAN_GATEWAY
+          port: 123
   - name: INTERNAL-TO-DMZ
     default_action: drop
     default_log: true
     rules:
-      - number: 10
+      - number: 15
         action: accept
-        description: Allow DNS from ZABBIX_SERVERS to DNS_SERVERS
-        protocol: tcp_udp
+        description: Allow ICMP from ZABBIX_SERVERS to DNS_SERVERS
+        protocol: icmp
         source:
           address_group: ZABBIX_SERVERS
         destination:
           address_group: DNS_SERVERS
-          port: 53
-      - number: 11
+      - number: 16
         action: accept
-        description: Allow DNS from NAS_SERVERS to DNS_SERVERS
-        protocol: tcp_udp
+        description: Allow ICMP from ZABBIX_SERVERS to TAILSCALE_NODES
+        protocol: icmp
         source:
-          address_group: NAS_SERVERS
+          address_group: ZABBIX_SERVERS
         destination:
-          address_group: DNS_SERVERS
-          port: 53
-      - number: 12
-        action: accept
-        description: Allow DNS from DESKTOP to DNS_SERVERS
-        protocol: tcp_udp
-        source:
-          address_group: DESKTOP
-        destination:
-          address_group: DNS_SERVERS
-          port: 53
+          address_group: TAILSCALE_NODES
       - number: 30
         action: accept
         description: Allow Squid explicit proxy from ZABBIX_SERVERS to DNS_PROXY_VIP
@@ -459,6 +519,60 @@ fw_rulesets:
         destination:
           address_group: DNS_PROXY_VIP
           port: 3128
+      - number: 36
+        action: accept
+        description: Allow Squid explicit proxy from DESKTOP to DNS_PROXY_VIP
+        protocol: tcp
+        source:
+          address_group: DESKTOP
+        destination:
+          address_group: DNS_PROXY_VIP
+          port: 3128
+      - number: 200
+        action: accept
+        description: Allow Zabbix passive check from ZABBIX_SERVERS to DNS_SERVERS
+        protocol: tcp
+        source:
+          address_group: ZABBIX_SERVERS
+        destination:
+          address_group: DNS_SERVERS
+          port: 10050
+      - number: 201
+        action: accept
+        description: Allow Zabbix passive check from ZABBIX_SERVERS to TAILSCALE_NODES
+        protocol: tcp
+        source:
+          address_group: ZABBIX_SERVERS
+        destination:
+          address_group: TAILSCALE_NODES
+          port: 10050
+      - number: 210
+        action: accept
+        description: Allow DNS from ZABBIX_SERVERS to DNS_SERVERS
+        protocol: tcp_udp
+        source:
+          address_group: ZABBIX_SERVERS
+        destination:
+          address_group: DNS_SERVERS
+          port: 53
+      - number: 211
+        action: accept
+        description: Allow DNS from NAS_SERVERS to DNS_SERVERS
+        protocol: tcp_udp
+        source:
+          address_group: NAS_SERVERS
+        destination:
+          address_group: DNS_SERVERS
+          port: 53
+      - number: 212
+        action: accept
+        description: Allow DNS from DESKTOP to DNS_SERVERS
+        protocol: tcp_udp
+        source:
+          address_group: DESKTOP
+        destination:
+          address_group: DNS_SERVERS
+          port: 53
 
   - name: INTERNAL-TO-LOCAL
     default_action: drop
@@ -470,6 +584,20 @@ fw_rulesets:
         protocol: "112"
         source:
           address_group: FW_INTERNAL_NODES
+      - number: 20
+        action: accept
+        description: Allow ICMP from ZABBIX_SERVERS
+        protocol: icmp
+        source:
+          address_group: ZABBIX_SERVERS
+      - number: 200
+        action: accept
+        description: Allow Zabbix passive check from ZABBIX_SERVERS
+        protocol: tcp
+        source:
+          address_group: ZABBIX_SERVERS
+        destination:
+          port: 10050
       - number: 950
         action: drop
         description: Silently drop NetBIOS Name Service broadcast from NAS_SERVERS
@@ -518,6 +646,13 @@ fw_rulesets:
         protocol: tcp
         destination:
           domain_group: DEBIAN_MIRRORS
+          port: 443
+      - number: 36
+        action: accept
+        description: Allow HTTPS to Zabbix repo
+        protocol: tcp
+        destination:
+          domain_group: ZABBIX_MIRRORS
           port: 443
       - number: 40
         action: accept
@@ -596,6 +731,13 @@ fw_rulesets:
         protocol: udp
         destination:
           port: 33434-33534
+      - number: 200
+        action: accept
+        description: Allow Zabbix active check to ZABBIX_VIP
+        protocol: tcp
+        destination:
+          address_group: ZABBIX_VIP
+          port: 10051
 
   - name: SERVICE-TO-LOCAL
     default_action: drop

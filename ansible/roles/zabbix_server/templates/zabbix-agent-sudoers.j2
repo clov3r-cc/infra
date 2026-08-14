@@ -1,0 +1,6 @@
+# {{ ansible_managed }}
+# Allow the zabbix agent to run Pacemaker/DRBD monitoring commands as root.
+# Needed because the Zabbix 7.0.29 SELinux policy confines zabbix_agent_t too
+# strictly for these tools (netlink sockets, raw block devices, cluster IPC).
+Defaults:zabbix !requiretty
+zabbix ALL=(root) NOPASSWD: /usr/sbin/crm_mon, /usr/sbin/pcs, /usr/sbin/drbdadm, /usr/sbin/drbdsetup, /usr/sbin/drbdmeta

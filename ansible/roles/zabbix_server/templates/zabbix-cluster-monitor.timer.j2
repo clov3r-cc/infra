@@ -1,0 +1,10 @@
+[Unit]
+Description=Collect Pacemaker and DRBD state for Zabbix periodically
+
+[Timer]
+OnBootSec=15s
+OnUnitActiveSec=30s
+Persistent=true
+
+[Install]
+WantedBy=timers.target

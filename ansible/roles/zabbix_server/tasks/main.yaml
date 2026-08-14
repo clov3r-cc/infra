@@ -1,9 +1,17 @@
 ---
-# - name: Fix eth1 DNS contamination
-#   ansible.builtin.import_tasks: fix-eth1-dns.yaml
-- name: Setup DRBD
-  ansible.builtin.import_tasks: drbd.yaml
+- name: Fix eth1 DNS contamination
+  ansible.builtin.import_tasks: fix-eth1-dns.yaml
+- name: Setup Pacemaker QDevice
+  ansible.builtin.import_tasks: pacemaker_qdevice.yaml
 - name: Setup Pacemaker
   ansible.builtin.import_tasks: pacemaker.yaml
-# - name: Setup MariaDB
-#   ansible.builtin.import_tasks: mariadb.yaml
+- name: Setup DRBD
+  ansible.builtin.import_tasks: drbd.yaml
+- name: Setup MariaDB
+  ansible.builtin.import_tasks: mariadb.yaml
+- name: Setup Zabbix Server
+  ansible.builtin.import_tasks: zabbix-server.yaml
+- name: Setup Zabbix Agent custom monitoring (DRBD + Pacemaker)
+  ansible.builtin.import_tasks: zabbix-agent-custom.yaml
+- name: Setup SNMP trap reception
+  ansible.builtin.import_tasks: snmp.yaml

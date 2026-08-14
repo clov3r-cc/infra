@@ -1,0 +1,130 @@
+zabbix_export:
+  version: '7.0'
+  template_groups:
+    - uuid: 0899051eeec74aa88d82d8bcf3c6fda9
+      name: Cusotmized
+    - uuid: d7499a44661641dfbf848a21729401d5
+      name: Templates/Applications
+  templates:
+    - uuid: 5b4dfe64d02147689e2e64aa7fb5db27
+      template: DRBD
+      name: DRBD
+      description: |
+        DRBD block device replication monitoring.
+        Monitors connection state, disk state, role, and sync progress.
+        Requires UserParameter definitions in zabbix_agentd_drbd_pacemaker.conf.
+      groups:
+        - name: Cusotmized
+        - name: Templates/Applications
+      items:
+        - uuid: bfdc8559ad7b4bd599bfc63dc3c53a20
+          name: 'DRBD: Connection state'
+          type: ZABBIX_ACTIVE
+          key: 'drbd.connection[{$DRBD.RESOURCE}]'
+          history: 7d
+          value_type: TEXT
+          trends: '0'
+          description: |
+            DRBD connection state.
+            - Connected: Normal replication
+            - StandAlone: No connection to peer
+            - WFConnection: Waiting for peer
+            - SyncSource/SyncTarget: Resynchronizing
+            - PausedSync: Sync paused
+          tags:
+            - tag: component
+              value: drbd
+          triggers:
+            - uuid: a05ebe278c5c4d88a81f1df92eb3fd5d
+              expression: 'find(/DRBD/drbd.connection[{$DRBD.RESOURCE}],#1,,"Connected")=0'
+              name: 'DRBD: Connection not Connected on {HOST.HOST}'
+              event_name: 'DRBD: Connection not Connected on {HOST.HOST}'
+              priority: HIGH
+              description: 'DRBD connection state is not Connected. Check peer reachability and network.'
+              tags:
+                - tag: component
+                  value: drbd
+        - uuid: c2c0324c217a4195837291df29f7f82c
+          name: 'DRBD: Disk state'
+          type: ZABBIX_ACTIVE
+          key: 'drbd.disk_state[{$DRBD.RESOURCE}]'
+          history: 7d
+          value_type: TEXT
+          trends: '0'
+          description: |
+            DRBD local/peer disk state (format: Local/Peer).
+            - UpToDate/UpToDate: Both disks healthy
+            - Inconsistent/UpToDate: Resynchronizing
+            - Diskless: No backing device
+            - Failed: Disk I/O error
+          tags:
+            - tag: component
+              value: drbd
+          triggers:
+            - uuid: 89f4bfe40d7f4ba7a91eb50ca2af7a71
+              expression: 'find(/DRBD/drbd.disk_state[{$DRBD.RESOURCE}],#1,,"UpToDate")=0'
+              name: 'DRBD: Disk state is not UpToDate on {HOST.HOST}'
+              event_name: 'DRBD: Disk state is not UpToDate on {HOST.HOST}'
+              priority: HIGH
+              description: 'DRBD disk state is not UpToDate. Data may be inconsistent.'
+              tags:
+                - tag: component
+                  value: drbd
+        - uuid: 78f0b567bc314363ba5bf203e6eafcab
+          name: 'DRBD: Out-of-sync sectors'
+          type: ZABBIX_ACTIVE
+          key: 'drbd.out_of_sync[{$DRBD.RESOURCE}]'
+          history: 7d
+          units: sectors
+          description: 'Number of out-of-sync sectors. 0 indicates fully synchronized.'
+          tags:
+            - tag: component
+              value: drbd
+          triggers:
+            - uuid: 805ccb73917445e7bd3dcfb134d795a9
+              expression: 'last(/DRBD/drbd.out_of_sync[{$DRBD.RESOURCE}],#3)>1000'
+              name: 'DRBD: Out-of-sync sectors high on {HOST.HOST}'
+              event_name: 'DRBD: Out-of-sync sectors high on {HOST.HOST}'
+              priority: AVERAGE
+              description: 'DRBD has out-of-sync sectors. Verifying sync is in progress or stalled.'
+              tags:
+                - tag: component
+                  value: drbd
+        - uuid: 83a88be7265740f7bd1b313fbbad5c44
+          name: 'DRBD: Role'
+          type: ZABBIX_ACTIVE
+          key: 'drbd.role[{$DRBD.RESOURCE}]'
+          history: 7d
+          value_type: TEXT
+          trends: '0'
+          description: |
+            DRBD local/peer role (format: Local/Peer).
+            - Primary/Secondary: Normal (active/passive)
+            - Primary/Primary: Both primary (split-brain)
+            - Secondary/Secondary: No primary
+          tags:
+            - tag: component
+              value: drbd
+          triggers:
+            - uuid: 6a3cfddae1014f9d864e1f35fe459f39
+              expression: 'change(/DRBD/drbd.role[{$DRBD.RESOURCE}])=1'
+              name: 'DRBD: Role changed on {HOST.HOST}'
+              event_name: 'DRBD: Role changed on {HOST.HOST}'
+              priority: AVERAGE
+              description: 'DRBD role (Primary/Secondary) has changed. This may indicate a failover or manual promote/demote.'
+              tags:
+                - tag: component
+                  value: drbd
+            - uuid: fd83bd8ac42a4bc69d9f6a214d218d3d
+              expression: 'find(/DRBD/drbd.role[{$DRBD.RESOURCE}],#1,,"Primary/Primary")=1'
+              name: 'DRBD: Split-brain detected on {HOST.HOST}'
+              event_name: 'DRBD: Split-brain detected on {HOST.HOST}'
+              priority: DISASTER
+              description: 'Both DRBD nodes are Primary simultaneously. Manual intervention required.'
+              tags:
+                - tag: component
+                  value: drbd
+      macros:
+        - macro: '{$DRBD.RESOURCE}'
+          value: drbd1
+          description: 'DRBD resource name to monitor (configured in /etc/drbd.d/*.res).'

@@ -1,0 +1,141 @@
+---
+- name: SNMP | Install SNMP packages
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  ansible.builtin.package:
+    name:
+      - net-snmp
+      - net-snmp-agent-libs
+      - net-snmp-devel
+      - net-snmp-perl
+      - net-snmp-perl-module
+      - net-snmp-utils
+    state: present
+
+- name: SNMP | Create trap log directory
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  ansible.builtin.file:
+    path: /var/log/snmptrap
+    state: directory
+    owner: zabbix
+    group: zabbix
+    mode: '0775'
+
+- name: SNMP | Set SELinux context for trap directory
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  ansible.builtin.command: semanage fcontext -a -t snmpd_log_t "/var/log/snmptrap(/.*)?"
+  register: __semanage_result
+  failed_when: false
+  changed_when: '__semanage_result.rc == 0 and "File context already defined" not in __semanage_result.stderr'
+
+- name: SNMP | Apply SELinux context to trap directory
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  ansible.builtin.command: restorecon -RF /var/log/snmptrap
+
+- name: SNMP | Deploy rsyslog config for snmp trap forwarding
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  ansible.builtin.template:
+    src: 99-snmptrap.conf.j2
+    dest: /etc/rsyslog.d/99-snmptrap.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart rsyslog
+
+- name: SNMP | Download zabbix_trap_receiver.pl
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  ansible.builtin.get_url:
+    url: https://raw.githubusercontent.com/zabbix/zabbix/master/misc/snmptrap/zabbix_trap_receiver.pl
+    dest: /usr/local/bin/zabbix_trap_receiver.pl
+    owner: root
+    group: root
+    mode: '0755'
+  environment:
+    https_proxy: "{{ proxy_server_url }}"
+
+- name: SNMP | Replace file write with pipe to logger
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  ansible.builtin.lineinfile:
+    path: /usr/local/bin/zabbix_trap_receiver.pl
+    regexp: 'unless \(sysopen\(OUTPUT_FILE, \$SNMPTrapperFile,.*?\)\)'
+    line: "\tunless (open(OUTPUT_FILE, \"| /usr/bin/logger -t zabbix_trap -p local6.info\"))"
+
+- name: SNMP | Deploy snmpd.conf
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  ansible.builtin.template:
+    src: snmpd.conf.j2
+    dest: /etc/snmp/snmpd.conf
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: SNMP | Deploy snmptrapd.conf
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  ansible.builtin.template:
+    src: snmptrapd.conf.j2
+    dest: /etc/snmp/snmptrapd.conf
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: SNMP | Deploy Zabbix trapper config
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  ansible.builtin.template:
+    src: SNMP.conf.j2
+    dest: /etc/zabbix/zabbix_server.d/SNMP.conf
+    owner: zabbix
+    group: zabbix
+    mode: '0640'
+
+- name: SNMP | Deploy snmptrapd sysconfig
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  ansible.builtin.template:
+    src: snmptrapd.sysconfig.j2
+    dest: /etc/sysconfig/snmptrapd
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: SNMP | Deploy logrotate config
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  ansible.builtin.template:
+    src: snmptrap_logrotate.j2
+    dest: /etc/logrotate.d/zabbix-snmptrap
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: SNMP | Stop and disable snmpd
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  ansible.builtin.systemd_service:
+    name: snmpd
+    state: stopped
+    enabled: false
+
+- name: SNMP | Stop and disable snmptrapd
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  ansible.builtin.systemd_service:
+    name: snmptrapd
+    state: stopped
+    enabled: false
+
+- name: SNMP | Add snmpd to Pacemaker
+  when: "inventory_hostname == hostvars[groups['zabbix_server__ha'][0]]['drbd_active_node']"
+  pcs_resource:
+    name: snmpd
+    resource_class: systemd
+    resource_type: systemd:snmpd
+    options: >-
+      op monitor interval="60s"
+      --group zabbix-server-group
+  run_once: true
+
+- name: SNMP | Add snmptrapd to Pacemaker
+  when: "inventory_hostname == hostvars[groups['zabbix_server__ha'][0]]['drbd_active_node']"
+  pcs_resource:
+    name: snmptrapd
+    resource_class: systemd
+    resource_type: systemd:snmptrapd
+    options: >-
+      op monitor interval="60s"
+      --group zabbix-server-group
+  run_once: true

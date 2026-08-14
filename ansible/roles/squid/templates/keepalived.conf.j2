@@ -10,6 +10,10 @@ vrrp_instance {{ instance.name }} {
   virtual_router_id {{ instance.virtual_router_id }}
   priority {{ 150 if host_index == 1 else 100 }}
   advert_int 1
+  garp_master_delay 1
+  garp_master_repeat 5
+  garp_master_refresh 60
+  garp_master_refresh_repeat 2
   authentication {
     auth_type PASS
     auth_pass {{ proxy_keepalived_password }}

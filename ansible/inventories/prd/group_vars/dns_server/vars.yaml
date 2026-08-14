@@ -1,10 +1,9 @@
 ---
-lego_version: "4.33.0"  # 初回インストール時のバージョン
-lego_path: /etc/lego
-lego_email: me@clov3r.cc
-lego_domain: "{{ inventory_hostname }}.labo.clov3r.cc"
-lego_dns_provider: cloudflare
-lego_cloudflare_api_token: "{{ vault_lego_cloudflare_api_token }}"
+lego_domains:
+  - "{{ inventory_hostname }}.labo.clov3r.cc"
+lego_renew_hook: "systemctl restart AdGuardHome"
+lego_notify_handlers:
+  - Restart AdGuardHome
 
 adguard_version: "0.107.73"  # 初回インストール時のバージョン（以降はAdGuard Homeの自動更新に委ねる）
 adguard_listen_addr: "{{ ansible_host }}"
@@ -42,23 +41,27 @@ adguard_blocked_services:
   - wizz
   - xiaohongshu
 adguard_rewrites:
-  - domain: prd-dpx-01.labo.clov3r.cc
-    answer: 192.168.20.23
-  - domain: prd-dpx-02.labo.clov3r.cc
-    answer: 192.168.20.24
   - domain: prd-pve-01.labo.clov3r.cc
     answer: 192.168.20.2
-  - domain: prd-tal-01.labo.clov3r.cc
-    answer: 192.168.20.20
-  - domain: prd-tal-02.labo.clov3r.cc
-    answer: 192.168.20.21
   - domain: prd-nft-01.labo.clov3r.cc
     answer: 192.168.20.18
   - domain: prd-nft-02.labo.clov3r.cc
     answer: 192.168.20.19
+  - domain: prd-tal-01.labo.clov3r.cc
+    answer: 192.168.20.20
+  - domain: prd-tal-02.labo.clov3r.cc
+    answer: 192.168.20.21
+  - domain: prd-dpx-01.labo.clov3r.cc
+    answer: 192.168.20.23
+  - domain: prd-dpx-02.labo.clov3r.cc
+    answer: 192.168.20.24
+  - domain: prd-zbx.labo.clov3r.cc
+    answer: 192.168.22.7
   - domain: prd-zbx-01.labo.clov3r.cc
     answer: 192.168.22.8
   - domain: prd-zbx-02.labo.clov3r.cc
     answer: 192.168.22.9
+  - domain: prd-dsk-01.labo.clov3r.cc
+    answer: 192.168.22.10
   - domain: prd-acc-02.labo.clov3r.cc
     answer: 192.168.22.1

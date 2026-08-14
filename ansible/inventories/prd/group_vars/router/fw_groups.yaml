@@ -10,6 +10,9 @@ fw_domain_groups:
       - ftp.sakura.ad.jp
       - ftp.riken.jp
       - ftp.yz.yamagata-u.ac.jp
+      - mirror.nishi.network
+      - mirror.hashy0917.net
+      - mirrors.krnk.org
       - mirrors.xtom.jp
       - alma.acidman.thelefty.org
   - name: ELREPO_MIRRORS
@@ -35,6 +38,7 @@ fw_domain_groups:
     domains:
       - github.com
       - objects.githubusercontent.com
+      - raw.githubusercontent.com
   - name: LETSENCRYPT
     domains:
       - acme-v02.api.letsencrypt.org
@@ -55,6 +59,12 @@ fw_domain_groups:
       - derp7f.tailscale.com
       - derp7g.tailscale.com
       - derp7h.tailscale.com
+  - name: ZABBIX_MIRRORS
+    domains:
+      - repo.zabbix.com
+  - name: DISCORD
+    domains:
+      - discord.com
 
 fw_network_groups:
   - name: HOME_CLIENTS
@@ -134,6 +144,9 @@ fw_address_groups:
   - name: DESKTOP
     addresses:
       - 192.168.22.10
+  - name: ZABBIX_VIP
+    addresses:
+      - 192.168.22.7
   - name: DNS_PROXY_VIP
     addresses:
       - 192.168.20.22

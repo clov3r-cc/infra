@@ -1,0 +1,12 @@
+# {{ ansible_managed }}
+# Lego certificate monitoring UserParameters for Zabbix Agent
+
+# LLD: Discover lego certificates
+# Lists *.crt files, excludes *.issuer.crt, requires matching *.key
+UserParameter=lego.cert.discover[*],/usr/local/bin/lego_discover.sh "$1"
+
+# Days until certificate expiry (clamped to 0 for expired certs)
+UserParameter=lego.cert.expiry[*],expiry_date=$(openssl x509 -in "$1/$2.crt" -enddate -noout 2>/dev/null | cut -d= -f2-) && [ -n "$expiry_date" ] && expiry_epoch=$(date -d "$expiry_date" +%s 2>/dev/null) && [ -n "$expiry_epoch" ] && remaining=$(( (expiry_epoch - $(date +%s)) / 86400 )) && [ "$remaining" -lt 0 ] && echo 0 || echo "$remaining" || echo 0
+
+# Certificate validity (1=valid within the next second, 0=expired or error)
+UserParameter=lego.cert.valid[*],openssl x509 -in "$1/$2.crt" -checkend 0 -noout >/dev/null 2>&1 && echo 1 || echo 0
