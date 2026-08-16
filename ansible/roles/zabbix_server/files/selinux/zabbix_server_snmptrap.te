@@ -1,0 +1,12 @@
+module zabbix_server_snmptrap 1.0;
+
+require {
+    type snmpd_log_t;
+    type zabbix_t;
+    class dir { getattr search };
+    class file { getattr open read };
+}
+
+# Allow Zabbix Server to read the SNMP trap log written by rsyslog.
+allow zabbix_t snmpd_log_t:dir { getattr search };
+allow zabbix_t snmpd_log_t:file { getattr open read };

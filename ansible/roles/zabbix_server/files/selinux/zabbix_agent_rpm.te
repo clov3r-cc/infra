@@ -1,0 +1,33 @@
+module zabbix_agent_rpm 1.0.0;
+
+require {
+    type bin_t;
+    type rpm_exec_t;
+    type rpm_var_cache_t;
+    type rpm_var_lib_t;
+    type var_lib_t;
+    type var_t;
+    type zabbix_agent_t;
+    class dir { getattr open read search };
+    class file { execute execute_no_trans getattr ioctl lock map open read };
+    class lnk_file { getattr read };
+}
+
+# Allow system.sw.packages.get to execute /usr/bin/rpm.
+allow zabbix_agent_t rpm_exec_t:file { execute execute_no_trans getattr ioctl lock map open read };
+
+# Allow rpm to read the local package database.
+allow zabbix_agent_t rpm_var_lib_t:dir { getattr open read search };
+allow zabbix_agent_t rpm_var_lib_t:file { getattr ioctl lock map open read };
+allow zabbix_agent_t rpm_var_lib_t:lnk_file { getattr read };
+
+# Allow traversal of the paths leading to the RPM database and cache.
+allow zabbix_agent_t bin_t:dir { getattr open search };
+allow zabbix_agent_t bin_t:lnk_file { getattr read };
+allow zabbix_agent_t var_t:dir { getattr open search };
+allow zabbix_agent_t var_lib_t:dir { getattr open search };
+
+# Allow read-only access to RPM cache files used during package discovery.
+allow zabbix_agent_t rpm_var_cache_t:dir { getattr open read search };
+allow zabbix_agent_t rpm_var_cache_t:file { getattr ioctl lock open read };
+allow zabbix_agent_t rpm_var_cache_t:lnk_file { getattr read };

@@ -5,16 +5,64 @@ state_dir=/run/zabbix/cluster-monitor
 tmp_dir="$(mktemp -d /run/zabbix/cluster-monitor.XXXXXX)"
 trap 'rm -rf "$tmp_dir"' EXIT
 
+resource_group='{{ zabbix_server_pacemaker_resource_group }}'
+local_node="$(hostname -s 2>/dev/null || hostname)"
+
 install -d -o root -g zabbix -m 0750 "$state_dir"
 
 write_value() {
   printf '%s\n' "$2" > "$tmp_dir/$1"
 }
 
+json_escape() {
+  /usr/bin/sed -e 's/\\/\\\\/g' -e 's/"/\\"/g'
+}
+
+# Convert pcs' human-readable resource status into resource/state/node rows.
+# Resource IDs are the first field on status lines; group and clone headings
+# are deliberately ignored.
+parse_resource_status() {
+  /usr/bin/awk '
+    /^[[:space:]]*\*[[:space:]]/ {
+      line = $0
+      sub(/^[[:space:]]*\*[[:space:]]*/, "", line)
+      if (line ~ /^(Resource Group|Clone Set|Master\/Slave Set|Promotable Clone Set|Bundle):/) {
+        next
+      }
+
+      field_count = split(line, fields, /[[:space:]]+/)
+      resource = fields[1]
+      state = ""
+      node = ""
+      for (i = 2; i <= field_count; i++) {
+        candidate = fields[i]
+        sub(/:$/, "", candidate)
+        if (candidate ~ /^(Started|Stopped|Failed|Promoted|Master|Slave|Unmanaged|Blocked|Disabled)$/) {
+          state = candidate
+          if (i < field_count && fields[i + 1] !~ /^[([]/) {
+            node = fields[i + 1]
+          }
+          break
+        }
+      }
+
+      if (resource != "" && state != "") {
+        print resource "\t" state "\t" node
+      }
+    }
+  ' "$1"
+}
+
 crm_file="$tmp_dir/crm_mon"
 pcs_file="$tmp_dir/pcs_status"
+group_pcs_file="$tmp_dir/pcs_group_status"
+resource_raw="$tmp_dir/resources.raw"
+resource_aggregated="$tmp_dir/resources.aggregated"
+resource_data="$tmp_dir/pacemaker.resources"
+
 /usr/sbin/crm_mon -1 > "$crm_file" 2>/dev/null || :
 /usr/sbin/pcs resource status > "$pcs_file" 2>/dev/null || :
+/usr/sbin/pcs resource status "$resource_group" > "$group_pcs_file" 2>/dev/null || :
 
 connection=$(/usr/sbin/drbdadm cstate drbd1 2>/dev/null || printf 'unknown')
 disk_state=$(/usr/sbin/drbdadm dstate drbd1 2>/dev/null || printf 'unknown')
@@ -29,6 +77,79 @@ dc=$(awk '/Current DC:/{print $3; exit}' "$crm_file")
 quorum=$(awk '/partition with quorum/{print 1; found=1; exit} END{if (!found) print 0}' "$crm_file")
 failed=$(awk '/Failed Resource Actions:/{found=1; next} found && /^[[:space:]]*\*/{count++} END{print count+0}' "$crm_file")
 
+parse_resource_status "$pcs_file" > "$resource_raw"
+
+# Collapse repeated resource entries (for example clone instances) into one
+# row while retaining all nodes on which the resource is active.
+awk -F '\t' '
+  function priority(value) {
+    if (value == "Failed") return 50
+    if (value == "Stopped" || value == "Unmanaged" || value == "Blocked" || value == "Disabled") return 40
+    if (value == "Promoted" || value == "Master") return 30
+    if (value == "Slave") return 20
+    return 10
+  }
+  {
+    resource = $1
+    state = $2
+    node = $3
+    if (!(resource in seen)) {
+      seen[resource] = 1
+      order[++count] = resource
+      states[resource] = state
+    } else if (priority(state) > priority(states[resource])) {
+      states[resource] = state
+    }
+    if (node != "" && node != "unknown" && index("," nodes[resource] ",", "," node ",") == 0) {
+      nodes[resource] = (nodes[resource] == "" ? node : nodes[resource] "," node)
+    }
+  }
+  END {
+    for (i = 1; i <= count; i++) {
+      resource = order[i]
+      print resource "\t" states[resource] "\t" nodes[resource]
+    }
+  }
+' "$resource_raw" > "$resource_aggregated"
+
+: > "$resource_data"
+{
+  printf '{"data":['
+  first=1
+  while IFS=$'\t' read -r resource state nodes; do
+    [ -n "$resource" ] || continue
+    case "$resource" in
+      *[!A-Za-z0-9_.:-]*) continue ;;
+    esac
+
+    active=0
+    old_ifs=$IFS
+    IFS=','
+    for node in $nodes; do
+      node_short="${node%%.*}"
+      if [ "$node_short" = "$local_node" ]; then
+        active=1
+        break
+      fi
+    done
+    IFS=$old_ifs
+
+    [ -n "$nodes" ] || nodes=unknown
+    printf '%s\t%s\t%s\t%s\n' "$resource" "$state" "$nodes" "$active" >> "$resource_data"
+
+    escaped_resource=$(printf '%s' "$resource" | json_escape)
+    if [ "$first" -eq 0 ]; then
+      printf ','
+    fi
+    printf '{"{% raw %}{#RESOURCE.NAME}{% endraw %}":"%s"}' "$escaped_resource"
+    first=0
+  done < "$resource_aggregated"
+  printf ']}\n'
+} > "$tmp_dir/pacemaker.resources.discover"
+
+group_total=$(parse_resource_status "$group_pcs_file" | awk -F '\t' '!seen[$1]++ {count++} END{print count+0}')
+group_started=$(parse_resource_status "$group_pcs_file" | awk -F '\t' '!seen[$1]++ && $2 == "Started" {count++} END{print count+0}')
+
 write_value drbd.connection "$connection"
 write_value drbd.disk_state "$disk_state"
 write_value drbd.role "$role"
@@ -38,25 +159,16 @@ write_value pacemaker.nodes.standby "$standby"
 write_value pacemaker.dc "$dc"
 write_value pacemaker.quorum "$quorum"
 write_value pacemaker.resources.failed "$failed"
-write_value pacemaker.resources.discover '{"data":[{"{% raw %}{#RESOURCE.NAME}{% endraw %}":"virtual-ip"},{"{% raw %}{#RESOURCE.NAME}{% endraw %}":"drbd-fs"},{"{% raw %}{#RESOURCE.NAME}{% endraw %}":"mariadb"},{"{% raw %}{#RESOURCE.NAME}{% endraw %}":"php-fpm"},{"{% raw %}{#RESOURCE.NAME}{% endraw %}":"zabbix-server"},{"{% raw %}{#RESOURCE.NAME}{% endraw %}":"nginx"},{"{% raw %}{#RESOURCE.NAME}{% endraw %}":"snmpd"},{"{% raw %}{#RESOURCE.NAME}{% endraw %}":"snmptrapd"}]}'
+write_value pacemaker.group.status "$group_started"
+write_value pacemaker.group.total "$group_total"
 
-resources='virtual-ip drbd-fs mariadb php-fpm zabbix-server nginx snmpd snmptrapd'
-started=0
-total=0
-for resource in $resources; do
-  state=$(awk -v res="$resource" '$2 == res {print $4; exit}' "$pcs_file")
-  [ -n "$state" ] || state=unknown
-  write_value "pacemaker.resource.state.$resource" "$state"
-  total=$((total + 1))
-  [ "$state" = Started ] && started=$((started + 1))
-done
-write_value pacemaker.group.status "$started"
-write_value pacemaker.group.total "$total"
-
+install -o root -g zabbix -m 0640 "$resource_data" "$state_dir/pacemaker.resources"
 for file in "$tmp_dir"/*; do
   [ -f "$file" ] || continue
   case "$(basename "$file")" in
-    crm_mon|pcs_status) continue ;;
+    crm_mon|pcs_status|pcs_group_status|resources.raw|resources.aggregated|pacemaker.resources)
+      continue
+      ;;
   esac
   install -o root -g zabbix -m 0640 "$file" "$state_dir/$(basename "$file")"
 done

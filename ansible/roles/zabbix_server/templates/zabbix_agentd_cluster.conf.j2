@@ -1,0 +1,16 @@
+# {{ ansible_managed }}
+# Zabbix agent instance for the Pacemaker cluster logical host
+
+LogType=system
+DebugLevel=2
+Timeout=10
+PidFile=/run/zabbix-agent-cluster/zabbix_agentd.pid
+
+ServerActive={{ zabbix_server_vip.split('/')[0] }}
+Hostname={{ zabbix_server_cluster_agent_hostname }}
+
+# This instance is managed by Pacemaker and only sends active checks.
+StartAgents=0
+RefreshActiveChecks=60
+
+Include={{ zabbix_agentd_conf_dir }}/drbd_pacemaker.conf

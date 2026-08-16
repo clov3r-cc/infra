@@ -24,14 +24,70 @@
   when: "inventory_hostname in groups['zabbix_server__ha']"
   ansible.builtin.command: semanage fcontext -a -t snmpd_log_t "/var/log/snmptrap(/.*)?"
   register: __semanage_result
-  changed_when: false
-  failed_when: false
   changed_when: '__semanage_result.rc == 0 and "File context already defined" not in __semanage_result.stderr'
+  failed_when: false
 
 - name: SNMP | Apply SELinux context to trap directory
   when: "inventory_hostname in groups['zabbix_server__ha']"
   ansible.builtin.command: restorecon -RF /var/log/snmptrap
   changed_when: false
+
+- name: SNMP | Install SELinux tools for custom module build
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  ansible.builtin.package:
+    name:
+      - checkpolicy
+      - policycoreutils-python-utils
+    state: present
+  tags: [snmp-selinux]
+
+- name: SNMP | Deploy custom SELinux module for Zabbix trap log access
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  ansible.builtin.copy:
+    src: selinux/zabbix_server_snmptrap.te
+    dest: /tmp/zabbix_server_snmptrap.te
+    owner: root
+    group: root
+    mode: '0600'
+  register: __zabbix_server_snmptrap_selinux_te
+  tags: [snmp-selinux]
+
+- name: SNMP | Check loaded SELinux modules
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  ansible.builtin.command: semodule -l
+  register: __zabbix_server_snmptrap_selinux_modules
+  changed_when: false
+  tags: [snmp-selinux]
+
+- name: SNMP | Compile custom SELinux module
+  when:
+    - "inventory_hostname in groups['zabbix_server__ha']"
+    - >-
+      __zabbix_server_snmptrap_selinux_te is changed or
+      not (__zabbix_server_snmptrap_selinux_modules.stdout | regex_search('(?m)^zabbix_server_snmptrap(?:\s|$)'))
+  ansible.builtin.command: checkmodule -M -m -o /tmp/zabbix_server_snmptrap.mod /tmp/zabbix_server_snmptrap.te
+  changed_when: false
+  tags: [snmp-selinux]
+
+- name: SNMP | Package custom SELinux module
+  when:
+    - "inventory_hostname in groups['zabbix_server__ha']"
+    - >-
+      __zabbix_server_snmptrap_selinux_te is changed or
+      not (__zabbix_server_snmptrap_selinux_modules.stdout | regex_search('(?m)^zabbix_server_snmptrap(?:\s|$)'))
+  ansible.builtin.command: semodule_package -o /tmp/zabbix_server_snmptrap.pp -m /tmp/zabbix_server_snmptrap.mod
+  changed_when: false
+  tags: [snmp-selinux]
+
+- name: SNMP | Load custom SELinux module
+  when:
+    - "inventory_hostname in groups['zabbix_server__ha']"
+    - >-
+      __zabbix_server_snmptrap_selinux_te is changed or
+      not (__zabbix_server_snmptrap_selinux_modules.stdout | regex_search('(?m)^zabbix_server_snmptrap(?:\s|$)'))
+  ansible.builtin.command: semodule -i /tmp/zabbix_server_snmptrap.pp
+  changed_when: true
+  tags: [snmp-selinux]
 
 - name: SNMP | Deploy rsyslog config for snmp trap forwarding
   when: "inventory_hostname in groups['zabbix_server__ha']"

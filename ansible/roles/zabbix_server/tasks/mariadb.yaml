@@ -58,11 +58,13 @@
   when: inventory_hostname == hostvars[groups['zabbix_server__ha'][0]]['drbd_active_node']
   ansible.builtin.command:
     cmd: semanage fcontext -a -t mysqld_db_t "{{ zabbix_server_mariadb_datadir }}(/.*)?"
+  changed_when: false
 
 - name: mariadb | Apply SELinux context to datadir
   when: inventory_hostname == hostvars[groups['zabbix_server__ha'][0]]['drbd_active_node']
   ansible.builtin.command:
     cmd: restorecon -Rv "{{ zabbix_server_mariadb_datadir }}"
+  changed_when: false
 
 # systemd に操作させず、Pacemaker が管理する
 - name: mariadb | Stop and disable mariadb

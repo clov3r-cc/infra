@@ -1,0 +1,21 @@
+[Unit]
+Description=Zabbix agent for Pacemaker cluster logical host
+After=syslog.target network.target network-online.target zabbix-agent.service
+Wants=network-online.target
+
+[Service]
+Environment="CONFFILE=/etc/zabbix/zabbix_agentd_cluster.conf"
+Type=forking
+Restart=on-failure
+PIDFile=/run/zabbix-agent-cluster/zabbix_agentd.pid
+KillMode=control-group
+ExecStart=/usr/sbin/zabbix_agentd -c $CONFFILE
+ExecStop=/bin/kill -SIGTERM $MAINPID
+RestartSec=10s
+User=zabbix
+Group=zabbix
+RuntimeDirectory=zabbix-agent-cluster
+RuntimeDirectoryMode=0755
+
+[Install]
+WantedBy=multi-user.target

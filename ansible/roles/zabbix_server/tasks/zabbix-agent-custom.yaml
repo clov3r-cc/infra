@@ -24,6 +24,16 @@
     mode: '0600'
   register: __zabbix_agent_selinux_te
 
+- name: zabbix-agent-custom | Deploy custom SELinux module for package inventory
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  ansible.builtin.copy:
+    src: selinux/zabbix_agent_rpm.te
+    dest: /tmp/zabbix_agent_rpm.te
+    owner: root
+    group: root
+    mode: '0600'
+  register: __zabbix_agent_rpm_selinux_te
+
 - name: zabbix-agent-custom | Check loaded SELinux modules
   when: "inventory_hostname in groups['zabbix_server__ha']"
   ansible.builtin.command: semodule -l
@@ -53,6 +63,31 @@
       __zabbix_agent_selinux_te is changed or
       'zabbix_agent_cluster_drbd' not in __zabbix_agent_selinux_modules.stdout_lines
   ansible.builtin.command: semodule -i /tmp/zabbix_agent_cluster_drbd.pp
+  notify: Restart zabbix-agent
+
+- name: zabbix-agent-custom | Compile SELinux module for package inventory
+  when:
+    - "inventory_hostname in groups['zabbix_server__ha']"
+    - >-
+      __zabbix_agent_rpm_selinux_te is changed or
+      'zabbix_agent_rpm' not in __zabbix_agent_selinux_modules.stdout_lines
+  ansible.builtin.command: checkmodule -M -m -o /tmp/zabbix_agent_rpm.mod /tmp/zabbix_agent_rpm.te
+
+- name: zabbix-agent-custom | Package SELinux module for package inventory
+  when:
+    - "inventory_hostname in groups['zabbix_server__ha']"
+    - >-
+      __zabbix_agent_rpm_selinux_te is changed or
+      'zabbix_agent_rpm' not in __zabbix_agent_selinux_modules.stdout_lines
+  ansible.builtin.command: semodule_package -o /tmp/zabbix_agent_rpm.pp -m /tmp/zabbix_agent_rpm.mod
+
+- name: zabbix-agent-custom | Load SELinux module for package inventory
+  when:
+    - "inventory_hostname in groups['zabbix_server__ha']"
+    - >-
+      __zabbix_agent_rpm_selinux_te is changed or
+      'zabbix_agent_rpm' not in __zabbix_agent_selinux_modules.stdout_lines
+  ansible.builtin.command: semodule -i /tmp/zabbix_agent_rpm.pp
   notify: Restart zabbix-agent
 
 - name: zabbix-agent-custom | Disable unused zabbix_run_sudo SELinux boolean
@@ -134,3 +169,73 @@
     group: root
     mode: '0644'
   notify: Restart zabbix-agent
+
+- name: zabbix-agent-custom | Deploy cluster logical host agent config
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  ansible.builtin.template:
+    src: zabbix_agentd_cluster.conf.j2
+    dest: /etc/zabbix/zabbix_agentd_cluster.conf
+    owner: root
+    group: root
+    mode: '0644'
+  register: zabbix_server_cluster_agent_config
+
+- name: zabbix-agent-custom | Deploy cluster logical host agent service
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  ansible.builtin.template:
+    src: zabbix-agent-cluster.service.j2
+    dest: /etc/systemd/system/zabbix-agent-cluster.service
+    owner: root
+    group: root
+    mode: '0644'
+  register: zabbix_server_cluster_agent_unit
+
+- name: zabbix-agent-custom | Reload systemd for cluster logical host agent
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+
+- name: zabbix-agent-custom | Check cluster logical host agent Pacemaker resource
+  when: "inventory_hostname == groups['zabbix_server__ha'][0]"
+  ansible.builtin.command: pcs resource config zabbix-agent-cluster
+  register: zabbix_server_cluster_agent_resource
+  changed_when: false
+  failed_when: false
+  check_mode: false
+  run_once: true
+
+- name: zabbix-agent-custom | Disable cluster logical host agent at boot
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  ansible.builtin.systemd_service:
+    name: zabbix-agent-cluster
+    enabled: false
+
+- name: zabbix-agent-custom | Stop cluster logical host agent before Pacemaker management
+  when:
+    - "inventory_hostname in groups['zabbix_server__ha']"
+    - hostvars[groups['zabbix_server__ha'][0]]['zabbix_server_cluster_agent_resource']['rc'] != 0
+  ansible.builtin.systemd_service:
+    name: zabbix-agent-cluster
+    state: stopped
+
+- name: zabbix-agent-custom | Add cluster logical host agent to Pacemaker
+  when: "inventory_hostname in groups['zabbix_server__ha']"
+  pcs_resource:
+    name: zabbix-agent-cluster
+    resource_class: systemd
+    resource_type: systemd:zabbix-agent-cluster
+    options: >-
+      op monitor interval="60s"
+      --group {{ zabbix_server_pacemaker_resource_group }}
+  run_once: true
+
+- name: zabbix-agent-custom | Restart cluster logical host agent after configuration change
+  when:
+    - "inventory_hostname == groups['zabbix_server__ha'][0]"
+    - hostvars[groups['zabbix_server__ha'][0]]['zabbix_server_cluster_agent_resource']['rc'] == 0
+    - >-
+      hostvars[groups['zabbix_server__ha'][0]]['zabbix_server_cluster_agent_config']['changed'] | bool or
+      hostvars[groups['zabbix_server__ha'][0]]['zabbix_server_cluster_agent_unit']['changed'] | bool
+  ansible.builtin.command: pcs resource restart zabbix-agent-cluster
+  changed_when: true
+  run_once: true
