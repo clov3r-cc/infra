@@ -36,6 +36,7 @@ fw_domain_groups:
       - adguardteam.github.io
   - name: GITHUB
     domains:
+      - api.github.com
       - github.com
       - objects.githubusercontent.com
       - raw.githubusercontent.com

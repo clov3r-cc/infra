@@ -100,7 +100,7 @@ nftables を使用し、IPv4 ゾーンベースファイアウォールで実装
 | `MARIADB-MIRRORS`        | `ftp.yz.yamagata-u.ac.jp`                                                                                                                                                                          | MariaDB パッケージミラー                            |
 | `COPR`                   | `copr.fedorainfracloud.org, download.copr.fedorainfracloud.org`                                                                                                                                     | COPR パッケージリポジトリ                          |
 | `ADGUARD`                | `static.adtidy.org, adguardteam.github.io`                                                                                                                                                          | AdGuardHome アップデート・フィルタリスト           |
-| `GITHUB`                 | `github.com, objects.githubusercontent.com, raw.githubusercontent.com`                                                                                       | GitHub                                             |
+| `GITHUB`                 | `api.github.com, github.com, objects.githubusercontent.com, raw.githubusercontent.com`                                                                        | GitHub                                             |
 | `LETSENCRYPT`            | `acme-v02.api.letsencrypt.org`                                                                                                                                                                      | Let's Encrypt ACME                                 |
 | `CLOUDFLARE-API`         | `api.cloudflare.com`                                                                                                                                                                                | Cloudflare API                                     |
 | `EASYLIST`               | `easylist.to`                                                                                                                                                                                       | AdGuardHome フィルタリスト                         |
@@ -223,6 +223,7 @@ Tailscale の通信要件: [What firewall ports should I open to use Tailscale?]
 | :---: | :--------------: | :--------: | :----------: | :------------: | ------------- |
 |  10   |  `NAS-SERVERS`   |    ICMP    |      -       |      any       | ICMP          |
 |  200  |  `NAS-SERVERS`   |    TCP     |     443      |      any       | NAS HTTPS API |
+|  201  | `ZABBIX-SERVERS` |    TCP     |     443      |    `GITHUB`     | GitHub        |
 |  202  | `ZABBIX-SERVERS` |    TCP     |     8006     |  `PVE-NODES`   | Zabbix Proxmox API monitoring |
 |  205  | `ZABBIX-SERVERS` |  UDP/TCP   |      53      |      any       | DNS (lego DNS-01) |
 |  210  | `ZABBIX-SERVERS` |    UDP     |     123      | `WAN-GATEWAY`  | NTP           |

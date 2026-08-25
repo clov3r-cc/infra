@@ -29,11 +29,11 @@
       - corosync-qdevice
       - pacemaker
       - pcs
+      - unzip
     state: present
 
 - name: pacemaker | Get latest fence_pve release info from GitHub
   when: "inventory_hostname in groups['zabbix_server__ha']"
-  delegate_to: localhost
   ansible.builtin.uri:
     url: https://api.github.com/repos/clov3r-cc/fence-agents/releases/latest
   register: __zabbix_server_fence_pve_release
@@ -55,24 +55,22 @@
     __fence_pve_local_zip: "/tmp/fence_pve_{{ __zabbix_server_fence_pve_release.json.tag_name }}.zip"
     __fence_pve_local_dir: "/tmp/fence_pve_{{ __zabbix_server_fence_pve_release.json.tag_name }}"
   block:
-    - name: pacemaker | Download fence_pve zip to controller
-      delegate_to: localhost
+    - name: pacemaker | Download fence_pve zip to server
       ansible.builtin.get_url:
         url: "{{ __fence_pve_zip_url }}"
         dest: "{{ __fence_pve_local_zip }}"
         mode: "0644"
 
-    - name: pacemaker | Create extraction directory on controller
-      delegate_to: localhost
+    - name: pacemaker | Create extraction directory on server
       ansible.builtin.file:
         path: "{{ __fence_pve_local_dir }}"
         state: directory
         mode: "0755"
 
-    - name: pacemaker | Extract fence_pve on controller
-      delegate_to: localhost
+    - name: pacemaker | Extract fence_pve on server
       ansible.builtin.unarchive:
         src: "{{ __fence_pve_local_zip }}"
+        remote_src: true
         dest: "{{ __fence_pve_local_dir }}"
         include:
           - fence_pve
@@ -80,6 +78,7 @@
     - name: pacemaker | Copy fence_pve to server
       ansible.builtin.copy:
         src: "{{ __fence_pve_local_dir }}/fence_pve"
+        remote_src: true
         dest: /usr/sbin/fence_pve
         mode: "0755"
         owner: root

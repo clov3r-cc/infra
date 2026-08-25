@@ -437,6 +437,15 @@ fw_rulesets:
           address_group: NAS_SERVERS
         destination:
           port: 443
+      - number: 201
+        action: accept
+        description: Allow HTTPS to GitHub from ZABBIX_SERVERS
+        protocol: tcp
+        source:
+          address_group: ZABBIX_SERVERS
+        destination:
+          domain_group: GITHUB
+          port: 443
       - number: 202
         action: accept
         description: Allow Zabbix Proxmox API monitoring from ZABBIX_SERVERS to PVE_NODES
