@@ -118,12 +118,6 @@
   ansible.builtin.systemd_service:
     daemon_reload: true
 
-- name: zabbix-agent-custom | Run initial cluster state collection
-  when: "inventory_hostname in groups['zabbix_server__ha']"
-  ansible.builtin.systemd_service:
-    name: zabbix-cluster-monitor.service
-    state: started
-
 - name: zabbix-agent-custom | Enable cluster state collection timer
   when: "inventory_hostname in groups['zabbix_server__ha']"
   ansible.builtin.systemd_service:
