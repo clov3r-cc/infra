@@ -201,7 +201,7 @@ fw_rulesets:
           address_group: DNS_SERVERS
         destination:
           domain_group: MARIADB_MIRRORS
-          port: "80,443"
+          port: 443
       - number: 50
         action: accept
         description: Allow HTTPS from DNS_SERVERS to Zabbix repo

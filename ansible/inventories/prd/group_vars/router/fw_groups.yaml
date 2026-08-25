@@ -25,7 +25,7 @@ fw_domain_groups:
       - linux-mirrors.fnal.gov
   - name: MARIADB_MIRRORS
     domains:
-      - mirror.stechnology.jp
+      - ftp.yz.yamagata-u.ac.jp
   - name: COPR
     domains:
       - copr.fedorainfracloud.org
