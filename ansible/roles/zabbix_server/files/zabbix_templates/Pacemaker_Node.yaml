@@ -1,0 +1,155 @@
+zabbix_export:
+  version: '7.0'
+  template_groups:
+    - uuid: 0899051eeec74aa88d82d8bcf3c6fda9
+      name: Cusotmized
+    - uuid: d7499a44661641dfbf848a21729401d5
+      name: Templates/Applications
+  templates:
+    - uuid: 24610a5ee77a40a0bff6180a4371f272
+      template: 'Pacemaker Node'
+      name: 'Pacemaker Node'
+      description: |
+        Node-local Pacemaker/Corosync monitoring.
+        Monitors local service processes and whether each discovered resource
+        is active on this node. Link this template to each Pacemaker cluster
+        node together with the Pacemaker template.
+        Requires UserParameter definitions in zabbix_agentd_drbd_pacemaker.conf.
+      groups:
+        - name: Cusotmized
+        - name: Templates/Applications
+      items:
+        - uuid: 6cda73b1d98e487d84fcb7c31489c65c
+          name: 'Corosync-QDevice process'
+          type: ZABBIX_ACTIVE
+          key: 'proc.num[corosync-qdevice]'
+          delay: 2m
+          history: 7d
+          description: 'Number of running corosync-qdevice processes (qnetd client). 0 if qdevice is not configured.'
+          tags:
+            - tag: component
+              value: corosync
+          triggers:
+            - uuid: ab4e3e7b9b7145f5935ad5ce56694051
+              expression: 'last(/Pacemaker Node/proc.num[corosync-qdevice])=0 and {$QDEVICE.ENABLED}=1'
+              name: 'Corosync QDevice process is not running on {HOST.HOST}'
+              event_name: 'Corosync QDevice process is not running on {HOST.HOST}'
+              priority: AVERAGE
+              description: 'Corosync QDevice (external quorum agent) is not running while QDevice is expected.'
+              tags:
+                - tag: component
+                  value: corosync
+        - uuid: 1581bd643d6649889d092ee177cc1864
+          name: 'Corosync process'
+          type: ZABBIX_ACTIVE
+          key: 'proc.num[corosync]'
+          history: 7d
+          description: 'Number of running corosync processes.'
+          tags:
+            - tag: component
+              value: corosync
+          triggers:
+            - uuid: 4f800bcc14d8412f8b05d0cbf2a0a024
+              expression: 'last(/Pacemaker Node/proc.num[corosync])=0'
+              name: 'Corosync process is not running on {HOST.HOST}'
+              event_name: 'Corosync process is not running on {HOST.HOST}'
+              priority: HIGH
+              description: 'Corosync cluster communication service is not running. Cluster communication is disrupted.'
+              tags:
+                - tag: component
+                  value: corosync
+        - uuid: 7147097cfed94d02b52c7f9b5efafd19
+          name: 'Pacemaker daemon process'
+          type: ZABBIX_ACTIVE
+          key: 'proc.num[pacemakerd]'
+          history: 7d
+          description: 'Number of running pacemakerd processes.'
+          tags:
+            - tag: component
+              value: pacemaker
+          triggers:
+            - uuid: 2dcbe1c77c4d429c8361e135007eafc5
+              expression: 'last(/Pacemaker Node/proc.num[pacemakerd])=0'
+              name: 'Pacemaker daemon is not running on {HOST.HOST}'
+              event_name: 'Pacemaker daemon is not running on {HOST.HOST}'
+              priority: DISASTER
+              description: 'Pacemaker cluster manager is not running. High availability is unavailable.'
+              tags:
+                - tag: component
+                  value: pacemaker
+        - uuid: 9ae1ffd8ae444a4f84e5682c67926fc3
+          name: 'PCSD process'
+          type: ZABBIX_ACTIVE
+          key: 'proc.num[pcsd]'
+          history: 7d
+          description: 'Number of running pcsd processes.'
+          tags:
+            - tag: component
+              value: pacemaker
+          triggers:
+            - uuid: e3078f3d7ed94544b43d39510fb5a2c7
+              expression: 'last(/Pacemaker Node/proc.num[pcsd])=0'
+              name: 'PCSD process is not running on {HOST.HOST}'
+              event_name: 'PCSD process is not running on {HOST.HOST}'
+              priority: WARNING
+              description: 'PCSD (Pacemaker Configuration System Daemon) is not running.'
+              tags:
+                - tag: component
+                  value: pacemaker
+      discovery_rules:
+        - uuid: d0ab740dd74c449580c1f5519e25cd9b
+          name: 'Pacemaker: Local Resource Discovery'
+          type: ZABBIX_ACTIVE
+          key: 'pacemaker.resources.discover[all]'
+          delay: 1h
+          filter:
+            conditions:
+              - macro: '{#RESOURCE.NAME}'
+                value: '^(.*)$'
+                formulaid: A
+          item_prototypes:
+            - uuid: 1284d45557284a368c9a8f30938f35c7
+              name: 'Pacemaker: resource {#RESOURCE.NAME} active on this node'
+              type: ZABBIX_ACTIVE
+              key: 'pacemaker.resource.active[{#RESOURCE.NAME}]'
+              delay: 30s
+              history: 7d
+              value_type: UNSIGNED
+              description: >-
+                1 when Pacemaker resource {#RESOURCE.NAME} is active on this
+                Zabbix host; otherwise 0.
+              valuemap:
+                name: 'Pacemaker resource activity status'
+              tags:
+                - tag: component
+                  value: pacemaker
+              trigger_prototypes:
+                - uuid: 67566b209fdf489d85619c5f1703fc79
+                  expression: >-
+                    last(/Pacemaker Node/pacemaker.resource.active[{#RESOURCE.NAME}])=1
+                    and change(/Pacemaker Node/pacemaker.resource.active[{#RESOURCE.NAME}])=1
+                  name: >-
+                    Pacemaker: resource {#RESOURCE.NAME} became active on
+                    {HOST.HOST}
+                  event_name: >-
+                    Pacemaker: resource {#RESOURCE.NAME} became active on
+                    {HOST.HOST}
+                  priority: INFO
+                  description: >-
+                    Pacemaker resource {#RESOURCE.NAME} became active on this
+                    host.
+                  tags:
+                    - tag: component
+                      value: pacemaker
+      macros:
+        - macro: '{$QDEVICE.ENABLED}'
+          value: '0'
+          description: 'Set to 1 if QDevice (corosync-qdevice) is configured for external quorum.'
+      valuemaps:
+        - uuid: a9b65f90d3d04d45887e1d16acbb922a
+          name: 'Pacemaker resource activity status'
+          mappings:
+            - value: '1'
+              newvalue: Active
+            - value: '0'
+              newvalue: Inactive

@@ -18,7 +18,7 @@
     - name: pkg-upgrade | Configure dnf-automatic to reboot when needed
       community.general.ini_file:
         path: /etc/dnf/automatic.conf
-        section: reboot
+        section: commands
         option: reboot
         value: when-needed
         mode: "0644"

@@ -10,35 +10,15 @@ zabbix_export:
       template: Pacemaker
       name: Pacemaker
       description: |
-        Pacemaker/Corosync HA cluster health monitoring.
-        Monitors node status, quorum, DC, failed actions, and cluster processes.
+        Cluster-wide Pacemaker/Corosync HA monitoring.
+        Monitors node status, quorum, DC, failed actions, resource state, and
+        resource placement. Link this template to one logical Zabbix host
+        representing the cluster.
         Requires UserParameter definitions in zabbix_agentd_drbd_pacemaker.conf.
       groups:
         - name: Cusotmized
         - name: Templates/Applications
       items:
-        - uuid: feb4b1af09914a079efe3f30d3cd5e94
-          name: 'Pacemaker: Resource moved'
-          type: ZABBIX_ACTIVE
-          key: 'log[/var/log/pacemaker/pacemaker.log,pacemaker-schedulerd.*notice: Actions: Move,,,skip,,]'
-          delay: 30s
-          history: 7d
-          value_type: LOG
-          trends: '0'
-          description: 'Captures Pacemaker scheduler action lines (Move) which indicate resource state transitions.'
-          tags:
-            - tag: component
-              value: pacemaker
-          triggers:
-            - uuid: ab7cba779a894407b3922c4f4f7cb6f6
-              expression: 'find(/Pacemaker/log[/var/log/pacemaker/pacemaker.log,pacemaker-schedulerd.*notice: Actions: Move,,,skip,,],#1,,"Actions: Move")=1 and nodata(/Pacemaker/log[/var/log/pacemaker/pacemaker.log,pacemaker-schedulerd.*notice: Actions: Move,,,skip,,],1m)=0'
-              name: 'Pacemaker: Resource Moved on {HOST.HOST}'
-              event_name: 'Pacemaker: Resource Moved on {HOST.HOST}'
-              priority: INFO
-              description: 'A Pacemaker scheduler Move action was detected. Check /var/log/pacemaker/pacemaker.log for details.'
-              tags:
-                - tag: component
-                  value: pacemaker
         - uuid: 5082b70d42474037acfda697b9d86f42
           name: 'Pacemaker: DC node'
           type: ZABBIX_ACTIVE
@@ -119,80 +99,69 @@ zabbix_export:
               tags:
                 - tag: component
                   value: pacemaker
-        - uuid: fb6c368cf5c14afcafdbeaec453ea601
-          name: 'Corosync-QDevice process'
+        - uuid: 1325955bcf4048ecbc7cd84fb54ff8bd
+          name: 'Pacemaker: Group started resources'
           type: ZABBIX_ACTIVE
-          key: 'proc.num[corosync-qdevice]'
-          delay: 2m
+          key: 'pacemaker.group.status[{$PACEMAKER.GROUP}]'
+          delay: 30s
           history: 7d
-          description: 'Number of running corosync-qdevice processes (qnetd client). 0 if qdevice is not configured.'
-          tags:
-            - tag: component
-              value: corosync
-          triggers:
-            - uuid: 58f9f84ae44748d78402d82884a4441c
-              expression: 'last(/Pacemaker/proc.num[corosync-qdevice])=0 and {$QDEVICE.ENABLED}=1'
-              name: 'Corosync QDevice process is not running on {HOST.HOST}'
-              event_name: 'Corosync QDevice process is not running on {HOST.HOST}'
-              priority: AVERAGE
-              description: 'Corosync QDevice (external quorum agent) is not running while QDevice is expected.'
-              tags:
-                - tag: component
-                  value: corosync
-        - uuid: 7fb1b46a92a94ea99b3bf6d9192fd336
-          name: 'Corosync process'
-          type: ZABBIX_ACTIVE
-          key: 'proc.num[corosync]'
-          history: 7d
-          description: 'Number of running corosync processes.'
-          tags:
-            - tag: component
-              value: corosync
-          triggers:
-            - uuid: f29af200bfa04194bc42ae3d131f8e05
-              expression: 'last(/Pacemaker/proc.num[corosync])=0'
-              name: 'Corosync process is not running on {HOST.HOST}'
-              event_name: 'Corosync process is not running on {HOST.HOST}'
-              priority: HIGH
-              description: 'Corosync cluster communication service is not running. Cluster communication is disrupted.'
-              tags:
-                - tag: component
-                  value: corosync
-        - uuid: e0d48e9ad58c48f19b1041f553560a62
-          name: 'Pacemaker daemon process'
-          type: ZABBIX_ACTIVE
-          key: 'proc.num[pacemakerd]'
-          history: 7d
-          description: 'Number of running pacemakerd processes.'
+          description: 'Number of currently Started resources in the Pacemaker group {$PACEMAKER.GROUP}. Compared against the total resource count.'
           tags:
             - tag: component
               value: pacemaker
-          triggers:
-            - uuid: c5fdb9d9a6854ce5b7a68b16ffc8301e
-              expression: 'last(/Pacemaker/proc.num[pacemakerd])=0'
-              name: 'Pacemaker daemon is not running on {HOST.HOST}'
-              event_name: 'Pacemaker daemon is not running on {HOST.HOST}'
-              priority: DISASTER
-              description: 'Pacemaker cluster manager is not running. High availability is unavailable.'
+        - uuid: b5a0f2c9a96343dc95b13a51e1d4c0ce
+          name: 'Pacemaker: Group total resources'
+          type: ZABBIX_ACTIVE
+          key: 'pacemaker.group.total[{$PACEMAKER.GROUP}]'
+          delay: 30s
+          history: 7d
+          description: 'Total number of resources in the Pacemaker group {$PACEMAKER.GROUP} (regardless of state).'
+          tags:
+            - tag: component
+              value: pacemaker
+      discovery_rules:
+        - uuid: b5986001a85d4f80a11604acd4a844ce
+          name: 'Pacemaker: Resource Discovery'
+          type: ZABBIX_ACTIVE
+          key: 'pacemaker.resources.discover[all]'
+          delay: 1h
+          filter:
+            conditions:
+              - macro: '{#RESOURCE.NAME}'
+                value: '^(.*)$'
+                formulaid: A
+          item_prototypes:
+            - uuid: 501a2cad1aab456d8287de67afe89322
+              name: 'Pacemaker: resource {#RESOURCE.NAME} state'
+              type: ZABBIX_ACTIVE
+              key: 'pacemaker.resource.state[{#RESOURCE.NAME}]'
+              delay: 30s
+              history: 7d
+              value_type: CHAR
+              trends: '0'
+              description: 'Current state of Pacemaker resource {#RESOURCE.NAME}.'
               tags:
                 - tag: component
                   value: pacemaker
-        - uuid: 478aaf88128540558cfa267823b7573f
-          name: 'PCSD process'
-          type: ZABBIX_ACTIVE
-          key: 'proc.num[pcsd]'
-          history: 7d
-          description: 'Number of running pcsd processes.'
-          tags:
-            - tag: component
-              value: pacemaker
-          triggers:
-            - uuid: 1b1eb71a31e240ad9105a13f6776ccfa
-              expression: 'last(/Pacemaker/proc.num[pcsd])=0'
-              name: 'PCSD process is not running on {HOST.HOST}'
-              event_name: 'PCSD process is not running on {HOST.HOST}'
-              priority: WARNING
-              description: 'PCSD (Pacemaker Configuration System Daemon) is not running.'
+              trigger_prototypes:
+                - uuid: 8c8267b1a9a842e3b2237bc848b63e35
+                  expression: 'count(/Pacemaker/pacemaker.resource.state[{#RESOURCE.NAME}],#5,"ne","Started")=5'
+                  name: 'Pacemaker: resource {#RESOURCE.NAME} has unexpected state ({ITEM.LASTVALUE}) on {HOST.HOST}'
+                  event_name: 'Pacemaker: resource {#RESOURCE.NAME} has unexpected state ({ITEM.LASTVALUE}) on {HOST.HOST}'
+                  priority: DISASTER
+                  description: 'Resource {#RESOURCE.NAME} has remained outside Started state for five consecutive checks (approximately two minutes). Expected: Started.'
+                  tags:
+                    - tag: component
+                      value: pacemaker
+            - uuid: 71f87e1e736e4cbab9d3adf845de99de
+              name: 'Pacemaker: resource {#RESOURCE.NAME} placement node'
+              type: ZABBIX_ACTIVE
+              key: 'pacemaker.resource.node[{#RESOURCE.NAME}]'
+              delay: 30s
+              history: 7d
+              value_type: CHAR
+              trends: '0'
+              description: 'Node or nodes currently hosting Pacemaker resource {#RESOURCE.NAME}.'
               tags:
                 - tag: component
                   value: pacemaker
@@ -200,9 +169,9 @@ zabbix_export:
         - macro: '{$CLUSTER.EXPECTED_NODES}'
           value: '2'
           description: 'Expected number of online cluster nodes.'
-        - macro: '{$QDEVICE.ENABLED}'
-          value: '0'
-          description: 'Set to 1 if QDevice (corosync-qdevice) is configured for external quorum.'
+        - macro: '{$PACEMAKER.GROUP}'
+          value: zabbix-server-group
+          description: 'Pacemaker resource group name used for the group summary.'
       valuemaps:
         - uuid: 9edc01270d944dcaba6c85daf20a2820
           name: 'Quorum status'
@@ -211,3 +180,13 @@ zabbix_export:
               newvalue: 'Has quorum'
             - value: '0'
               newvalue: 'No quorum'
+  triggers:
+    - uuid: 282425df1b17438cbe1df6970a6c83ca
+      expression: 'last(/Pacemaker/pacemaker.group.status[{$PACEMAKER.GROUP}])<last(/Pacemaker/pacemaker.group.total[{$PACEMAKER.GROUP}]) and last(/Pacemaker/pacemaker.group.status[{$PACEMAKER.GROUP}],#2)<last(/Pacemaker/pacemaker.group.total[{$PACEMAKER.GROUP}],#2) and last(/Pacemaker/pacemaker.group.status[{$PACEMAKER.GROUP}],#3)<last(/Pacemaker/pacemaker.group.total[{$PACEMAKER.GROUP}],#3) and last(/Pacemaker/pacemaker.group.status[{$PACEMAKER.GROUP}],#4)<last(/Pacemaker/pacemaker.group.total[{$PACEMAKER.GROUP}],#4) and last(/Pacemaker/pacemaker.group.status[{$PACEMAKER.GROUP}],#5)<last(/Pacemaker/pacemaker.group.total[{$PACEMAKER.GROUP}],#5)'
+      name: 'Pacemaker: {{$PACEMAKER.GROUP}} group not fully started on {HOST.HOST}'
+      event_name: 'Pacemaker: {{$PACEMAKER.GROUP}} group not fully started on {HOST.HOST}'
+      priority: DISASTER
+      description: 'One or more resources in {[$PACEMAKER.GROUP]} have remained outside Started state for five consecutive checks (approximately two minutes). Expected all resources to be Started.'
+      tags:
+        - tag: component
+          value: pacemaker

@@ -9,15 +9,20 @@ case "$metric" in
   drbd.connection|drbd.disk_state|drbd.role|drbd.out_of_sync|pacemaker.nodes.online|pacemaker.nodes.standby|pacemaker.dc|pacemaker.quorum|pacemaker.resources.failed|pacemaker.resources.discover|pacemaker.group.status|pacemaker.group.total)
     file="$state_dir/$metric"
     ;;
-  pacemaker.resource.state)
+  pacemaker.resource.state|pacemaker.resource.node|pacemaker.resource.active)
     case "$resource" in
-      virtual-ip|drbd-fs|mariadb|php-fpm|zabbix-server|nginx|snmpd|snmptrapd)
-        file="$state_dir/pacemaker.resource.state.$resource"
-        ;;
-      *)
+      ''|*[!A-Za-z0-9_.:-]*)
         exit 1
         ;;
     esac
+    case "$metric" in
+      pacemaker.resource.state) column=2 ;;
+      pacemaker.resource.node) column=3 ;;
+      pacemaker.resource.active) column=4 ;;
+    esac
+    test -r "$state_dir/pacemaker.resources" || exit 1
+    /usr/bin/awk -F '\t' -v resource="$resource" -v column="$column" '$1 == resource { print $column; found=1; exit } END { if (!found) exit 1 }' "$state_dir/pacemaker.resources"
+    exit $?
     ;;
   *)
     exit 1

@@ -6,8 +6,10 @@ zabbix_server_pve_stonith_api_token_secret: "{{ vault_zabbix_server_pve_stonith_
 zabbix_server_drbd_mount_point: /mnt/drbd1
 zabbix_server_mariadb_datadir: "{{ zabbix_server_drbd_mount_point }}/mysql"
 zabbix_server_vip: "192.168.22.7/24"
+zabbix_server_pacemaker_resource_group: zabbix-server-group
 zabbix_server_db_password: "{{ vault_zabbix_server_db_password }}"
 zabbix_server_name: prd-zbx
+zabbix_server_cluster_agent_hostname: "{{ zabbix_server_name }}-cluster"
 zabbix_server_fqdn: "{{ zabbix_server_name }}.labo.clov3r.cc"
 
 # SNMP trap reception

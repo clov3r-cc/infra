@@ -33,3 +33,7 @@ UserParameter=pacemaker.resources.discover[*],/usr/local/bin/zabbix-cluster-valu
 
 # Individual resource state in the specified group
 UserParameter=pacemaker.resource.state[*],/usr/local/bin/zabbix-cluster-value pacemaker.resource.state "$1"
+# Individual resource placement node
+UserParameter=pacemaker.resource.node[*],/usr/local/bin/zabbix-cluster-value pacemaker.resource.node "$1"
+# Whether the individual resource is active on this node (1 = active, 0 = inactive)
+UserParameter=pacemaker.resource.active[*],/usr/local/bin/zabbix-cluster-value pacemaker.resource.active "$1"
