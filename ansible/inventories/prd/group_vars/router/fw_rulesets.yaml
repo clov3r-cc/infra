@@ -201,7 +201,7 @@ fw_rulesets:
           address_group: DNS_SERVERS
         destination:
           domain_group: MARIADB_MIRRORS
-          port: "80,443"
+          port: 443
       - number: 50
         action: accept
         description: Allow HTTPS from DNS_SERVERS to Zabbix repo
@@ -436,6 +436,15 @@ fw_rulesets:
         source:
           address_group: NAS_SERVERS
         destination:
+          port: 443
+      - number: 201
+        action: accept
+        description: Allow HTTPS to GitHub from ZABBIX_SERVERS
+        protocol: tcp
+        source:
+          address_group: ZABBIX_SERVERS
+        destination:
+          domain_group: GITHUB
           port: 443
       - number: 202
         action: accept

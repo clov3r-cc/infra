@@ -24,12 +24,14 @@
   when: "inventory_hostname in groups['zabbix_server__ha']"
   ansible.builtin.command: semanage fcontext -a -t snmpd_log_t "/var/log/snmptrap(/.*)?"
   register: __semanage_result
+  changed_when: false
   failed_when: false
   changed_when: '__semanage_result.rc == 0 and "File context already defined" not in __semanage_result.stderr'
 
 - name: SNMP | Apply SELinux context to trap directory
   when: "inventory_hostname in groups['zabbix_server__ha']"
   ansible.builtin.command: restorecon -RF /var/log/snmptrap
+  changed_when: false
 
 - name: SNMP | Deploy rsyslog config for snmp trap forwarding
   when: "inventory_hostname in groups['zabbix_server__ha']"

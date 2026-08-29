@@ -4,7 +4,7 @@
   environment:
     https_proxy: "{{ proxy_server_url }}"
   ansible.builtin.rpm_key:
-    key: https://mirror.stechnology.jp/mariadb/yum/RPM-GPG-KEY-MariaDB
+    key: https://ftp.yz.yamagata-u.ac.jp/pub/dbms/mariadb/yum/RPM-GPG-KEY-MariaDB
     state: present
 
 - name: mariadb | Add MariaDB repository
@@ -12,8 +12,8 @@
   ansible.builtin.yum_repository:
     name: mariadb
     description: MariaDB
-    baseurl: https://mirror.stechnology.jp/mariadb/yum/11.8/rhel/$releasever/$basearch
-    gpgkey: https://mirror.stechnology.jp/mariadb/yum/RPM-GPG-KEY-MariaDB
+    baseurl: https://ftp.yz.yamagata-u.ac.jp/pub/dbms/mariadb/yum/11.8/rhel/$releasever/$basearch
+    gpgkey: https://ftp.yz.yamagata-u.ac.jp/pub/dbms/mariadb/yum/RPM-GPG-KEY-MariaDB
     gpgcheck: true
     enabled: true
 

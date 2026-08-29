@@ -95,11 +95,12 @@ nftables を使用し、IPv4 ゾーンベースファイアウォールで実装
 
 |        グループ名        |                                                                                              メンバー                                                                                               |                        説明                        |
 | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
-| `ALMALINUX-MIRRORS`      | `mirrors.almalinux.org, repo.almalinux.org, ftp.udx.icscoe.jp, ftp.iij.ad.jp, ftp.jaist.ac.jp, ftp.sakura.ad.jp, ftp.riken.jp, ftp.yz.yamagata-u.ac.jp, mirror.nishi.network, mirror.hashy0917.net, mirrors.krnk.org, mirrors.xtom.jp, alma.acidman.thelefty.org` | AlmaLinux・MariaDB パッケージミラー                |
+| `ALMALINUX-MIRRORS`      | `mirrors.almalinux.org, repo.almalinux.org, ftp.udx.icscoe.jp, ftp.iij.ad.jp, ftp.jaist.ac.jp, ftp.sakura.ad.jp, ftp.riken.jp, ftp.yz.yamagata-u.ac.jp, mirror.nishi.network, mirror.hashy0917.net, mirrors.krnk.org, mirrors.xtom.jp, alma.acidman.thelefty.org` | AlmaLinux パッケージミラー                         |
 | `ELREPO-MIRRORS`         | `www.elrepo.org, elrepo.org, mirrors.elrepo.org, mirrors.coreix.net, mirror.rackspace.com, linux-mirrors.fnal.gov`                                                                                  | ELRepo パッケージミラー                            |
+| `MARIADB-MIRRORS`        | `ftp.yz.yamagata-u.ac.jp`                                                                                                                                                                          | MariaDB パッケージミラー                            |
 | `COPR`                   | `copr.fedorainfracloud.org, download.copr.fedorainfracloud.org`                                                                                                                                     | COPR パッケージリポジトリ                          |
 | `ADGUARD`                | `static.adtidy.org, adguardteam.github.io`                                                                                                                                                          | AdGuardHome アップデート・フィルタリスト           |
-| `GITHUB`                 | `github.com, objects.githubusercontent.com, raw.githubusercontent.com`                                                                                       | GitHub                                             |
+| `GITHUB`                 | `api.github.com, github.com, objects.githubusercontent.com, raw.githubusercontent.com`                                                                        | GitHub                                             |
 | `LETSENCRYPT`            | `acme-v02.api.letsencrypt.org`                                                                                                                                                                      | Let's Encrypt ACME                                 |
 | `CLOUDFLARE-API`         | `api.cloudflare.com`                                                                                                                                                                                | Cloudflare API                                     |
 | `EASYLIST`               | `easylist.to`                                                                                                                                                                                       | AdGuardHome フィルタリスト                         |
@@ -174,6 +175,7 @@ Tailscale の通信要件: [What firewall ports should I open to use Tailscale?]
 |  45   |   `DNS-SERVERS`   |   accept   |    TCP     |     any      |     443      |      `LETSENCRYPT`       | Let's Encrypt ACME API                          |
 |  46   |   `DNS-SERVERS`   |   accept   |    TCP     |     any      |     443      |     `CLOUDFLARE-API`     | Cloudflare API (DNS-01 チャレンジ)              |
 |  47   |   `DNS-SERVERS`   |   accept   |    TCP     |     any      |     443      |        `EASYLIST`        | AdGuardHome フィルタリストダウンロード          |
+|  49   |   `DNS-SERVERS`   |   accept   |    TCP     |     any      |     443      |     `MARIADB-MIRRORS`    | MariaDB リポジトリ                               |
 |  50   |   `DNS-SERVERS`   |   accept   |    TCP     |     any      |     443      |     `ZABBIX-MIRRORS`     | Zabbix リポジトリ                               |
 |  51   |   `DNS-SERVERS`   |   accept   | TCP / UDP  |     any      |      53      |     `CLOUDFLARE-IPS`     | SSL 証明書更新に伴う DNS チャレンジ             |
 |  52   |   `DNS-SERVERS`   |   accept   |    TCP     |     any      |     443      |        `DISCORD`         | Discord API・Web                                |
@@ -221,6 +223,7 @@ Tailscale の通信要件: [What firewall ports should I open to use Tailscale?]
 | :---: | :--------------: | :--------: | :----------: | :------------: | ------------- |
 |  10   |  `NAS-SERVERS`   |    ICMP    |      -       |      any       | ICMP          |
 |  200  |  `NAS-SERVERS`   |    TCP     |     443      |      any       | NAS HTTPS API |
+|  201  | `ZABBIX-SERVERS` |    TCP     |     443      |    `GITHUB`     | GitHub        |
 |  202  | `ZABBIX-SERVERS` |    TCP     |     8006     |  `PVE-NODES`   | Zabbix Proxmox API monitoring |
 |  205  | `ZABBIX-SERVERS` |  UDP/TCP   |      53      |      any       | DNS (lego DNS-01) |
 |  210  | `ZABBIX-SERVERS` |    UDP     |     123      | `WAN-GATEWAY`  | NTP           |
