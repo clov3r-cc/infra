@@ -1,0 +1,59 @@
+zabbix_export:
+  version: '7.0'
+  template_groups:
+    - uuid: 0899051eeec74aa88d82d8bcf3c6fda9
+      name: Cusotmized
+    - uuid: d7499a44661641dfbf848a21729401d5
+      name: Templates/Applications
+  templates:
+    - uuid: 80dc49bd7779407fb8d8b2516e9038a2
+      template: 'TCP 22'
+      name: 'TCP 22'
+      description: |
+        TCP/22 connectivity monitoring from the Zabbix server or proxy.
+        This simple check does not require a Zabbix agent.
+        Set {$TCP.22.TARGET} to a hostname or IP address. Leave it empty
+        to use the linked host interface as the target.
+      groups:
+        - name: Cusotmized
+        - name: Templates/Applications
+      items:
+        - uuid: a1f16b6c8e644a019879663890e78d92
+          name: 'TCP/22: Service availability'
+          type: SIMPLE
+          key: 'net.tcp.service[tcp,{$TCP.22.TARGET},22]'
+          delay: 1m
+          history: 7d
+          value_type: UNSIGNED
+          description: 'Checks whether the target accepts TCP connections on port 22. Returns 1 when available and 0 when unavailable.'
+          valuemap:
+            name: 'TCP 22 service state'
+          tags:
+            - tag: component
+              value: network
+            - tag: target
+              value: tcp-22
+          triggers:
+            - uuid: 0ec11790664e4a4c97907bfae3ab9841
+              expression: 'count(/TCP 22/net.tcp.service[tcp,{$TCP.22.TARGET},22],#3,,"0")=3'
+              name: 'TCP/22 connection failed on {HOST.HOST}'
+              event_name: 'TCP/22 connection failed on {HOST.HOST}'
+              priority: HIGH
+              description: 'The Zabbix server or proxy cannot establish a TCP connection to the target on port 22.'
+              tags:
+                - tag: component
+                  value: network
+                - tag: target
+                  value: tcp-22
+      macros:
+        - macro: '{$TCP.22.TARGET}'
+          value: ''
+          description: 'Hostname or IP address to check. Leave empty to use the linked host interface.'
+      valuemaps:
+        - uuid: 6283fe23032e499485db742980568523
+          name: 'TCP 22 service state'
+          mappings:
+            - value: '1'
+              newvalue: Up
+            - value: '0'
+              newvalue: Down

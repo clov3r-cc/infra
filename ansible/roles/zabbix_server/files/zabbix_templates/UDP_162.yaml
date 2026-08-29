@@ -1,0 +1,54 @@
+zabbix_export:
+  version: '7.0'
+  template_groups:
+    - uuid: 0899051eeec74aa88d82d8bcf3c6fda9
+      name: Cusotmized
+    - uuid: d7499a44661641dfbf848a21729401d5
+      name: Templates/Applications
+  templates:
+    - uuid: 63fdc1eb73634e65b98482033a99a1bb
+      template: 'UDP 162'
+      name: 'UDP 162'
+      description: |
+        UDP/162 SNMP trap listener monitoring on the Zabbix host.
+        This active check verifies that a process is listening on the local
+        UDP port 162. It requires a Zabbix agent on the monitored host.
+      groups:
+        - name: Cusotmized
+        - name: Templates/Applications
+      items:
+        - uuid: 481a01ffccd74baa9c1f38401d7c6408
+          name: 'UDP/162: SNMP trap listener availability'
+          type: ZABBIX_ACTIVE
+          key: 'net.udp.listen[162]'
+          delay: 1m
+          history: 7d
+          value_type: UNSIGNED
+          description: 'Checks whether a process is listening on the local UDP port 162. Returns 1 when available and 0 when unavailable.'
+          valuemap:
+            name: 'UDP 162 listener state'
+          tags:
+            - tag: component
+              value: network
+            - tag: target
+              value: udp-162
+          triggers:
+            - uuid: 881481e255f4458daa114b03b2c90df6
+              expression: 'count(/UDP 162/net.udp.listen[162],#3,,"0")=3'
+              name: 'UDP/162 SNMP trap listener is not available on {HOST.HOST}'
+              event_name: 'UDP/162 SNMP trap listener is not available on {HOST.HOST}'
+              priority: HIGH
+              description: 'No process is listening on the local UDP port 162. SNMP traps cannot be received on this host.'
+              tags:
+                - tag: component
+                  value: network
+                - tag: target
+                  value: udp-162
+      valuemaps:
+        - uuid: 9a3f5c7e1b2d4f6089c0e1a2b3d4f5e6
+          name: 'UDP 162 listener state'
+          mappings:
+            - value: '1'
+              newvalue: Listening
+            - value: '0'
+              newvalue: Not listening

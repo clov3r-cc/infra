@@ -1,0 +1,178 @@
+zabbix_export:
+  version: '7.0'
+  template_groups:
+    - uuid: 0899051eeec74aa88d82d8bcf3c6fda9
+      name: Cusotmized
+    - uuid: d7499a44661641dfbf848a21729401d5
+      name: Templates/Applications
+  templates:
+    - uuid: c01b0b4b70f94cf3b057a0d1d5e72574
+      template: 'DNS 53'
+      name: 'DNS 53'
+      description: |
+        DNS resolution monitoring over UDP and TCP port 53.
+        Uses Zabbix agent active checks to resolve both an external and an
+        internal name.
+        The DNS server target is {HOST.IP}, so each DNS server is checked
+        against its own AdGuard Home listener instead of its upstream resolver.
+        The external name defaults to github.com and the internal name defaults
+        to prd-zbx.labo.clov3r.cc.
+      groups:
+        - name: Cusotmized
+        - name: Templates/Applications
+      items:
+        - uuid: 24edad9e9fb047188678ed31d208f79d
+          name: 'DNS/53: External A query over UDP'
+          type: ZABBIX_ACTIVE
+          key: 'net.dns[{HOST.IP},{$DNS.53.EXTERNAL.NAME},A,5,1,udp]'
+          delay: 1m
+          history: 7d
+          value_type: UNSIGNED
+          description: 'Checks whether the monitored host can resolve github.com with an A query over UDP/53. Returns 1 when resolution succeeds and 0 when it fails.'
+          valuemap:
+            name: 'DNS 53 service state'
+          tags:
+            - tag: component
+              value: dns
+            - tag: target
+              value: dns-53
+            - tag: scope
+              value: external
+            - tag: protocol
+              value: udp
+          triggers:
+            - uuid: 7b87fe8bf2df4057851d82f2b56558b6
+              expression: 'count(/DNS 53/net.dns[{HOST.IP},{$DNS.53.EXTERNAL.NAME},A,5,1,udp],#3,,"0")=3'
+              name: 'External DNS A query over UDP/53 failed on {HOST.HOST}'
+              event_name: 'External DNS A query over UDP/53 failed on {HOST.HOST}'
+              priority: HIGH
+              description: 'The monitored host cannot resolve github.com with an A query over UDP/53.'
+              tags:
+                - tag: component
+                  value: dns
+                - tag: target
+                  value: dns-53
+                - tag: scope
+                  value: external
+                - tag: protocol
+                  value: udp
+        - uuid: 017842a768124f6c997440f4d959bff0
+          name: 'DNS/53: Internal A query over UDP'
+          type: ZABBIX_ACTIVE
+          key: 'net.dns[{HOST.IP},{$DNS.53.INTERNAL.NAME},A,5,1,udp]'
+          delay: 1m
+          history: 7d
+          value_type: UNSIGNED
+          description: 'Checks whether the monitored host can resolve prd-zbx.labo.clov3r.cc with an A query over UDP/53. Returns 1 when resolution succeeds and 0 when it fails.'
+          valuemap:
+            name: 'DNS 53 service state'
+          tags:
+            - tag: component
+              value: dns
+            - tag: target
+              value: dns-53
+            - tag: scope
+              value: internal
+            - tag: protocol
+              value: udp
+          triggers:
+            - uuid: 99b8edf7f9a84f1b9a7c85c34fd389ee
+              expression: 'count(/DNS 53/net.dns[{HOST.IP},{$DNS.53.INTERNAL.NAME},A,5,1,udp],#3,,"0")=3'
+              name: 'Internal DNS A query over UDP/53 failed on {HOST.HOST}'
+              event_name: 'Internal DNS A query over UDP/53 failed on {HOST.HOST}'
+              priority: HIGH
+              description: 'The monitored host cannot resolve prd-zbx.labo.clov3r.cc with an A query over UDP/53.'
+              tags:
+                - tag: component
+                  value: dns
+                - tag: target
+                  value: dns-53
+                - tag: scope
+                  value: internal
+                - tag: protocol
+                  value: udp
+        - uuid: b1c894f60e664923a68035f356ad2942
+          name: 'DNS/53: External A query over TCP'
+          type: ZABBIX_ACTIVE
+          key: 'net.dns[{HOST.IP},{$DNS.53.EXTERNAL.NAME},A,5,1,tcp]'
+          delay: 1m
+          history: 7d
+          value_type: UNSIGNED
+          description: 'Checks whether the monitored host can resolve github.com with an A query over TCP/53. Returns 1 when resolution succeeds and 0 when it fails.'
+          valuemap:
+            name: 'DNS 53 service state'
+          tags:
+            - tag: component
+              value: dns
+            - tag: target
+              value: dns-53
+            - tag: scope
+              value: external
+            - tag: protocol
+              value: tcp
+          triggers:
+            - uuid: 27f3bdb1f7764fa2adefe68271f2880b
+              expression: 'count(/DNS 53/net.dns[{HOST.IP},{$DNS.53.EXTERNAL.NAME},A,5,1,tcp],#3,,"0")=3'
+              name: 'External DNS A query over TCP/53 failed on {HOST.HOST}'
+              event_name: 'External DNS A query over TCP/53 failed on {HOST.HOST}'
+              priority: HIGH
+              description: 'The monitored host cannot resolve github.com with an A query over TCP/53.'
+              tags:
+                - tag: component
+                  value: dns
+                - tag: target
+                  value: dns-53
+                - tag: scope
+                  value: external
+                - tag: protocol
+                  value: tcp
+        - uuid: 039a47716591461c9b855a14087fc86b
+          name: 'DNS/53: Internal A query over TCP'
+          type: ZABBIX_ACTIVE
+          key: 'net.dns[{HOST.IP},{$DNS.53.INTERNAL.NAME},A,5,1,tcp]'
+          delay: 1m
+          history: 7d
+          value_type: UNSIGNED
+          description: 'Checks whether the monitored host can resolve prd-zbx.labo.clov3r.cc with an A query over TCP/53. Returns 1 when resolution succeeds and 0 when it fails.'
+          valuemap:
+            name: 'DNS 53 service state'
+          tags:
+            - tag: component
+              value: dns
+            - tag: target
+              value: dns-53
+            - tag: scope
+              value: internal
+            - tag: protocol
+              value: tcp
+          triggers:
+            - uuid: 9ed42e52fb0247be96ab62a8fcae5cfd
+              expression: 'count(/DNS 53/net.dns[{HOST.IP},{$DNS.53.INTERNAL.NAME},A,5,1,tcp],#3,,"0")=3'
+              name: 'Internal DNS A query over TCP/53 failed on {HOST.HOST}'
+              event_name: 'Internal DNS A query over TCP/53 failed on {HOST.HOST}'
+              priority: HIGH
+              description: 'The monitored host cannot resolve prd-zbx.labo.clov3r.cc with an A query over TCP/53.'
+              tags:
+                - tag: component
+                  value: dns
+                - tag: target
+                  value: dns-53
+                - tag: scope
+                  value: internal
+                - tag: protocol
+                  value: tcp
+      macros:
+        - macro: '{$DNS.53.EXTERNAL.NAME}'
+          value: 'github.com'
+          description: 'External DNS name used for the A query.'
+        - macro: '{$DNS.53.INTERNAL.NAME}'
+          value: 'prd-zbx.labo.clov3r.cc'
+          description: 'Internal DNS name used for the A query.'
+      valuemaps:
+        - uuid: 889f397d31fe4610992628f72f78148f
+          name: 'DNS 53 service state'
+          mappings:
+            - value: '1'
+              newvalue: Up
+            - value: '0'
+              newvalue: Down

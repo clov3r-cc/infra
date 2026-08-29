@@ -1,0 +1,59 @@
+zabbix_export:
+  version: '7.0'
+  template_groups:
+    - uuid: 0899051eeec74aa88d82d8bcf3c6fda9
+      name: Cusotmized
+    - uuid: d7499a44661641dfbf848a21729401d5
+      name: Templates/Applications
+  templates:
+    - uuid: facc34fcde4340a1bf214423a062d73a
+      template: 'UDP 123'
+      name: 'UDP 123'
+      description: |
+        UDP/123 NTP service monitoring from the Zabbix server or proxy.
+        This simple check does not require a Zabbix agent.
+        Set {$UDP.123.TARGET} to a hostname or IP address. Leave it empty
+        to use the linked host interface as the target.
+      groups:
+        - name: Cusotmized
+        - name: Templates/Applications
+      items:
+        - uuid: ba5e247ee0374cd284b6a1a880cf04ef
+          name: 'UDP/123: NTP service availability'
+          type: SIMPLE
+          key: 'net.udp.service[ntp,{$UDP.123.TARGET},123]'
+          delay: 1m
+          history: 7d
+          value_type: UNSIGNED
+          description: 'Checks whether the target responds to NTP requests on UDP port 123. Returns 1 when available and 0 when unavailable.'
+          valuemap:
+            name: 'UDP 123 service state'
+          tags:
+            - tag: component
+              value: network
+            - tag: target
+              value: udp-123
+          triggers:
+            - uuid: abcf52f50b854de782fe88a0c5177774
+              expression: 'count(/UDP 123/net.udp.service[ntp,{$UDP.123.TARGET},123],#3,,"0")=3'
+              name: 'UDP/123 connection failed on {HOST.HOST}'
+              event_name: 'UDP/123 connection failed on {HOST.HOST}'
+              priority: HIGH
+              description: 'The Zabbix server or proxy cannot receive an NTP response from the target on UDP port 123.'
+              tags:
+                - tag: component
+                  value: network
+                - tag: target
+                  value: udp-123
+      macros:
+        - macro: '{$UDP.123.TARGET}'
+          value: ''
+          description: 'Hostname or IP address to check. Leave empty to use the linked host interface.'
+      valuemaps:
+        - uuid: 205c4701169c40f7a24783693ec2b6da
+          name: 'UDP 123 service state'
+          mappings:
+            - value: '1'
+              newvalue: Up
+            - value: '0'
+              newvalue: Down

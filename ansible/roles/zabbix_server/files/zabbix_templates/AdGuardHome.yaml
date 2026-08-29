@@ -1,0 +1,98 @@
+zabbix_export:
+  version: '7.0'
+  template_groups:
+    - uuid: 0899051eeec74aa88d82d8bcf3c6fda9
+      name: Cusotmized
+    - uuid: d7499a44661641dfbf848a21729401d5
+      name: Templates/Applications
+  templates:
+    - uuid: 9f3c1d7a0b4e4d8ba2c6f5e9d1a7b3c4
+      template: 'AdGuard Home'
+      name: 'AdGuard Home'
+      description: |
+        Web monitoring for the AdGuard Home web interface and API.
+        The target URL is derived from the Zabbix host name as
+        https://{HOST.HOST}.labo.clov3r.cc.
+        Set the AdGuard Home credentials in the user macros before linking
+        this template to a host.
+      groups:
+        - name: Cusotmized
+        - name: Templates/Applications
+      items:
+        - uuid: 0a6b2c4d8e1f4397b5c6d7e8f9a0b1c2
+          name: 'Failed step of scenario "AdGuard Home check" (mapped)'
+          type: DEPENDENT
+          key: adguard.home.webtest.failed_step
+          value_type: UNSIGNED
+          description: 'Mapped view of web.test.fail[AdGuard Home check]: 0 = OK; 1-2 = failed step number.'
+          valuemap:
+            name: 'AdGuard Home failed step'
+          master_item:
+            key: 'web.test.fail[AdGuard Home check]'
+          tags:
+            - tag: component
+              value: web-scenario
+            - tag: target
+              value: adguard-home
+      httptests:
+        - uuid: 1b7c3d5e9f2a4b68a0d1e2f3a4b5c6d7
+          name: 'AdGuard Home check'
+          delay: 5m
+          attempts: '1'
+          agent: Zabbix
+          status: ENABLED
+          authentication: BASIC
+          http_user: '{$ADGUARD.HOME.USER}'
+          http_password: '{$ADGUARD.HOME.PASSWORD}'
+          verify_peer: 'YES'
+          verify_host: 'YES'
+          steps:
+            - name: 'Web interface'
+              url: 'https://{HOST.HOST}.labo.clov3r.cc/'
+              follow_redirects: 'YES'
+              retrieve_mode: BODY
+              timeout: 15s
+              status_codes: '200'
+            - name: 'API status'
+              url: 'https://{HOST.HOST}.labo.clov3r.cc/control/status'
+              follow_redirects: 'YES'
+              retrieve_mode: BODY
+              timeout: 15s
+              required: '"running"\s*:\s*true'
+              status_codes: '200'
+          tags:
+            - tag: component
+              value: web-scenario
+            - tag: target
+              value: adguard-home
+      macros:
+        - macro: '{$ADGUARD.HOME.USER}'
+          value: ''
+          description: 'AdGuard Home user used for web monitoring Basic authentication.'
+        - macro: '{$ADGUARD.HOME.PASSWORD}'
+          type: SECRET_TEXT
+          value: ''
+          description: 'Password of the AdGuard Home user used for web monitoring.'
+      valuemaps:
+        - uuid: 2c8d4e6f0a1b43c7a9e0f1a2b3c4d5e6
+          name: 'AdGuard Home failed step'
+          mappings:
+            - value: '0'
+              newvalue: OK
+            - value: '1'
+              newvalue: 'Web interface'
+            - value: '2'
+              newvalue: 'API status'
+  triggers:
+    - uuid: 3d9e5f7a1b2c46d8a0f1a2b3c4d5e6f7
+      expression: 'last(/AdGuard Home/adguard.home.webtest.failed_step)<>0'
+      name: 'AdGuard Home web scenario failed on {HOST.HOST}'
+      event_name: 'AdGuard Home web scenario failed on {HOST.HOST}'
+      opdata: 'Failed step: {ITEM.VALUE}'
+      priority: HIGH
+      description: 'The AdGuard Home web interface or API status check failed.'
+      tags:
+        - tag: component
+          value: web-scenario
+        - tag: target
+          value: adguard-home
