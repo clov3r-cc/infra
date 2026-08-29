@@ -1,0 +1,4 @@
+// Allow unattended-upgrades to use every configured APT repository.
+Unattended-Upgrade::Origins-Pattern {
+    "origin=*";
+};
