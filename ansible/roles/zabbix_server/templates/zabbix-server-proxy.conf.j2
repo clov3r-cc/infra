@@ -1,5 +1,7 @@
 # {{ ansible_managed }}
+{% set no_proxy_hosts = zabbix_server_no_proxy | default(proxy_no_proxy | default('192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,.labo.clov3r.cc,localhost')) %}
 [Service]
 Environment="http_proxy={{ proxy_server_url }}"
 Environment="https_proxy={{ proxy_server_url }}"
-Environment="no_proxy={{ proxy_no_proxy | default('192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,.labo.clov3r.cc,localhost') }}"
+Environment="no_proxy={{ no_proxy_hosts }}"
+Environment="NO_PROXY={{ no_proxy_hosts }}"

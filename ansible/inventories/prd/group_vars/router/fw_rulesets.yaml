@@ -220,15 +220,6 @@ fw_rulesets:
         destination:
           network_group: CLOUDFLARE_IPS
           port: 53
-      - number: 52
-        action: accept
-        description: Allow HTTPS to discord.com from DNS_SERVERS
-        protocol: tcp
-        source:
-          address_group: DNS_SERVERS
-        destination:
-          domain_group: DISCORD
-          port: 443
       - number: 200
         action: accept
         description: Allow NTP from TAILSCALE_NODES to WAN_GATEWAY
@@ -455,6 +446,15 @@ fw_rulesets:
         destination:
           address_group: PVE_NODES
           port: 8006
+      - number: 203
+        action: accept
+        description: Allow HTTPS to Discord from ZABBIX_SERVERS
+        protocol: tcp
+        source:
+          address_group: ZABBIX_SERVERS
+        destination:
+          domain_group: DISCORD
+          port: 443
       - number: 205
         action: accept
         description: Allow DNS from ZABBIX_SERVERS to WAN
@@ -537,6 +537,24 @@ fw_rulesets:
         destination:
           address_group: DNS_PROXY_VIP
           port: 3128
+      - number: 100
+        action: accept
+        description: Allow SSH from ZABBIX_SERVERS to TAILSCALE_NODES
+        protocol: tcp
+        source:
+          address_group: ZABBIX_SERVERS
+        destination:
+          address_group: TAILSCALE_NODES
+          port: 22
+      - number: 101
+        action: accept
+        description: Allow SSH from ZABBIX_SERVERS to DNS_SERVERS
+        protocol: tcp
+        source:
+          address_group: ZABBIX_SERVERS
+        destination:
+          address_group: DNS_SERVERS
+          port: 22
       - number: 200
         action: accept
         description: Allow Zabbix passive check from ZABBIX_SERVERS to DNS_SERVERS
@@ -555,6 +573,15 @@ fw_rulesets:
         destination:
           address_group: TAILSCALE_NODES
           port: 10050
+      - number: 205
+        action: accept
+        description: Allow HTTPS from ZABBIX_SERVERS to DNS_SERVERS
+        protocol: tcp
+        source:
+          address_group: ZABBIX_SERVERS
+        destination:
+          address_group: DNS_SERVERS
+          port: 443
       - number: 210
         action: accept
         description: Allow DNS from ZABBIX_SERVERS to DNS_SERVERS
@@ -599,6 +626,15 @@ fw_rulesets:
         protocol: icmp
         source:
           address_group: ZABBIX_SERVERS
+      - number: 100
+        action: accept
+        description: Allow SSH from ZABBIX_SERVERS to FW_INTERNAL_NODES
+        protocol: tcp
+        source:
+          address_group: ZABBIX_SERVERS
+        destination:
+          address_group: FW_INTERNAL_NODES
+          port: 22
       - number: 200
         action: accept
         description: Allow Zabbix passive check from ZABBIX_SERVERS
@@ -607,6 +643,15 @@ fw_rulesets:
           address_group: ZABBIX_SERVERS
         destination:
           port: 10050
+      - number: 210
+        action: accept
+        description: Allow fallback DNS from ZABBIX_SERVERS to FW_INTERNAL_NODES
+        protocol: tcp_udp
+        source:
+          address_group: ZABBIX_SERVERS
+        destination:
+          address_group: FW_INTERNAL_NODES
+          port: 53
       - number: 950
         action: drop
         description: Silently drop NetBIOS Name Service broadcast from NAS_SERVERS

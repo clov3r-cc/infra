@@ -11,6 +11,13 @@ zabbix_server_db_password: "{{ vault_zabbix_server_db_password }}"
 zabbix_server_name: prd-zbx
 zabbix_server_cluster_agent_hostname: "{{ zabbix_server_name }}-cluster"
 zabbix_server_fqdn: "{{ zabbix_server_name }}.labo.clov3r.cc"
+# Keep AdGuardHome first for internal DNS rewrites; use the firewall dnsmasq as a fallback.
+dns_nameservers:
+  - 192.168.20.23  # AdGuardHome (prd-dpx-01)
+  - 192.168.20.24  # AdGuardHome (prd-dpx-02)
+  - 192.168.22.4   # FW dnsmasq (prd-nft-01)
+# Discord webhook notifications must bypass the shared Squid VIP.
+zabbix_server_no_proxy: "192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,.labo.clov3r.cc,localhost,discord.com"
 
 # SNMP trap reception
 snmp_auth_password: "{{ vault_snmp_auth_password }}"

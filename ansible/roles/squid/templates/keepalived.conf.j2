@@ -3,6 +3,15 @@ global_defs {
   router_id {{ inventory_hostname }}
 }
 
+vrrp_script check_squid {
+  script "/usr/bin/systemctl is-active --quiet squid"
+  interval 2
+  timeout 1
+  fall 2
+  rise 2
+  weight -60
+}
+
 {% for instance in proxy_keepalived_vrrp_instances %}
 vrrp_instance {{ instance.name }} {
   interface {{ instance.interface }}
@@ -22,6 +31,9 @@ vrrp_instance {{ instance.name }} {
 {% for vip in instance.virtual_ipaddresses %}
     {{ vip }}
 {% endfor %}
+  }
+  track_script {
+    check_squid
   }
 }
 {% endfor %}
