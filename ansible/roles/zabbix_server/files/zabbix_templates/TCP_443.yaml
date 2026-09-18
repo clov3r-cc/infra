@@ -1,0 +1,59 @@
+zabbix_export:
+  version: '7.0'
+  template_groups:
+    - uuid: 0899051eeec74aa88d82d8bcf3c6fda9
+      name: Cusotmized
+    - uuid: d7499a44661641dfbf848a21729401d5
+      name: Templates/Applications
+  templates:
+    - uuid: 19ed439cd63a4abab144a989dd8d361e
+      template: 'TCP 443'
+      name: 'TCP 443'
+      description: |
+        TCP/443 connectivity monitoring from the Zabbix server or proxy.
+        This simple check does not require a Zabbix agent.
+        Set {$TCP.443.TARGET} to a hostname or IP address. Leave it empty
+        to use the linked host interface as the target.
+      groups:
+        - name: Cusotmized
+        - name: Templates/Applications
+      items:
+        - uuid: 0a2e7025ee0b40d4b6d9667c83eb94b1
+          name: 'TCP/443: Service availability'
+          type: SIMPLE
+          key: 'net.tcp.service[tcp,{$TCP.443.TARGET},443]'
+          delay: 1m
+          history: 7d
+          value_type: UNSIGNED
+          description: 'Checks whether the target accepts TCP connections on port 443. Returns 1 when available and 0 when unavailable.'
+          valuemap:
+            name: 'TCP service state'
+          tags:
+            - tag: component
+              value: network
+            - tag: target
+              value: tcp-443
+          triggers:
+            - uuid: 313a3760ab85412bbdc430fb00c9c1fd
+              expression: 'count(/TCP 443/net.tcp.service[tcp,{$TCP.443.TARGET},443],#3,,"0")=3'
+              name: 'TCP/443 connection failed on {HOST.HOST}'
+              event_name: 'TCP/443 connection failed on {HOST.HOST}'
+              priority: HIGH
+              description: 'The Zabbix server or proxy cannot establish a TCP connection to the target on port 443.'
+              tags:
+                - tag: component
+                  value: network
+                - tag: target
+                  value: tcp-443
+      macros:
+        - macro: '{$TCP.443.TARGET}'
+          value: ''
+          description: 'Hostname or IP address to check. Leave empty to use the linked host interface.'
+      valuemaps:
+        - uuid: 96153cffe3444123985fe2e2d2525f0e
+          name: 'TCP service state'
+          mappings:
+            - value: '1'
+              newvalue: Up
+            - value: '0'
+              newvalue: Down

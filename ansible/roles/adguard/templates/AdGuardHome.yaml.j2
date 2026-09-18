@@ -8,6 +8,8 @@ http:
 users:
   - name: {{ adguard_admin_username }}
     password: {{ __adguard_password_hash.stdout }}
+  - name: {{ adguard_web_monitor_username }}
+    password: {{ __adguard_web_monitor_password_hash.stdout }}
 auth_attempts: 5
 block_auth_min: 15
 http_proxy: ""

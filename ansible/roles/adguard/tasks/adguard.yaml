@@ -83,6 +83,66 @@
   delegate_to: localhost
   no_log: true
 
+- name: adguard | Validate web monitoring credentials
+  ansible.builtin.assert:
+    that:
+      - adguard_web_monitor_username | length > 0
+      - adguard_web_monitor_username != adguard_admin_username
+      - adguard_web_monitor_password is defined
+      - adguard_web_monitor_password | default('') | length > 0
+      - adguard_web_monitor_password | default('') != adguard_admin_password
+    fail_msg: >-
+      Set a dedicated non-empty AdGuard Home web monitoring password in
+      vault_adguard_web_monitor_password. It must differ from the administrator
+      password.
+  no_log: true
+
+- name: adguard | Read existing AdGuard Home web monitoring password hash
+  ansible.builtin.command:
+    argv:
+      - "{{ ansible_playbook_python }}"
+      - -c
+      - |
+        import json, sys, yaml
+        data = json.loads(sys.stdin.read())
+        try:
+          config = yaml.safe_load(open('/opt/AdGuardHome/AdGuardHome.yaml')) or {}
+          for user in config.get('users', []):
+            if user.get('name') == data['username']:
+              print(user.get('password', ''))
+              break
+          else:
+            print('')
+        except Exception:
+          print('')
+    stdin: "{{ {'username': adguard_web_monitor_username} | to_json }}"
+  register: __adguard_existing_web_monitor_hash
+  check_mode: false
+  changed_when: false
+  failed_when: false
+  no_log: true
+
+- name: adguard | Generate bcrypt hash for AdGuard Home web monitoring password
+  ansible.builtin.command:
+    argv:
+      - "{{ ansible_playbook_python }}"
+      - -c
+      - |
+        import bcrypt, sys, json
+        data = json.loads(sys.stdin.read())
+        pw = data['password'].encode()
+        existing = data['existing'].encode()
+        if existing and bcrypt.checkpw(pw, existing):
+          print(existing.decode())
+        else:
+          print(bcrypt.hashpw(pw, bcrypt.gensalt()).decode())
+    stdin: "{{ {'password': adguard_web_monitor_password, 'existing': __adguard_existing_web_monitor_hash.stdout} | to_json }}"
+  register: __adguard_web_monitor_password_hash
+  check_mode: false
+  changed_when: false
+  delegate_to: localhost
+  no_log: true
+
 - name: adguard | Deploy AdGuard Home configuration
   ansible.builtin.template:
     src: AdGuardHome.yaml.j2

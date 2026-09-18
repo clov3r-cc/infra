@@ -73,6 +73,14 @@
           APT::Periodic::Update-Package-Lists "1";
           APT::Periodic::Unattended-Upgrade "1";
 
+    - name: pkg-upgrade | Allow all configured APT repositories
+      ansible.builtin.copy:
+        src: 52unattended-upgrades-local
+        dest: /etc/apt/apt.conf.d/52unattended-upgrades-local
+        owner: root
+        group: root
+        mode: "0644"
+
     - name: pkg-upgrade | Deploy systemd override for unattended-upgrades timer
       ansible.builtin.file:
         path: /etc/systemd/system/apt-daily-upgrade.timer.d

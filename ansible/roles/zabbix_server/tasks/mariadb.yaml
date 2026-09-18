@@ -66,9 +66,20 @@
     cmd: restorecon -Rv "{{ zabbix_server_mariadb_datadir }}"
   changed_when: false
 
+- name: mariadb | Check if MariaDB is already managed by Pacemaker
+  when: "inventory_hostname == groups['zabbix_server__ha'][0]"
+  ansible.builtin.command: pcs resource config mariadb
+  register: __zabbix_server_mariadb_resource
+  changed_when: false
+  failed_when: false
+  check_mode: false
+  run_once: true
+
 # systemd に操作させず、Pacemaker が管理する
 - name: mariadb | Stop and disable mariadb
-  when: "inventory_hostname in groups['zabbix_server__ha']"
+  when:
+    - "inventory_hostname in groups['zabbix_server__ha']"
+    - hostvars[groups['zabbix_server__ha'][0]]['__zabbix_server_mariadb_resource']['rc'] != 0
   ansible.builtin.systemd_service:
     name: mariadb
     state: stopped

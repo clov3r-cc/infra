@@ -1,0 +1,144 @@
+zabbix_export:
+  version: '7.0'
+  template_groups:
+    - uuid: 0899051eeec74aa88d82d8bcf3c6fda9
+      name: Cusotmized
+    - uuid: d7499a44661641dfbf848a21729401d5
+      name: Templates/Applications
+  templates:
+    - uuid: 4b4a0dd91fe04d31b0feee8ae014aa7f
+      template: 'Zabbix Frontend'
+      name: 'Zabbix Frontend'
+      description: |
+        Web monitoring for the Zabbix frontend.
+        Checks availability, content, login, and logout over HTTPS.
+        Set the frontend monitoring user's credentials in the user macros
+        before using this web scenario.
+        The default URL targets the production Zabbix Server VIP.
+      groups:
+        - name: Cusotmized
+        - name: Templates/Applications
+      items:
+        - uuid: b8d7e9f483b142d6aef0c27a4e5b6f56
+          name: 'Failed step of scenario "Frontend check" (mapped)'
+          type: DEPENDENT
+          key: zabbix.frontend.webtest.failed_step
+          value_type: UNSIGNED
+          description: 'Mapped view of web.test.fail[Frontend check]: 0 = OK; 1-5 = failed step number.'
+          valuemap:
+            name: 'Zabbix frontend failed step'
+          master_item:
+            key: 'web.test.fail[Frontend check]'
+          tags:
+            - tag: component
+              value: web-scenario
+            - tag: target
+              value: frontend
+      httptests:
+        - uuid: 1ef0f27d8b4e4aa1a0b5d3991fe006a9
+          name: 'Frontend check'
+          delay: 5m
+          attempts: '1'
+          agent: Zabbix
+          status: ENABLED
+          verify_peer: 'YES'
+          verify_host: 'YES'
+          variables:
+            - name: '{user}'
+              value: '{$ZABBIX.FRONTEND.USER}'
+            - name: '{password}'
+              value: '{$ZABBIX.FRONTEND.PASSWORD}'
+          steps:
+            - name: 'First page'
+              url: '{$ZABBIX.FRONTEND.URL}/'
+              follow_redirects: 'YES'
+              retrieve_mode: BODY
+              timeout: 15s
+              required: 'Zabbix SIA'
+              status_codes: '200'
+            - name: Login
+              url: '{$ZABBIX.FRONTEND.URL}/index.php'
+              posts:
+                - name: name
+                  value: '{user}'
+                - name: password
+                  value: '{password}'
+                - name: enter
+                  value: 'Sign in'
+              follow_redirects: 'YES'
+              retrieve_mode: BODY
+              timeout: 15s
+              status_codes: '200'
+            - name: 'Login check'
+              url: '{$ZABBIX.FRONTEND.URL}/zabbix.php?action=dashboard.list'
+              follow_redirects: 'YES'
+              retrieve_mode: BODY
+              timeout: 15s
+              required: 'dashboard-list'
+              status_codes: '200'
+              variables:
+                - name: '{csrf_token}'
+                  value: 'regex:([0-9a-z]{64})'
+            - name: Logout
+              url: '{$ZABBIX.FRONTEND.URL}/index.php'
+              posts:
+                - name: reconnect
+                  value: '1'
+                - name: _csrf_token
+                  value: '{csrf_token}'
+              follow_redirects: 'YES'
+              retrieve_mode: BODY
+              timeout: 15s
+              status_codes: '200'
+            - name: 'Logout check'
+              url: '{$ZABBIX.FRONTEND.URL}/'
+              follow_redirects: 'YES'
+              retrieve_mode: BODY
+              timeout: 15s
+              required: 'signin-container'
+              status_codes: '200'
+          tags:
+            - tag: component
+              value: web-scenario
+            - tag: target
+              value: frontend
+      macros:
+        - macro: '{$ZABBIX.FRONTEND.URL}'
+          value: 'https://prd-zbx.labo.clov3r.cc'
+          description: 'Base URL of the Zabbix frontend without a trailing slash.'
+        - macro: '{$ZABBIX.FRONTEND.USER}'
+          value: ''
+          description: 'Dedicated low-privilege Zabbix user for frontend web monitoring.'
+        - macro: '{$ZABBIX.FRONTEND.PASSWORD}'
+          type: SECRET_TEXT
+          value: ''
+          description: 'Password of the dedicated frontend web monitoring user.'
+      valuemaps:
+        - uuid: c9e8f0a594c243e7b0f1d38b5a6c7d68
+          name: 'Zabbix frontend failed step'
+          mappings:
+            - value: '0'
+              newvalue: OK
+            - value: '1'
+              newvalue: 'First page'
+            - value: '2'
+              newvalue: Login
+            - value: '3'
+              newvalue: 'Login check'
+            - value: '4'
+              newvalue: Logout
+            - value: '5'
+              newvalue: 'Logout check'
+  triggers:
+    - uuid: b7057f9f03c3420bbf5c3d58028f65c4
+      expression: 'last(/Zabbix Frontend/zabbix.frontend.webtest.failed_step)<>0'
+      name: 'Zabbix frontend web scenario failed on {HOST.HOST}'
+      event_name: 'Zabbix frontend web scenario failed on {HOST.HOST}'
+      opdata: 'Failed step: {ITEM.VALUE}'
+      priority: HIGH
+      description: 'The Zabbix frontend availability, login, or logout check failed.'
+      tags:
+        - tag: component
+          value: web-scenario
+        - tag: target
+          value: frontend

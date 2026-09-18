@@ -1,1 +1,2 @@
 adguard_admin_password: "{{ vault_adguard_admin_password }}"
+adguard_web_monitor_password: "{{ vault_adguard_web_monitor_password }}"

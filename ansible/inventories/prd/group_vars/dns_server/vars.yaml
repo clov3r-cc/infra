@@ -10,6 +10,7 @@ adguard_listen_addr: "{{ ansible_host }}"
 adguard_http_port: 80
 adguard_https_port: 443
 adguard_admin_username: lucky
+adguard_web_monitor_username: zabbix
 adguard_upstream_dns:
   - 192.168.20.18  # FW-DMZ-NODE-01
   - 192.168.20.19  # FW-DMZ-NODE-02
