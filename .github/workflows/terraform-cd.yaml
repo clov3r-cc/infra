@@ -11,7 +11,7 @@ jobs:
   find_envs:
     name: Find environments
     timeout-minutes: 5
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     outputs:
       matrix: ${{ steps.output_matrix.outputs.matrix }}
     steps:
@@ -26,7 +26,7 @@ jobs:
     permissions:
       pull-requests: write
     timeout-minutes: 30
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     needs: [ find_envs ]
     strategy:
       fail-fast: false
