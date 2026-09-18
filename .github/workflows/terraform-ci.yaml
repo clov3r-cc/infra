@@ -58,7 +58,7 @@ jobs:
       - name: Terraform Validate
         run: terraform validate -no-color
       - name: Expose all Terraform variables to environment variables from secrets
-        run: curl -fsSL https://raw.githubusercontent.com/GiganticMinecraft/seichi_infra/refs/heads/main/.github/workflows/scripts/expose-all-tf-vars-to-github-env.sh | bash
+        run: bash "${GITHUB_WORKSPACE}/.github/workflows/scripts/expose-all-tf-vars-to-github-env.sh"
         env:
           SECRETS_CONTEXT: ${{ toJson(secrets) }}
       - name: Setup Tailscale
