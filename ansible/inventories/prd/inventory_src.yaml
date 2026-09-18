@@ -1,2 +1,5 @@
 plugin: cloud.terraform.terraform_provider
 project_path: ../terraform/prd
+# ansible-core 2.21 removed the `required` argument from get_bin_path().
+# Passing the executable explicitly keeps the collection compatible.
+binary_path: terraform
