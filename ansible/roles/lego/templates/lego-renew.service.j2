@@ -10,8 +10,11 @@ ExecStart=/usr/local/bin/lego \
   --path {{ lego_path }} \
   --email {{ lego_email }} \
   --dns {{ lego_dns_provider }} \
+{% for domain in __lego_domains %}
+  --domains "{{ domain }}" \
+{% endfor %}
   --accept-tos \
   renew \
-  --renew-hook "chmod 755 {{ lego_path }}/certificates && chmod 644 {{ lego_path }}/certificates/*.crt && {{ lego_renew_hook | default('systemctl reload nginx') }}"
+  --renew-hook /usr/local/bin/lego-renew-hook.sh
 StandardOutput=append:/var/log/lego-renew.log
 StandardError=append:/var/log/lego-renew.log

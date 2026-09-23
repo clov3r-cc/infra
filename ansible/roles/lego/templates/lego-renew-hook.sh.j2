@@ -1,0 +1,9 @@
+#!/bin/bash
+# {{ ansible_managed }}
+set -eu
+
+chmod 755 "{{ lego_path }}/certificates"
+chmod 644 "{{ lego_path }}/certificates"/*.crt
+{% if lego_renew_hook is defined and lego_renew_hook %}
+{{ lego_renew_hook }}
+{% endif %}

@@ -98,6 +98,14 @@
   when: __lego_domains | length > 0
   changed_when: false
 
+- name: Deploy lego certificate renewal hook
+  ansible.builtin.template:
+    src: lego-renew-hook.sh.j2
+    dest: /usr/local/bin/lego-renew-hook.sh
+    owner: root
+    group: root
+    mode: "0755"
+
 - name: Deploy lego renew systemd service
   ansible.builtin.template:
     src: lego-renew.service.j2
@@ -128,6 +136,15 @@
     daemon_reload: true
     enabled: true
     state: started
+  when: __lego_domains | length > 0
+
+- name: Disable lego renew timer when no domains are configured
+  ansible.builtin.systemd_service:
+    name: lego-renew.timer
+    daemon_reload: true
+    enabled: false
+    state: stopped
+  when: __lego_domains | length == 0
 
 - name: lego | Deploy certificate discovery script
   ansible.builtin.copy:
