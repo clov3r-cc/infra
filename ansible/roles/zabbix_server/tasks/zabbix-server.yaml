@@ -22,7 +22,7 @@
 
 - name: zabbix-server | Create zabbix database
   when: inventory_hostname == hostvars[groups['zabbix_server__ha'][0]]['drbd_active_node']
-  community.mysql.mysql_db:
+  ansible.mysql.mysql_db:
     login_unix_socket: /var/lib/mysql/mysql.sock
     name: zabbix
     encoding: utf8mb4
@@ -31,7 +31,7 @@
 
 - name: zabbix-server | Create zabbix user and grant privileges
   when: inventory_hostname == hostvars[groups['zabbix_server__ha'][0]]['drbd_active_node']
-  community.mysql.mysql_user:
+  ansible.mysql.mysql_user:
     login_unix_socket: /var/lib/mysql/mysql.sock
     name: zabbix
     host: localhost
@@ -41,7 +41,7 @@
 
 - name: zabbix-server | Check if Zabbix schema already imported
   when: inventory_hostname == hostvars[groups['zabbix_server__ha'][0]]['drbd_active_node']
-  community.mysql.mysql_query:
+  ansible.mysql.mysql_query:
     login_unix_socket: /var/lib/mysql/mysql.sock
     login_db: zabbix
     query: SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'zabbix'
@@ -51,7 +51,7 @@
   when:
     - inventory_hostname == hostvars[groups['zabbix_server__ha'][0]]['drbd_active_node']
     - __zabbix_server_schema_check.query_result[0][0]['COUNT(*)'] | int == 0
-  community.mysql.mysql_variables:
+  ansible.mysql.mysql_variables:
     login_unix_socket: /var/lib/mysql/mysql.sock
     variable: log_bin_trust_function_creators
     value: 1
@@ -60,7 +60,7 @@
   when:
     - inventory_hostname == hostvars[groups['zabbix_server__ha'][0]]['drbd_active_node']
     - __zabbix_server_schema_check.query_result[0][0]['COUNT(*)'] | int == 0
-  community.mysql.mysql_db:
+  ansible.mysql.mysql_db:
     login_unix_socket: /var/lib/mysql/mysql.sock
     name: zabbix
     state: import
@@ -71,7 +71,7 @@
   when:
     - inventory_hostname == hostvars[groups['zabbix_server__ha'][0]]['drbd_active_node']
     - __zabbix_server_schema_check.query_result[0][0]['COUNT(*)'] | int == 0
-  community.mysql.mysql_variables:
+  ansible.mysql.mysql_variables:
     login_unix_socket: /var/lib/mysql/mysql.sock
     variable: log_bin_trust_function_creators
     value: 0
