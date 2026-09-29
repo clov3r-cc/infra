@@ -6,6 +6,12 @@ After=network-online.target
 [Service]
 Type=oneshot
 EnvironmentFile={{ lego_path }}/lego.env
+{% if proxy_server_url is defined %}
+Environment="http_proxy={{ proxy_server_url }}"
+Environment="https_proxy={{ proxy_server_url }}"
+Environment="HTTP_PROXY={{ proxy_server_url }}"
+Environment="HTTPS_PROXY={{ proxy_server_url }}"
+{% endif %}
 ExecStart=/usr/local/bin/lego \
   --path {{ lego_path }} \
   --email {{ lego_email }} \
