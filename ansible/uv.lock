@@ -667,7 +667,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "ansible", specifier = ">=13.2.0" },
-    { name = "ansible-core", specifier = ">=2.20.1" },
+    { name = "ansible-core", specifier = ">=2.20.7" },
     { name = "ansible-dev-tools", specifier = ">=26.4.1" },
     { name = "ansible-pylibssh", specifier = ">=1.4.0" },
     { name = "bcrypt", specifier = ">=5.0.0,<6.0.0" },
