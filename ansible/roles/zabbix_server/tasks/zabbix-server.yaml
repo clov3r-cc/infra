@@ -80,14 +80,14 @@
   when: "inventory_hostname in groups['zabbix_server__ha']"
   ansible.posix.seboolean:
     name: httpd_can_connect_zabbix
-    state: on
+    state: true
     persistent: true
 
 - name: zabbix-server | Enable SELinux boolean for Zabbix network connections
   when: "inventory_hostname in groups['zabbix_server__ha']"
   ansible.posix.seboolean:
     name: zabbix_can_network
-    state: on
+    state: true
     persistent: true
 
 - name: zabbix-server | Ensure zabbix_server.d is writable by zabbix user
