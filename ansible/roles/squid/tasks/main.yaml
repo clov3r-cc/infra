@@ -6,6 +6,33 @@
       - keepalived
     state: present
 
+- name: Create Keepalived script user
+  ansible.builtin.user:
+    name: keepalived_script
+    system: true
+    create_home: false
+    home: /
+    shell: /sbin/nologin
+
+- name: Deploy Squid health check script
+  ansible.builtin.copy:
+    dest: /usr/libexec/keepalived/check_squid
+    owner: root
+    group: root
+    mode: "0755"
+    content: |
+      #!/usr/bin/bash
+      exec 3<>/dev/tcp/127.0.0.1/3128 || exit 1
+      exec 3>&-
+  notify: Reload keepalived
+
+- name: Restore SELinux context for Squid health check script
+  ansible.builtin.command:
+    cmd: restorecon -Fv /usr/libexec/keepalived/check_squid
+  register: __squid_check_script_restorecon
+  changed_when: __squid_check_script_restorecon.stdout != ""
+  notify: Reload keepalived
+
 - name: Create keepalived directory
   ansible.builtin.file:
     path: /etc/keepalived
@@ -21,7 +48,7 @@
     owner: root
     group: root
     mode: "0600"
-  notify: Restart keepalived
+  notify: Reload keepalived
 
 - name: Enable and start keepalived
   ansible.builtin.systemd_service:
